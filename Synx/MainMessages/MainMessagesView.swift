@@ -110,6 +110,31 @@ class MainMessagesViewModel: ObservableObject {
     
 }
 
+struct BlurView: UIViewRepresentable {
+    func makeUIView(context: Context) -> UIVisualEffectView {
+        let view = UIVisualEffectView(effect: UIBlurEffect(style: .systemMaterial))
+        return view
+    }
+    
+    func updateUIView(_ uiView: UIVisualEffectView, context: Context) {}
+}
+
+struct BackdropImageView: View {
+    @Binding var offset: CGFloat
+    var imageName: String
+    
+    var body: some View {
+        GeometryReader { geo in
+            Image(imageName)
+                .resizable()
+                .scaledToFill()
+                .frame(width: geo.size.width * 1.5, height: geo.size.height)
+                .offset(x: offset)
+                .edgesIgnoringSafeArea(.all)
+        }
+    }
+}
+
 struct MainMessagesView: View {
     @State private var shouldShowLogOutOptions = false
     @State private var shouldNavigateToChatLogView = false
