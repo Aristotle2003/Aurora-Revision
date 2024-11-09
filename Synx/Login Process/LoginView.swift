@@ -11,6 +11,14 @@ import SwiftUI
 import Firebase
 import FirebaseAuth
 import GoogleSignIn
+import AuthenticationServices
+import CryptoKit
+
+
+
+
+
+
 
 
 
@@ -34,6 +42,9 @@ struct LoginView: View {
     }
     @State private var loginStatusMessage = ""
     
+    
+    // Apple nonce
+    @State private var nonce: String?
     
     var body: some View {
         if isLogin{
@@ -138,7 +149,7 @@ struct LoginView: View {
                             }
                         } label: {
                             Text(isPhoneLogin ? "Use email instead" : "Use phone number instead")
-                                .font(.system(size: 14))
+                                .font(.system(size: 16))
                                 .foregroundColor(.blue)
                         }
                         
@@ -149,7 +160,7 @@ struct LoginView: View {
                             VStack { Divider() }.padding(.horizontal, 8)
                             Text("or").foregroundColor(.gray)
                             VStack { Divider() }.padding(.horizontal, 8)
-                        }.padding(.vertical, 16)
+                        }
                         
                         
                         
@@ -170,6 +181,24 @@ struct LoginView: View {
                                     .stroke(Color.gray.opacity(0.5), lineWidth: 1)
                             )
                         }
+                        
+                        
+                        SignInWithAppleButton(.continue) { request in
+                            let nonce = randomNonceString()
+                            self.nonce = nonce
+                            request.requestedScopes = [.email, .fullName]
+                            request.nonce = sha256(nonce)
+                        } onCompletion: { result in
+                            switch result {
+                            case .success(let authorization):
+                                handleAppleSignIn(authorization)
+                            case .failure(let error):
+                                loginStatusMessage = "Error signing in with Apple: \(error.localizedDescription)"
+                            }
+                        }
+                        .frame(maxWidth: .infinity)
+                        .frame(height: 44)
+                        .cornerRadius(12)
                         
                         
                         // Create new account button
@@ -223,6 +252,97 @@ struct LoginView: View {
         }
         
     }
+    
+    
+    
+    // Sign in using Apple account
+    func handleAppleSignIn(_ authorization: ASAuthorization) {
+        if let appleIDCredential = authorization.credential as? ASAuthorizationAppleIDCredential {
+            // Showing loading screen later
+            
+            guard let nonce else {
+                fatalError("Invalid state: A login callback was received, but no login request was sent.")
+            }
+            guard let appleIDToken = appleIDCredential.identityToken else {
+                print("Unable to fetch identity token")
+                return
+            }
+            guard let idTokenString = String(data: appleIDToken, encoding: .utf8) else {
+                print("Unable to serialize token string from data: \(appleIDToken.debugDescription)")
+                return
+            }
+            // Initialize a Firebase credential, including the user's full name.
+            let credential = OAuthProvider.appleCredential(withIDToken: idTokenString,
+                                                           rawNonce: nonce,
+                                                           fullName: appleIDCredential.fullName)
+            // Sign in with Firebase.
+            FirebaseManager.shared.auth.signIn(with: credential) { (authResult, error) in
+                if let error {
+                    // Error. If error.code == .MissingOrInvalidNonce, make sure
+                    // you're sending the SHA256-hashed nonce as a hex string with
+                    // your request to Apple.
+                    self.loginStatusMessage = "Apple sign in error: \(error.localizedDescription)"
+                    return
+                }
+                // User is signed in to Firebase with Apple.
+                guard let user = authResult?.user else { return }
+                FirebaseManager.shared.firestore.collection("users")
+                    .document(user.uid).getDocument { snapshot, error in
+                        if let error = error {
+                            self.loginStatusMessage = "\(error)"
+                            return
+                        }
+                        
+                        // User exists
+                        if let data = snapshot?.data() {
+                            let chatUser = ChatUser(data: data)
+                            self.loginStatusMessage = "Successfully logged in as \(chatUser.email)"
+                            self.isLogin = true
+                        // New user set up profile
+                        } else {
+                            self.showProfileSetup = true
+                        }
+                    }
+            }
+        }
+    }
+    
+    private func randomNonceString(length: Int = 32) -> String {
+        precondition(length > 0)
+        var randomBytes = [UInt8](repeating: 0, count: length)
+        let errorCode = SecRandomCopyBytes(kSecRandomDefault, randomBytes.count, &randomBytes)
+        if errorCode != errSecSuccess {
+            fatalError(
+                "Unable to generate nonce. SecRandomCopyBytes failed with OSStatus \(errorCode)"
+            )
+        }
+        
+        let charset: [Character] =
+        Array("0123456789ABCDEFGHIJKLMNOPQRSTUVXYZabcdefghijklmnopqrstuvwxyz-._")
+        
+        let nonce = randomBytes.map { byte in
+            // Pick a random character from the set, wrapping around if needed.
+            charset[Int(byte) % charset.count]
+        }
+        
+        return String(nonce)
+    }
+    
+    @available(iOS 13, *)
+    private func sha256(_ input: String) -> String {
+        let inputData = Data(input.utf8)
+        let hashedData = SHA256.hash(data: inputData)
+        let hashString = hashedData.compactMap {
+            String(format: "%02x", $0)
+        }.joined()
+        
+        return hashString
+    }
+    
+    
+    
+    
+    
     
     
     // Sign in using email and password
@@ -321,6 +441,9 @@ struct LoginView: View {
             }
         }
     }
+    
+    
+    
 }
 
 
