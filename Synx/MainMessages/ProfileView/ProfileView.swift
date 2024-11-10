@@ -2,10 +2,6 @@ import SwiftUI
 import SDWebImageSwiftUI
 import Firebase
 
-import SwiftUI
-import SDWebImageSwiftUI
-import Firebase
-
 struct ProfileView: View {
     let chatUser: ChatUser
     let currentUser: ChatUser
@@ -90,31 +86,9 @@ struct ProfileView: View {
                     .padding()
                 } else {
                     if isFriend {
-                        NavigationLink(destination: ChatLogView(vm: chatLogViewModel)
-                            .onAppear {
-                                chatLogViewModel.chatUser = chatUser
-                            }) {
-                            Text("Message")
-                                .font(.headline)
-                                .padding()
-                                .background(Color.green)
-                                .foregroundColor(.white)
-                                .cornerRadius(8)
-                        }
-                        .padding()
+                        friendOptions
                     } else {
-                        Button(action: {
-                            sendFriendRequest()
-                        }) {
-                            Text(friendRequestSent ? "Request Sent" : "Send Friend Request")
-                                .font(.headline)
-                                .padding()
-                                .background(friendRequestSent ? Color.gray : Color.blue)
-                                .foregroundColor(.white)
-                                .cornerRadius(8)
-                        }
-                        .padding()
-                        .disabled(friendRequestSent)
+                        strangerOptions
                     }
                 }
                 
@@ -140,6 +114,81 @@ struct ProfileView: View {
             .navigationDestination(isPresented: $showMainMessageView) {
                 MainMessagesView()
             }
+        }
+    }
+    
+    // Friend Profile 选项
+    private var friendOptions: some View {
+        VStack(spacing: 20) {
+            NavigationLink(destination: ChatLogView(vm: chatLogViewModel)
+                .onAppear {
+                    chatLogViewModel.chatUser = chatUser
+                }) {
+                Text("Message")
+                    .font(.headline)
+                    .padding()
+                    .background(Color.green)
+                    .foregroundColor(.white)
+                    .cornerRadius(8)
+            }
+            .padding()
+            
+            HStack(spacing: 20) {
+                Button(action: {
+                    pinToTop()
+                }) {
+                    Text("Pin to Top")
+                }
+                .padding()
+                
+                Button(action: {
+                    searchSavedMessages()
+                }) {
+                    Text("Search Saved Messages")
+                }
+                .padding()
+            }
+            
+            HStack(spacing: 20) {
+                Button(action: {
+                    muteFriend()
+                }) {
+                    Text("Mute Friend")
+                }
+                .padding()
+                
+                Button(action: {
+                    blockFriend()
+                }) {
+                    Text("Block Friend")
+                }
+                .padding()
+            }
+            
+            Button(action: {
+                reportFriend()
+            }) {
+                Text("Report Friend")
+            }
+            .padding()
+        }
+    }
+    
+    // Stranger Profile 选项
+    private var strangerOptions: some View {
+        VStack(spacing: 20) {
+            Button(action: {
+                sendFriendRequest()
+            }) {
+                Text(friendRequestSent ? "Request Sent" : "Send Friend Request")
+                    .font(.headline)
+                    .padding()
+                    .background(friendRequestSent ? Color.gray : Color.blue)
+                    .foregroundColor(.white)
+                    .cornerRadius(8)
+            }
+            .padding()
+            .disabled(friendRequestSent)
         }
     }
     
@@ -206,10 +255,88 @@ struct ProfileView: View {
                 }
             }
     }
+    
+    // 各种操作的函数逻辑, 这里我觉得pinned friend 应当为一个field在friend_list的document里
+    private func pinToTop() {
+        // 实现置顶逻辑
+        FirebaseManager.shared.firestore
+            .collection("friends")
+            .document(currentUser.uid)
+            .collection("friend_list")
+            .document(chatUser.uid)
+            .updateData(["isPinned": true]) { error in
+                if let error = error {
+                    print("Failed to pin friend to top: \(error)")
+                } else {
+                    print("Successfully pinned friend to top")
+                }
+            }
+    }
+    
+    private func searchSavedMessages() { //还没有实现，先装饰一下， 没想好，要不要直接转跳到SavedMessagesView？还是说先找到那条消息，然后现实那条消息的上下文？
+        // 实现查看保存的消息记录的逻辑
+        FirebaseManager.shared.firestore
+            .collection("saving_messages")
+            .document(currentUser.uid)
+            .collection(chatUser.uid)
+
+            
+            
+    }
+    
+    private func muteFriend() { // 与pin逻辑相似
+        // 实现静音好友的逻辑
+        FirebaseManager.shared.firestore
+            .collection("friends")
+            .document(currentUser.uid)
+            .collection("friend_list")
+            .document(chatUser.uid)
+            .updateData(["isMuted": true]) { error in
+                if let error = error {
+                    print("Failed to mute friend: \(error)")
+                } else {
+                    print("Friend muted successfully")
+                }
+            }
+    }
+    
+    private func blockFriend() { //目前只是单纯删除一下好友
+        // 实现屏蔽好友的逻辑
+        FirebaseManager.shared.firestore
+            .collection("friends")
+            .document(currentUser.uid)
+            .collection("friend_list")
+            .document(chatUser.uid)
+            .delete { error in
+                if let error = error {
+                    print("Failed to block friend: \(error)")
+                } else {
+                    print("Friend blocked successfully")
+                }
+            }
+    }
+    
+    private func reportFriend() {
+        // 实现举报好友的逻辑
+        let reportData: [String: Any] = [
+            "reporterUid": chatUser.uid,
+            "reporteeUid": currentUser.uid,
+            "timestamp": Timestamp(),
+            "content": "This user is spamming" //这边后面要增加一个输入框来写举报原因
+        ]
+        
+        FirebaseManager.shared.firestore
+            .collection("reports")
+            .document()
+            .setData(reportData) { error in
+                if let error = error {
+                    print("Failed to report friend: \(error)")
+                } else {
+                    print("Friend reported successfully")
+                }
+            }
+    }
 }
-
-
-
 
 struct BasicInfo {
     var age: String
@@ -218,4 +345,3 @@ struct BasicInfo {
     var bio: String
     var location: String
 }
-
