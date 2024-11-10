@@ -1,5 +1,5 @@
 # Robin's Change preparation:
-- add reports, pin_list, mute_list collection into the database
+- add reports collection, isPinned field, isMuted field into the database
 - add a few function in profileview.swift to allow report, block, mute, pin, and search.
 
 ## Waiting to be done:
@@ -9,4 +9,4 @@
 - pin
 - search
 
-# More detailed plans are waiting to be made after the meeting with Shawn
+# More detailed plans are waiting to be made after the meeting with Shawn...
