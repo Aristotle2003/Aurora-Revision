@@ -415,6 +415,14 @@ struct ProfileView: View {
                     print("Friend delete you successfully")
                 }
             }
+        
+        // wait until the friend is deleted
+        DispatchQueue.main.asyncAfter(deadline: .now() + 5) {
+            print("hi")
+            showMainMessageView = true
+        }
+
+        print("hiii")
     }
     
     private func reportFriend() {
