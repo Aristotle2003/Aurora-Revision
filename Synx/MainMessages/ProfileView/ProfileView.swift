@@ -13,8 +13,13 @@ struct ProfileView: View {
     @State var otherUserInfo: BasicInfo? = nil // For other users
     @State private var showEditProfile = false // Controls navigation to EditProfileView
     @State private var showMainMessageView = false
+    @State private var showCalendarView = false
+    @State private var showReportSheet = false
+    @State private var reportContent = ""
+    
 
     @ObservedObject var chatLogViewModel: ChatLogViewModel
+    @StateObject private var messagesViewModel = MessagesViewModel()
     
     var body: some View {
         NavigationStack {
@@ -111,38 +116,93 @@ struct ProfileView: View {
             .navigationDestination(isPresented: $showEditProfile) {
                 EditProfileView(currentUser: currentUser, chatUser: chatUser, chatLogViewModel: chatLogViewModel)
             }
+            .navigationDestination(isPresented: $showCalendarView){
+                CalendarMessagesView(messagesViewModel: messagesViewModel)
+            }
             .navigationDestination(isPresented: $showMainMessageView) {
                 MainMessagesView()
+            }
+            .sheet(isPresented: $showReportSheet) {
+                VStack(spacing: 20) {
+                    Text("Report User")
+                        .font(.headline)
+                    
+                    TextField("Enter your report reason", text: $reportContent)
+                        .textFieldStyle(RoundedBorderTextFieldStyle())
+                        .padding()
+                    
+                    HStack {
+                        Button(action: {
+                            // Close the sheet without submitting
+                            showReportSheet = false
+                        }) {
+                            Text("Cancel")
+                                .padding()
+                                .background(Color.gray.opacity(0.3))
+                                .cornerRadius(8)
+                        }
+                        
+                        Button(action: {
+                            // Call the function to report the friend
+                            reportFriend()
+                            
+                            // Close the sheet
+                            showReportSheet = false
+                        }) {
+                            Text("Submit")
+                                .padding()
+                                .background(Color.blue)
+                                .foregroundColor(.white)
+                                .cornerRadius(8)
+                        }
+                    }
+                }
+                .padding()
             }
         }
     }
     
     // Friend Profile 选项
     private var friendOptions: some View {
+        
         VStack(spacing: 20) {
             NavigationLink(destination: ChatLogView(vm: chatLogViewModel)
                 .onAppear {
                     chatLogViewModel.chatUser = chatUser
                 }) {
-                Text("Message")
-                    .font(.headline)
-                    .padding()
-                    .background(Color.green)
-                    .foregroundColor(.white)
-                    .cornerRadius(8)
-            }
-            .padding()
-            
+                    Text("Message")
+                        .font(.headline)
+                        .padding()
+                        .background(Color.green)
+                        .foregroundColor(.white)
+                        .cornerRadius(8)
+                }
+                .padding()
+
             HStack(spacing: 20) {
                 Button(action: {
                     pinToTop()
                 }) {
-                    Text("Pin to Top")
+                    HStack {
+                        Image(systemName: "pin.fill")
+                        Text("Pin")
+                    }
                 }
                 .padding()
                 
                 Button(action: {
-                    searchSavedMessages()
+                    unpinToTop()
+                }) {
+                    HStack {
+                        Image(systemName: "pin.fill")
+                        Text("unPin")
+                    }
+                }
+                .padding()
+                
+                Button(action: {
+                    messagesViewModel.searchSavedMessages(fromId: currentUser.uid, toId: chatUser.uid)
+                    self.showCalendarView = true
                 }) {
                     Text("Search Saved Messages")
                 }
@@ -158,20 +218,28 @@ struct ProfileView: View {
                 .padding()
                 
                 Button(action: {
-                    blockFriend()
+                    unmuteFriend()
                 }) {
-                    Text("Block Friend")
+                    Text("unMute Friend")
+                }
+                .padding()
+                
+                Button(action: {
+                    deleteFriend()
+                }) {
+                    Text("Delete Friend")
                 }
                 .padding()
             }
-            
-            Button(action: {
-                reportFriend()
-            }) {
-                Text("Report Friend")
+            HStack{
+                Button(action: {
+                    showReportSheet = true
+                }) {
+                    Text("Report Friend")
+                }
+                .padding()
             }
-            .padding()
-        }
+    }
     }
     
     // Stranger Profile 选项
@@ -256,7 +324,6 @@ struct ProfileView: View {
             }
     }
     
-    // 各种操作的函数逻辑, 这里我觉得pinned friend 应当为一个field在friend_list的document里
     private func pinToTop() {
         // 实现置顶逻辑
         FirebaseManager.shared.firestore
@@ -271,18 +338,23 @@ struct ProfileView: View {
                     print("Successfully pinned friend to top")
                 }
             }
-    }
-    
-    private func searchSavedMessages() { //还没有实现，先装饰一下， 没想好，要不要直接转跳到SavedMessagesView？还是说先找到那条消息，然后现实那条消息的上下文？
-        // 实现查看保存的消息记录的逻辑
-        FirebaseManager.shared.firestore
-            .collection("saving_messages")
-            .document(currentUser.uid)
-            .collection(chatUser.uid)
-
-            
-            
-    }
+        }
+     
+     private func unpinToTop() {
+         // 实现置顶逻辑
+         FirebaseManager.shared.firestore
+             .collection("friends")
+             .document(currentUser.uid)
+             .collection("friend_list")
+             .document(chatUser.uid)
+             .updateData(["isPinned": false]) { error in
+                 if let error = error {
+                     print("Failed to pin friend to top: \(error)")
+                 } else {
+                     print("Successfully unpinned friend to top")
+                 }
+             }
+         }
     
     private func muteFriend() { // 与pin逻辑相似
         // 实现静音好友的逻辑
@@ -300,7 +372,23 @@ struct ProfileView: View {
             }
     }
     
-    private func blockFriend() { //目前只是单纯删除一下好友
+    private func unmuteFriend() { // 与pin逻辑相似
+        // 实现静音好友的逻辑
+        FirebaseManager.shared.firestore
+            .collection("friends")
+            .document(currentUser.uid)
+            .collection("friend_list")
+            .document(chatUser.uid)
+            .updateData(["isMuted": false]) { error in
+                if let error = error {
+                    print("Failed to unmute friend: \(error)")
+                } else {
+                    print("Friend unmuted successfully")
+                }
+            }
+    }
+    
+    private func deleteFriend() { //目前只是单纯删除一下好友
         // 实现屏蔽好友的逻辑
         FirebaseManager.shared.firestore
             .collection("friends")
@@ -309,33 +397,52 @@ struct ProfileView: View {
             .document(chatUser.uid)
             .delete { error in
                 if let error = error {
-                    print("Failed to block friend: \(error)")
+                    print("Failed to delete friend: \(error)")
                 } else {
-                    print("Friend blocked successfully")
+                    print("Friend deleted successfully")
                 }
             }
+        FirebaseManager.shared.firestore
+            .collection("friends")
+            .document(chatUser.uid)
+            .collection("friend_list")
+            .document(currentUser.uid)
+            .delete { error in
+                if let error = error {
+                    print("Failed to be deleted by friend: \(error)")
+                } else {
+                    print("Friend delete you successfully")
+                }
+            }
+        
+        // wait until the friend is deleted
+        DispatchQueue.main.asyncAfter(deadline: .now() + 5) {
+            print("hi")
+            showMainMessageView = true
+        }
+
+        print("hiii")
     }
     
     private func reportFriend() {
-        // 实现举报好友的逻辑
-        let reportData: [String: Any] = [
-            "reporterUid": chatUser.uid,
-            "reporteeUid": currentUser.uid,
-            "timestamp": Timestamp(),
-            "content": "This user is spamming" //这边后面要增加一个输入框来写举报原因
-        ]
-        
-        FirebaseManager.shared.firestore
-            .collection("reports")
-            .document()
-            .setData(reportData) { error in
-                if let error = error {
-                    print("Failed to report friend: \(error)")
-                } else {
-                    print("Friend reported successfully")
+            let reportData: [String: Any] = [
+                "reporterUid": chatUser.uid,
+                "reporteeUid": currentUser.uid,
+                "timestamp": Timestamp(),
+                "content": reportContent // Use the input from the text field
+            ]
+            
+            FirebaseManager.shared.firestore
+                .collection("reports")
+                .document()
+                .setData(reportData) { error in
+                    if let error = error {
+                        print("Failed to report friend: \(error)")
+                    } else {
+                        print("Friend reported successfully")
+                    }
                 }
-            }
-    }
+        }
 }
 
 struct BasicInfo {
