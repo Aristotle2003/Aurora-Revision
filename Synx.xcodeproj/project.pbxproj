@@ -7,6 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		FB3C61182CE0F497001A0922 /* CalendarView.swift in Sources */ = {isa = PBXBuildFile; fileRef = FB3C61172CE0F497001A0922 /* CalendarView.swift */; };
 		FB42CB802CD5B5A000283244 /* FriendGroupView.swift in Sources */ = {isa = PBXBuildFile; fileRef = FB42CB7F2CD5B5A000283244 /* FriendGroupView.swift */; };
 		FB42CB832CD66D9E00283244 /* EditProfileView.swift in Sources */ = {isa = PBXBuildFile; fileRef = FB42CB822CD66D9E00283244 /* EditProfileView.swift */; };
 		FB42CB852CD81D4600283244 /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = FB42CB842CD81D4600283244 /* AppDelegate.swift */; };
@@ -58,6 +59,7 @@
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXFileReference section */
+		FB3C61172CE0F497001A0922 /* CalendarView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CalendarView.swift; sourceTree = "<group>"; };
 		FB42CB7F2CD5B5A000283244 /* FriendGroupView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FriendGroupView.swift; sourceTree = "<group>"; };
 		FB42CB822CD66D9E00283244 /* EditProfileView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EditProfileView.swift; sourceTree = "<group>"; };
 		FB42CB842CD81D4600283244 /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
@@ -121,6 +123,14 @@
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
+		FB3C61162CE0F479001A0922 /* CalenarView */ = {
+			isa = PBXGroup;
+			children = (
+				FB3C61172CE0F497001A0922 /* CalendarView.swift */,
+			);
+			path = CalenarView;
+			sourceTree = "<group>";
+		};
 		FB42CB7E2CD5B53300283244 /* FriendGroupView */ = {
 			isa = PBXGroup;
 			children = (
@@ -259,6 +269,7 @@
 		FBB505002CCEA5DF00FF1C87 /* ProfileView */ = {
 			isa = PBXGroup;
 			children = (
+				FB3C61162CE0F479001A0922 /* CalenarView */,
 				FBA6BD1C2CCD696F0019A5E1 /* ProfileView.swift */,
 			);
 			path = ProfileView;
@@ -430,6 +441,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				FB42CB802CD5B5A000283244 /* FriendGroupView.swift in Sources */,
+				FB3C61182CE0F497001A0922 /* CalendarView.swift in Sources */,
 				FB7E20C12CC165E400209582 /* ChatUser.swift in Sources */,
 				FBA6BD1D2CCD696F0019A5E1 /* ProfileView.swift in Sources */,
 				FB7E20C52CC565EA00209582 /* ChatLogView.swift in Sources */,
