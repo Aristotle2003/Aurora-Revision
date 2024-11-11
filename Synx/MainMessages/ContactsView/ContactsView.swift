@@ -1,10 +1,3 @@
-//
-//  CreateNewMessageView.swift
-//  Synx
-//
-//  Created by Shawn on 10/17/24.
-//
-
 import SwiftUI
 import SDWebImageSwiftUI
 
@@ -68,9 +61,29 @@ class CreateNewMessageViewModel: ObservableObject {
     func refreshUsers() {
         fetchAllFriends()
     }
+    
+//     // Group users by the first letter of their email
+//     func groupedUsers() -> [String: [ChatUser]] {
+//         Dictionary(grouping: filteredUsers) { user in
+//             String(user.email.prefix(1)).uppercased()
+//         }
+//     }
+// }
+
+    // Group users by the first letter of their email
+    func groupedUsers() -> [String: [ChatUser]] {
+        Dictionary(grouping: filteredUsers) { user in
+            let firstLetter = String(user.email.prefix(1)).uppercased()
+            let regex = try! NSRegularExpression(pattern: "^[A-Z]$")
+            let range = NSRange(location: 0, length: firstLetter.utf16.count)
+            if regex.firstMatch(in: firstLetter, options: [], range: range) != nil {
+                return firstLetter
+            } else {
+                return "#"
+            }
+        }
+    }
 }
-
-
 
 // MARK: - CreateNewMessageView (Main Contacts View)
 struct CreateNewMessageView: View {
@@ -100,45 +113,53 @@ struct CreateNewMessageView: View {
                     }
                     
                     LazyVStack(spacing: 0) {
-                        ForEach(vm.filteredUsers) { user in
-                            Button {
-                                presentationMode.wrappedValue.dismiss()
-                                didSelectNewUser(user)  // Direct selection from CreateNewMessageView
-                            } label: {
-                                HStack(spacing: 16) {
-                                    WebImage(url: URL(string: user.profileImageUrl))
-                                        .resizable()
-                                        .scaledToFill()
-                                        .frame(width: 50, height: 50)
-                                        .clipShape(Circle())
-                                        .overlay(
-                                            Circle()
-                                                .stroke(Color(.systemGray4), lineWidth: 1)
-                                        )
+                        ForEach(vm.groupedUsers().keys.sorted(), id: \.self) { key in
+                            Section(header: Text(key)
+                                        .font(.headline)
+                                        .padding(.leading, 16)
+                                        .padding(.vertical, 4)
+                                        .background(Color(.systemGray6))) {
+                                ForEach(vm.groupedUsers()[key]!) { user in
+                                    Button {
+                                        presentationMode.wrappedValue.dismiss()
+                                        didSelectNewUser(user)  // Direct selection from CreateNewMessageView
+                                    } label: {
+                                        HStack(spacing: 16) {
+                                            WebImage(url: URL(string: user.profileImageUrl))
+                                                .resizable()
+                                                .scaledToFill()
+                                                .frame(width: 50, height: 50)
+                                                .clipShape(Circle())
+                                                .overlay(
+                                                    Circle()
+                                                        .stroke(Color(.systemGray4), lineWidth: 1)
+                                                )
+                                            
+                                            Text(user.email)
+                                                .foregroundColor(.primary)
+                                                .font(.system(size: 16))
+                                            
+                                            Spacer()
+                                        }
+                                        .padding(.horizontal)
+                                        .padding(.vertical, 12)
+                                    }
                                     
-                                    Text(user.email)
-                                        .foregroundColor(.primary)
-                                        .font(.system(size: 16))
-                                    
-                                    Spacer()
+                                    Divider()
+                                        .padding(.leading, 76)
                                 }
-                                .padding(.horizontal)
-                                .padding(.vertical, 12)
                             }
-                            
-                            Divider()
-                                .padding(.leading, 76)
                         }
                     }
                 }
             }
             .onChange(of: hasSelectedUserFromAddFriendView) { oldValue, newValue in
-                            if newValue, let user = selectedUserFromAddFriendView {
-                                didSelectNewUser(user)  // Handle the user passed from AddFriendView
-                                selectedUserFromAddFriendView = nil  // Reset after handling
-                                hasSelectedUserFromAddFriendView = false  // Reset the flag
-                            }
-                        }
+                if newValue, let user = selectedUserFromAddFriendView {
+                    didSelectNewUser(user)  // Handle the user passed from AddFriendView
+                    selectedUserFromAddFriendView = nil  // Reset after handling
+                    hasSelectedUserFromAddFriendView = false  // Reset the flag
+                }
+            }
             .navigationTitle("Contacts")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
@@ -169,10 +190,6 @@ struct CreateNewMessageView: View {
         }
     }
 }
-
-
-
-
 
 struct SearchBar: View {
     @Binding var text: String
@@ -218,9 +235,6 @@ struct SearchBar: View {
         .padding(.horizontal)
     }
 }
-
-
-
 
 #Preview {
     MainMessagesView()
