@@ -166,6 +166,8 @@ struct ProfileView: View {
             NavigationLink(destination: ChatLogView(vm: chatLogViewModel)
                 .onAppear {
                     chatLogViewModel.chatUser = chatUser
+                    chatLogViewModel.initializeMessages()
+                    chatLogViewModel.startAutoSend()
                 }) {
                 Text("Message")
                     .font(.headline)
