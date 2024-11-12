@@ -1,10 +1,3 @@
-//
-//  CalendarView.swift
-//  Synx
-//
-//  Created by Lin Zhong on 11/11/2024.
-//
-
 import SwiftUI
 import Firebase
 
@@ -69,10 +62,21 @@ class MessagesViewModel: ObservableObject {
 struct CalendarMessagesView: View {
     @ObservedObject var messagesViewModel: MessagesViewModel
     @State private var selectedDate: Date? = nil
+    @Environment(\.presentationMode) var presentationMode
 
     var body: some View {
         VStack {
-            // Calendar UI
+            HStack {
+                Button(action: {
+                    // Close current view, return to the previous view (ProfileView)
+                    self.presentationMode.wrappedValue.dismiss()
+                }) {
+                    Image(systemName: "arrow.left")
+                        .font(.title)
+                }
+                .padding()
+            }
+            // Calendar UI for the entire year
             CalendarView(selectedDate: $selectedDate)
 
             // Display messages for the selected date
@@ -99,63 +103,99 @@ struct CalendarMessagesView: View {
             }
         }
         .navigationTitle("Messages Calendar")
+        .navigationBarHidden(true)
     }
 }
 
+// MARK: - CalendarView for Full Year
 struct CalendarView: View {
     @Binding var selectedDate: Date?
-    @State private var currentMonth: Date = Date()
+    @State private var currentYear: Date = Date()
 
     var body: some View {
         VStack {
-            // Month and Year Display
-            Text("\(currentMonth, formatter: monthYearFormatter)")
+            Text("\(currentYear, formatter: yearFormatter)")
                 .font(.headline)
                 .padding()
 
-            // Days of the Week Header
-            HStack {
-                ForEach(weekdays, id: \.self) { day in
-                    Text(day)
-                        .font(.subheadline)
-                        .frame(maxWidth: .infinity)
-                }
-            }
+            // Generate and display all months for the year
+            let months = generateMonthsInYear(for: currentYear)
+            ScrollView {
+                ForEach(months, id: \.self) { month in
+                    VStack {
+                        Text("\(month, formatter: monthFormatter)")
+                            .font(.headline)
+                            .padding()
 
-            // Calendar Grid
-            let days = generateDaysInMonth(for: currentMonth)
-            LazyVGrid(columns: Array(repeating: GridItem(.flexible()), count: 7)) {
-                ForEach(days, id: \.self) { day in
-                    if let day = day {
-                        Button(action: {
-                            selectedDate = day
-                        }) {
-                            Text("\(Calendar.current.component(.day, from: day))")
-                                .frame(maxWidth: .infinity, minHeight: 40)
-                                .background(selectedDate == day ? Color.blue.opacity(0.3) : Color.clear)
-                                .cornerRadius(5)
+                        // Days of the week header
+                        HStack {
+                            ForEach(weekdays, id: \.self) { day in
+                                Text(day)
+                                    .font(.subheadline)
+                                    .frame(maxWidth: .infinity)
+                            }
                         }
-                    } else {
-                        Text("") // Empty placeholder for padding days
-                            .frame(maxWidth: .infinity, minHeight: 40)
+
+                        // Calendar grid for each month
+                        let days = generateDaysInMonth(for: month)
+                        LazyVGrid(columns: Array(repeating: GridItem(.flexible()), count: 7)) {
+                            ForEach(days, id: \.self) { day in
+                                if let day = day {
+                                    Button(action: {
+                                        selectedDate = day
+                                    }) {
+                                        Text("\(Calendar.current.component(.day, from: day))")
+                                            .frame(maxWidth: .infinity, minHeight: 40)
+                                            .background(selectedDate == day ? Color.blue.opacity(0.3) : Color.clear)
+                                            .cornerRadius(5)
+                                    }
+                                } else {
+                                    Text("") // Empty placeholder for padding days
+                                        .frame(maxWidth: .infinity, minHeight: 40)
+                                }
+                            }
+                        }
                     }
+                    .padding()
                 }
             }
         }
         .padding()
     }
 
-    // Formatter for displaying the month and year
-    private let monthYearFormatter: DateFormatter = {
+    // Formatter for displaying the year
+    private let yearFormatter: DateFormatter = {
         let formatter = DateFormatter()
-        formatter.dateFormat = "MMMM yyyy"
+        formatter.dateFormat = "yyyy"
+        return formatter
+    }()
+
+    // Formatter for displaying the month
+    private let monthFormatter: DateFormatter = {
+        let formatter = DateFormatter()
+        formatter.dateFormat = "MMMM"
         return formatter
     }()
 
     // Days of the week
     private let weekdays = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"]
 
-    // Function to generate all days in the current month
+    // Function to generate all months in the current year
+    private func generateMonthsInYear(for date: Date) -> [Date] {
+        var months: [Date] = []
+        let calendar = Calendar.current
+        let year = calendar.component(.year, from: date)
+
+        for month in 1...12 {
+            if let monthDate = calendar.date(from: DateComponents(year: year, month: month)) {
+                months.append(monthDate)
+            }
+        }
+
+        return months
+    }
+
+    // Function to generate all days in the given month
     private func generateDaysInMonth(for date: Date) -> [Date?] {
         var days: [Date?] = []
         let calendar = Calendar.current
