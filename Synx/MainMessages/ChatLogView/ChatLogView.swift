@@ -1,4 +1,5 @@
 import SwiftUI
+import SDWebImageSwiftUI
 import Firebase
 import FirebaseFirestore
 import FirebaseAuth
@@ -299,9 +300,40 @@ struct ChatLogView: View {
             MainMessagesView()
         }
     }
+    
+    private func getCurrentUser() -> ChatUser {
+            guard let currentUser = FirebaseManager.shared.auth.currentUser else {
+                return ChatUser(data: ["uid": "", "email": "", "profileImageUrl": ""])
+            }
+            return ChatUser(data: [
+                "uid": currentUser.uid,
+                "email": currentUser.email ?? "",
+                "profileImageUrl": currentUser.photoURL?.absoluteString ?? ""
+            ])
+        }
+
 
     private var messagesView: some View {
         VStack {
+            if let chatUser = vm.chatUser {
+                NavigationLink(destination: ProfileView(
+                    chatUser: chatUser,
+                    currentUser: getCurrentUser(),
+                    isCurrentUser: false,
+                    chatLogViewModel: vm
+                )) {
+                    WebImage(url: URL(string: vm.chatUser?.profileImageUrl ?? ""))
+                                                            .resizable()
+                                                            .scaledToFill()
+                                                            .frame(width: 50, height: 50)
+                                                            .clipShape(Circle())
+                                                            .overlay(
+                                                                Circle()
+                                                                    .stroke(Color(.systemGray4), lineWidth: 1)
+                                                            )
+                }
+            }
+
             if let recipientMessage = vm.latestRecipientMessage {
                 HStack {
                     Text(recipientMessage.text)

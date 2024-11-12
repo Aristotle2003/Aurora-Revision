@@ -7,13 +7,15 @@ class FriendGroupViewModel: ObservableObject {
     @Published var responseText = ""
     @Published var responses = [FriendResponse]()
     @Published var showResponseInput = false
-    
+    @Published var currentUserHasPosted = false  // 新增属性
+
     private var selectedUser: ChatUser
-        
-        init(selectedUser: ChatUser) {
-            self.selectedUser = selectedUser
-        }
-    
+
+    init(selectedUser: ChatUser) {
+        self.selectedUser = selectedUser
+        fetchCurrentUserHasPostedStatus()
+    }
+
     func fetchPrompt() {
         FirebaseManager.shared.firestore.collection("prompts").document("currentPrompt")
             .getDocument { snapshot, error in
@@ -25,7 +27,7 @@ class FriendGroupViewModel: ObservableObject {
                 }
             }
     }
-    
+
     func submitResponse(for userId: String) {
         let responseRef = FirebaseManager.shared.firestore.collection("response_to_prompt").document()
         let data: [String: Any] = [
@@ -33,19 +35,20 @@ class FriendGroupViewModel: ObservableObject {
             "text": responseText,
             "timestamp": Timestamp()
         ]
-        
+
         responseRef.setData(data) { error in
             if error == nil {
                 self.responseText = ""
                 self.showResponseInput = false
                 print("Response submitted successfully")
-                self.fetchLatestResponses(for: userId) // Refresh responses after submission
+                self.updateHasPostedStatus(for: userId)  // 更新 hasPosted 状态
+                self.fetchLatestResponses(for: userId)  // Refresh responses after submission
             } else {
                 print("Failed to submit response: \(error?.localizedDescription ?? "Unknown error")")
             }
         }
     }
-    
+
     func fetchLatestResponses(for userId: String) {
         var allResponses: [FriendResponse] = []
         let group = DispatchGroup()
@@ -64,7 +67,7 @@ class FriendGroupViewModel: ObservableObject {
             }
             group.leave()
         }
-        
+
         // Step 2: Fetch friends' responses
         FirebaseManager.shared.firestore.collection("friends")
             .document(userId)
@@ -74,12 +77,12 @@ class FriendGroupViewModel: ObservableObject {
                     print("Failed to fetch friends: \(error.localizedDescription)")
                     return
                 }
-                
+
                 guard let friendDocs = friendSnapshot?.documents else {
                     print("No friends found.")
                     return
                 }
-                
+
                 for friendDoc in friendDocs {
                     let friendData = friendDoc.data()
                     guard let friendId = friendData["uid"] as? String,
@@ -88,7 +91,7 @@ class FriendGroupViewModel: ObservableObject {
                         print("Friend data missing fields")
                         continue
                     }
-                    
+
                     group.enter()
                     print("Fetching latest response for friend with ID: \(friendId)")
                     self.fetchLatestResponse(for: friendId) { latestMessage, timestamp in
@@ -104,14 +107,14 @@ class FriendGroupViewModel: ObservableObject {
                         group.leave()
                     }
                 }
-                
+
                 group.notify(queue: .main) {
                     self.responses = allResponses.sorted { $0.timestamp > $1.timestamp }
                     print("Fetched responses: \(self.responses)")
                 }
             }
     }
-    
+
     private func fetchLatestResponse(for uid: String, completion: @escaping (String?, Date?) -> Void) {
         FirebaseManager.shared.firestore.collection("response_to_prompt")
             .whereField("uid", isEqualTo: uid)
@@ -126,12 +129,39 @@ class FriendGroupViewModel: ObservableObject {
                     completion(latestMessage, timestamp)
                 } else {
                     print("No response found for UID \(uid) – displaying default message.")
-                    completion("No response yet", Date())
+                    completion(nil, nil)
                 }
             }
     }
-}
 
+    func fetchCurrentUserHasPostedStatus() {
+        guard let uid = FirebaseManager.shared.auth.currentUser?.uid else { return }
+
+        FirebaseManager.shared.firestore.collection("users").document(uid).getDocument { snapshot, error in
+            if let error = error {
+                print("Failed to fetch current user: \(error.localizedDescription)")
+                return
+            }
+
+            if let data = snapshot?.data() {
+                self.currentUserHasPosted = data["hasPosted"] as? Bool ?? false
+            }
+        }
+    }
+
+    func updateHasPostedStatus(for userId: String) {
+        FirebaseManager.shared.firestore.collection("users").document(userId).updateData([
+            "hasPosted": true
+        ]) { error in
+            if let error = error {
+                print("Failed to update hasPosted status: \(error.localizedDescription)")
+                return
+            }
+            print("User's hasPosted status updated successfully.")
+            self.currentUserHasPosted = true
+        }
+    }
+}
 
 struct FriendResponse: Identifiable {
     let id = UUID()
@@ -147,13 +177,12 @@ struct FriendGroupView: View {
     @Environment(\.presentationMode) var presentationMode
     @State var navigateToMainMessage = false
     let selectedUser: ChatUser
-    
-    
+
     init(selectedUser: ChatUser) {
         self.selectedUser = selectedUser
         _vm = ObservedObject(wrappedValue: FriendGroupViewModel(selectedUser: selectedUser))
     }
-    
+
     var body: some View {
         VStack(alignment: .leading, spacing: 16) {
             // Prompt display
@@ -163,13 +192,13 @@ struct FriendGroupView: View {
                 .frame(maxWidth: .infinity, alignment: .leading)
                 .background(RoundedRectangle(cornerRadius: 12).fill(Color.gray.opacity(0.1)))
                 .padding(.bottom, 8)
-            
+
             // Reply button and input
             Button("Reply") {
                 vm.showResponseInput = true
             }
             .frame(maxWidth: .infinity, alignment: .leading)
-            
+
             if vm.showResponseInput {
                 VStack(alignment: .leading) {
                     TextField("Write your response...", text: $vm.responseText)
@@ -182,42 +211,71 @@ struct FriendGroupView: View {
                     .padding(.top, 4)
                 }
             }
-            
+
             // Scroll view for responses
             ScrollView {
                 VStack(alignment: .leading, spacing: 16) {
-                    ForEach(vm.responses) { response in
-                        HStack(alignment: .top, spacing: 12) {
-                            // Profile image
-                            WebImage(url: URL(string: response.profileImageUrl))
-                                .resizable()
-                                .scaledToFill()
-                                .frame(width: 40, height: 40)
-                                .clipShape(Circle())
-                                .overlay(Circle().stroke(Color.gray.opacity(0.5), lineWidth: 1))
-                            
-                            VStack(alignment: .leading, spacing: 4) {
-                                // Username and timestamp
-                                HStack {
-                                    Text(response.email)
-                                        .font(.headline)
-                                    Spacer()
-                                    Text(response.timestamp, style: .time)
-                                        .font(.footnote)
-                                        .foregroundColor(.gray)
+                    if vm.currentUserHasPosted {
+                        ForEach(vm.responses) { response in
+                            HStack(alignment: .top, spacing: 12) {
+                                // Profile image
+                                WebImage(url: URL(string: response.profileImageUrl))
+                                    .resizable()
+                                    .scaledToFill()
+                                    .frame(width: 40, height: 40)
+                                    .clipShape(Circle())
+                                    .overlay(Circle().stroke(Color.gray.opacity(0.5), lineWidth: 1))
+
+                                VStack(alignment: .leading, spacing: 4) {
+                                    // Username and timestamp
+                                    HStack {
+                                        Text(response.email)
+                                            .font(.headline)
+                                        Spacer()
+                                        Text(response.timestamp, style: .time)
+                                            .font(.footnote)
+                                            .foregroundColor(.gray)
+                                    }
+
+                                    // Message text
+                                    Text(response.latestMessage)
+                                        .font(.body)
+                                        .foregroundColor(.primary)
+                                        .fixedSize(horizontal: false, vertical: true)
+                                        .padding(.top, 2)
+                                        .frame(maxWidth: .infinity, alignment: .leading)
                                 }
-                                
-                                // Message text
-                                Text(response.latestMessage)
-                                    .font(.body)
-                                    .foregroundColor(.primary)
-                                    .fixedSize(horizontal: false, vertical: true)
-                                    .padding(.top, 2)
-                                    .frame(maxWidth: .infinity, alignment: .leading)
                             }
+                            Divider()
+                                .padding(.vertical, 8)
                         }
-                        Divider()
-                            .padding(.vertical, 8)
+                    } else {
+                        // 用户未发布，显示锁定视图
+                        VStack {
+                            Spacer() // 在顶部添加 Spacer，增加空白空间，使得居中
+                            Image(systemName: "lock.fill")
+                                .resizable()
+                                .scaledToFit()
+                                .frame(width: 100, height: 100)
+                                .foregroundColor(.gray)
+//                                .padding()
+
+                            Text("发布一条动态以解锁好友圈")
+                                .font(.headline)
+                                .padding()
+
+                            Button(action: {
+                                vm.showResponseInput = true
+                            }) {
+                                Text("立即发布")
+                                    .foregroundColor(.white)
+                                    .padding()
+                                    .background(Color.blue)
+                                    .cornerRadius(8)
+                            }
+                            Spacer() // 在底部添加 Spacer，增加空白空间，使得居中
+                        }
+                        .frame(maxWidth: .infinity, maxHeight: .infinity) // 让整个 VStack 充满可用的空间
                     }
                 }
             }

@@ -225,8 +225,9 @@ struct ProfileView: View {
                 .padding()
                 
                 Button(action: {
-                    deleteFriend()
-                    showMainMessageView = true
+                    deleteFriend{
+                        showMainMessageView = true
+                    }
                 }) {
                     Text("Delete Friend")
                 }
@@ -389,8 +390,11 @@ struct ProfileView: View {
             }
     }
     
-    private func deleteFriend() { //目前只是单纯删除一下好友
-        // 实现屏蔽好友的逻辑
+    private func deleteFriend(completion: @escaping () -> Void) {
+        let dispatchGroup = DispatchGroup()
+
+        // Begin tracking the first deletion
+        dispatchGroup.enter()
         FirebaseManager.shared.firestore
             .collection("friends")
             .document(currentUser.uid)
@@ -402,7 +406,11 @@ struct ProfileView: View {
                 } else {
                     print("Friend deleted successfully")
                 }
+                dispatchGroup.leave()
             }
+
+        // Begin tracking the second deletion
+        dispatchGroup.enter()
         FirebaseManager.shared.firestore
             .collection("friends")
             .document(chatUser.uid)
@@ -414,16 +422,20 @@ struct ProfileView: View {
                 } else {
                     print("Friend delete you successfully")
                 }
+                dispatchGroup.leave()
             }
-        
-        // wait until the friend is deleted
-        DispatchQueue.main.asyncAfter(deadline: .now() + 5) {
-            print("hi")
-            showMainMessageView = true
-        }
 
-        print("hiii")
+        // Notify when both operations are complete
+        dispatchGroup.notify(queue: .main) {
+            // Introduce a slight delay before executing the completion handler
+            DispatchQueue.main.asyncAfter(deadline: .now() + 10) { // 0.5 seconds delay
+                completion()
+            }
+        }
     }
+
+
+
     
     private func reportFriend() {
             let reportData: [String: Any] = [

@@ -14,14 +14,6 @@ import GoogleSignIn
 import AuthenticationServices
 import CryptoKit
 
-
-
-
-
-
-
-
-
 struct LoginView: View {
     @Environment(\.window) var window
     
