@@ -11,174 +11,171 @@ struct ProfileView: View {
     @State var friendRequestSent: Bool = false
     @State var basicInfo: BasicInfo? = nil // For current user
     @State var otherUserInfo: BasicInfo? = nil // For other users
-    @State private var showEditProfile = false // Controls navigation to EditProfileView
-    @State private var showMainMessageView = false
-    @State private var showCalendarView = false
     @State private var showReportSheet = false
     @State private var reportContent = ""
-    
+    @State private var showDeleteConfirmation = false
+    @State private var navigateToMainMessagesView = false
 
     @ObservedObject var chatLogViewModel: ChatLogViewModel
     @StateObject private var messagesViewModel = MessagesViewModel()
-    
+    @Environment(\.presentationMode) var presentationMode
+
     var body: some View {
-        NavigationStack {
-            VStack {
-                // Custom back button to navigate back to MainMessageView
-                HStack {
-                    Button(action: {
-                        showMainMessageView = true
-                    }) {
-                        HStack {
-                            Image(systemName: "chevron.left")
-                            Text("Back")
-                        }
-                    }
-                    .padding()
-                    Spacer()
-                }
-                
-                WebImage(url: URL(string: chatUser.profileImageUrl))
-                    .resizable()
-                    .scaledToFill()
-                    .frame(width: 150, height: 150)
-                    .clipShape(Circle())
-                    .shadow(radius: 10)
-                
-                Text(chatUser.email)
-                    .font(.title)
-                    .padding()
-                
-                if isCurrentUser, let info = basicInfo {
-                    // Display basic info for the current user in a standard style
-                    VStack(alignment: .leading, spacing: 5) {
-                        Text("Age: \(info.age)")
-                        Text("Gender: \(info.gender)")
-                        Text("Location: \(info.location)")
-                        Text("Bio: \(info.bio)")
-                    }
-                    .padding()
-                } else if let otherInfo = otherUserInfo {
-                    // Display basic info for other users in a different style
-                    VStack(alignment: .leading, spacing: 5) {
-                        Text("Age: \(otherInfo.age)")
-                            .font(.headline)
-                            .foregroundColor(.blue)
-                        Text("Gender: \(otherInfo.gender)")
-                            .font(.headline)
-                            .foregroundColor(.blue)
-                        Text("Location: \(otherInfo.location)")
-                            .font(.headline)
-                            .foregroundColor(.blue)
-                        Text("Bio: \(otherInfo.bio)")
-                            .font(.headline)
-                            .foregroundColor(.blue)
-                    }
-                    .padding()
-                    .background(Color.blue.opacity(0.1))
-                    .cornerRadius(10)
-                }
-                
-                if isCurrentUser {
-                    // Edit button for the current user
-                    Button(action: {
-                        showEditProfile = true
-                    }) {
-                        Image(systemName: "pencil")
-                            .font(.title2)
-                    }
-                    .position(x: UIScreen.main.bounds.width - 140, y: -100)
-                    .padding()
-                } else {
-                    if isFriend {
-                        friendOptions
-                    } else {
-                        strangerOptions
-                    }
-                }
-                
-                Spacer()
-            }
-            .padding()
-            .onAppear {
-                checkIfFriend()
-                if isCurrentUser {
-                    fetchBasicInfo(for: currentUser.uid) { info in
-                        self.basicInfo = info
-                    }
-                } else {
-                    fetchBasicInfo(for: chatUser.uid) { info in
-                        self.otherUserInfo = info
-                    }
-                }
-            }
-            .navigationBarBackButtonHidden(true) // Hide the default back button
-            .navigationDestination(isPresented: $showEditProfile) {
-                EditProfileView(currentUser: currentUser, chatUser: chatUser, chatLogViewModel: chatLogViewModel)
-            }
-            .navigationDestination(isPresented: $showCalendarView){
-                CalendarMessagesView(messagesViewModel: messagesViewModel)
-            }
-            .navigationDestination(isPresented: $showMainMessageView) {
-                MainMessagesView()
-            }
-            .sheet(isPresented: $showReportSheet) {
-                VStack(spacing: 20) {
-                    Text("Report User")
-                        .font(.headline)
-                    
-                    TextField("Enter your report reason", text: $reportContent)
-                        .textFieldStyle(RoundedBorderTextFieldStyle())
-                        .padding()
-                    
+        VStack {
+            // 自定义返回按钮
+            HStack {
+                Button(action: {
+                    navigateToMainMessagesView = true
+                }) {
                     HStack {
-                        Button(action: {
-                            // Close the sheet without submitting
-                            showReportSheet = false
-                        }) {
-                            Text("Cancel")
-                                .padding()
-                                .background(Color.gray.opacity(0.3))
-                                .cornerRadius(8)
-                        }
-                        
-                        Button(action: {
-                            // Call the function to report the friend
-                            reportFriend()
-                            
-                            // Close the sheet
-                            showReportSheet = false
-                        }) {
-                            Text("Submit")
-                                .padding()
-                                .background(Color.blue)
-                                .foregroundColor(.white)
-                                .cornerRadius(8)
-                        }
+                        Image(systemName: "chevron.left")
+                        Text("Back")
                     }
                 }
                 .padding()
+                Spacer()
+            }
+            
+            WebImage(url: URL(string: chatUser.profileImageUrl))
+                .resizable()
+                .scaledToFill()
+                .frame(width: 150, height: 150)
+                .clipShape(Circle())
+                .shadow(radius: 10)
+            
+            Text(chatUser.email)
+                .font(.title)
+                .padding()
+            
+            if isCurrentUser, let info = basicInfo {
+                // 当前用户的基本信息
+                VStack(alignment: .leading, spacing: 5) {
+                    Text("Age: \(info.age)")
+                    Text("Gender: \(info.gender)")
+                    Text("Location: \(info.location)")
+                    Text("Bio: \(info.bio)")
+                }
+                .padding()
+            } else if let otherInfo = otherUserInfo {
+                // 其他用户的基本信息
+                VStack(alignment: .leading, spacing: 5) {
+                    Text("Age: \(otherInfo.age)")
+                        .font(.headline)
+                        .foregroundColor(.blue)
+                    Text("Gender: \(otherInfo.gender)")
+                        .font(.headline)
+                        .foregroundColor(.blue)
+                    Text("Location: \(otherInfo.location)")
+                        .font(.headline)
+                        .foregroundColor(.blue)
+                    Text("Bio: \(otherInfo.bio)")
+                        .font(.headline)
+                        .foregroundColor(.blue)
+                }
+                .padding()
+                .background(Color.blue.opacity(0.1))
+                .cornerRadius(10)
+            }
+            
+            if isCurrentUser {
+                // 编辑按钮
+                NavigationLink(destination: EditProfileView(currentUser: currentUser, chatUser: chatUser, chatLogViewModel: chatLogViewModel)) {
+                    Image(systemName: "pencil")
+                        .font(.title2)
+                }
+                .position(x: UIScreen.main.bounds.width - 140, y: -100)
+                .padding()
+            } else {
+                if isFriend {
+                    friendOptions
+                } else {
+                    strangerOptions
+                }
+            }
+            
+            Spacer()
+        }
+        .padding()
+        .onAppear {
+            checkIfFriend()
+            if isCurrentUser {
+                fetchBasicInfo(for: currentUser.uid) { info in
+                    self.basicInfo = info
+                }
+            } else {
+                fetchBasicInfo(for: chatUser.uid) { info in
+                    self.otherUserInfo = info
+                }
             }
         }
+        .sheet(isPresented: $showReportSheet) {
+            VStack(spacing: 20) {
+                Text("Report User")
+                    .font(.headline)
+                
+                TextField("Enter your report reason", text: $reportContent)
+                    .textFieldStyle(RoundedBorderTextFieldStyle())
+                    .padding()
+                
+                HStack {
+                    Button(action: {
+                        // 关闭报告视图
+                        showReportSheet = false
+                    }) {
+                        Text("Cancel")
+                            .padding()
+                            .background(Color.gray.opacity(0.3))
+                            .cornerRadius(8)
+                    }
+                    
+                    Button(action: {
+                        // 提交报告
+                        reportFriend()
+                        showReportSheet = false
+                    }) {
+                        Text("Submit")
+                            .padding()
+                            .background(Color.blue)
+                            .foregroundColor(.white)
+                            .cornerRadius(8)
+                    }
+                }
+            }
+            .padding()
+        }
+        .navigationDestination(isPresented: $navigateToMainMessagesView) {
+            MainMessagesView()
+        }
+        .alert(isPresented: $showDeleteConfirmation) {
+            Alert(
+                title: Text("Confirm Deletion"),
+                message: Text("Are you sure you want to delete this friend?"),
+                primaryButton: .destructive(Text("Delete")) {
+                    deleteFriend()
+                },
+                secondaryButton: .cancel()
+            )
+        }
+
+        .navigationBarBackButtonHidden(true)
     }
     
-    // Friend Profile 选项
+    // 好友选项
     private var friendOptions: some View {
-        
         VStack(spacing: 20) {
             NavigationLink(destination: ChatLogView(vm: chatLogViewModel)
                 .onAppear {
                     chatLogViewModel.chatUser = chatUser
                 }) {
-                    Text("Message")
-                        .font(.headline)
-                        .padding()
-                        .background(Color.green)
-                        .foregroundColor(.white)
-                        .cornerRadius(8)
-                }
-                .padding()
-
+                Text("Message")
+                    .font(.headline)
+                    .padding()
+                    .background(Color.green)
+                    .foregroundColor(.white)
+                    .cornerRadius(8)
+            }
+            .padding()
+            
             HStack(spacing: 20) {
                 Button(action: {
                     pinToTop()
@@ -194,16 +191,16 @@ struct ProfileView: View {
                     unpinToTop()
                 }) {
                     HStack {
-                        Image(systemName: "pin.fill")
-                        Text("unPin")
+                        Image(systemName: "pin.slash.fill")
+                        Text("Unpin")
                     }
                 }
                 .padding()
                 
-                Button(action: {
-                    messagesViewModel.searchSavedMessages(fromId: currentUser.uid, toId: chatUser.uid)
-                    self.showCalendarView = true
-                }) {
+                NavigationLink(destination: CalendarMessagesView(messagesViewModel: messagesViewModel)
+                    .onAppear {
+                        messagesViewModel.searchSavedMessages(fromId: currentUser.uid, toId: chatUser.uid)
+                    }) {
                     Text("Search Saved Messages")
                 }
                 .padding()
@@ -220,29 +217,29 @@ struct ProfileView: View {
                 Button(action: {
                     unmuteFriend()
                 }) {
-                    Text("unMute Friend")
+                    Text("Unmute Friend")
                 }
                 .padding()
                 
                 Button(action: {
-                    deleteFriend()
+                    // 显示确认删除弹窗
+                    showDeleteConfirmation = true
                 }) {
                     Text("Delete Friend")
                 }
                 .padding()
             }
-            HStack{
-                Button(action: {
-                    showReportSheet = true
-                }) {
-                    Text("Report Friend")
-                }
-                .padding()
+            
+            Button(action: {
+                showReportSheet = true
+            }) {
+                Text("Report Friend")
             }
-    }
+            .padding()
+        }
     }
     
-    // Stranger Profile 选项
+    // 陌生人选项
     private var strangerOptions: some View {
         VStack(spacing: 20) {
             Button(action: {
@@ -325,7 +322,6 @@ struct ProfileView: View {
     }
     
     private func pinToTop() {
-        // 实现置顶逻辑
         FirebaseManager.shared.firestore
             .collection("friends")
             .document(currentUser.uid)
@@ -338,26 +334,24 @@ struct ProfileView: View {
                     print("Successfully pinned friend to top")
                 }
             }
-        }
-     
-     private func unpinToTop() {
-         // 实现置顶逻辑
-         FirebaseManager.shared.firestore
-             .collection("friends")
-             .document(currentUser.uid)
-             .collection("friend_list")
-             .document(chatUser.uid)
-             .updateData(["isPinned": false]) { error in
-                 if let error = error {
-                     print("Failed to pin friend to top: \(error)")
-                 } else {
-                     print("Successfully unpinned friend to top")
-                 }
-             }
-         }
+    }
     
-    private func muteFriend() { // 与pin逻辑相似
-        // 实现静音好友的逻辑
+    private func unpinToTop() {
+        FirebaseManager.shared.firestore
+            .collection("friends")
+            .document(currentUser.uid)
+            .collection("friend_list")
+            .document(chatUser.uid)
+            .updateData(["isPinned": false]) { error in
+                if let error = error {
+                    print("Failed to unpin friend: \(error)")
+                } else {
+                    print("Successfully unpinned friend")
+                }
+            }
+    }
+    
+    private func muteFriend() {
         FirebaseManager.shared.firestore
             .collection("friends")
             .document(currentUser.uid)
@@ -372,8 +366,7 @@ struct ProfileView: View {
             }
     }
     
-    private func unmuteFriend() { // 与pin逻辑相似
-        // 实现静音好友的逻辑
+    private func unmuteFriend() {
         FirebaseManager.shared.firestore
             .collection("friends")
             .document(currentUser.uid)
@@ -388,8 +381,8 @@ struct ProfileView: View {
             }
     }
     
-    private func deleteFriend() { //目前只是单纯删除一下好友
-        // 实现屏蔽好友的逻辑
+    private func deleteFriend() {
+        // 删除好友逻辑
         FirebaseManager.shared.firestore
             .collection("friends")
             .document(currentUser.uid)
@@ -400,6 +393,8 @@ struct ProfileView: View {
                     print("Failed to delete friend: \(error)")
                 } else {
                     print("Friend deleted successfully")
+                    // 删除成功后，跳转到 MainMessagesView
+                    self.navigateToMainMessagesView = true
                 }
             }
         FirebaseManager.shared.firestore
@@ -411,38 +406,30 @@ struct ProfileView: View {
                 if let error = error {
                     print("Failed to be deleted by friend: \(error)")
                 } else {
-                    print("Friend delete you successfully")
+                    print("Friend deleted you successfully")
                 }
             }
-        
-        // wait until the friend is deleted
-        DispatchQueue.main.asyncAfter(deadline: .now() + 5) {
-            print("hi")
-            showMainMessageView = true
-        }
-
-        print("hiii")
     }
     
     private func reportFriend() {
-            let reportData: [String: Any] = [
-                "reporterUid": chatUser.uid,
-                "reporteeUid": currentUser.uid,
-                "timestamp": Timestamp(),
-                "content": reportContent // Use the input from the text field
-            ]
-            
-            FirebaseManager.shared.firestore
-                .collection("reports")
-                .document()
-                .setData(reportData) { error in
-                    if let error = error {
-                        print("Failed to report friend: \(error)")
-                    } else {
-                        print("Friend reported successfully")
-                    }
+        let reportData: [String: Any] = [
+            "reporterUid": currentUser.uid,
+            "reporteeUid": chatUser.uid,
+            "timestamp": Timestamp(),
+            "content": reportContent // 用户输入的举报内容
+        ]
+        
+        FirebaseManager.shared.firestore
+            .collection("reports")
+            .document()
+            .setData(reportData) { error in
+                if let error = error {
+                    print("Failed to report friend: \(error)")
+                } else {
+                    print("Friend reported successfully")
                 }
-        }
+            }
+    }
 }
 
 struct BasicInfo {
@@ -452,6 +439,3 @@ struct BasicInfo {
     var bio: String
     var location: String
 }
-
-
-// test
