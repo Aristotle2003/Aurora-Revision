@@ -12,7 +12,7 @@ struct ChatUser : Identifiable{
     var id: String{uid}
     let uid, email, profileImageUrl: String
     let fcmToken: String
-    var hasPosted: Bool  // 新增属性
+    var hasPosted, isPinned: Bool  // 新增属性
     
     init(data:[String: Any]){
         self.uid = data["uid"] as? String ?? ""
@@ -20,5 +20,6 @@ struct ChatUser : Identifiable{
         self.profileImageUrl = data["profileImageUrl"] as? String ?? ""
         self.fcmToken = data["fcmToken"] as? String ?? ""
         self.hasPosted = data["hasPosted"] as? Bool ?? false  // 初始化属性
+        self.isPinned = data["isPinned"] as? Bool ?? false
     }
 }

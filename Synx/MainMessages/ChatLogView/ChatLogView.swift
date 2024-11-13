@@ -114,7 +114,7 @@ class ChatLogViewModel: ObservableObject {
     }
 
     func startAutoSend() {
-        timer = Timer.scheduledTimer(withTimeInterval: 3, repeats: true) { _ in
+        timer = Timer.scheduledTimer(withTimeInterval: 1, repeats: true) { _ in
             print(self.chatText)
             self.handleSend()
         }

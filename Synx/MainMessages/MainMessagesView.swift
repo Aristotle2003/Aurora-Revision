@@ -64,7 +64,15 @@ class MainMessagesViewModel: ObservableObject {
                 documentsSnapshot?.documents.forEach({ snapshot in
                     let data = snapshot.data()
                     let user = ChatUser(data: data)
-                    if user.uid != FirebaseManager.shared.auth.currentUser?.uid {
+                    if user.uid != FirebaseManager.shared.auth.currentUser?.uid && user.isPinned {
+                        self.users.append(.init(data: data))
+                    }
+                })
+                
+                documentsSnapshot?.documents.forEach({ snapshot in
+                    let data = snapshot.data()
+                    let user = ChatUser(data: data)
+                    if user.uid != FirebaseManager.shared.auth.currentUser?.uid && !user.isPinned{
                         self.users.append(.init(data: data))
                     }
                 })
@@ -252,40 +260,43 @@ struct MainMessagesView: View {
         .padding()
     }
     
-    private var usersListView: some View {
-        ScrollView {
-            ForEach(vm.users) { user in
-                VStack {
-                    Button {
-                        if let chatUser = vm.chatUser{
-                            self.selectedUser = chatUser
-                            self.chatUser = user
-                            self.shouldNavigateToChatLogView.toggle()
-                        }
-                    } label: {
-                        HStack(spacing: 16) {
-                            WebImage(url: URL(string: user.profileImageUrl))
-                                .resizable()
-                                .scaledToFill()
-                                .frame(width: 64, height: 64)
-                                .cornerRadius(64)
-                                .overlay(RoundedRectangle(cornerRadius: 64).stroke(Color.black, lineWidth: 1))
-                                .shadow(radius: 5)
-                            VStack(alignment: .leading, spacing: 8) {
-                                Text(user.email)
-                                    .font(.system(size: 16, weight: .bold))
-                                    .foregroundColor(Color(.label))
-                            }
-                            Spacer()
-                        }
+private var usersListView: some View {
+    ScrollView {
+        ForEach(vm.users) { user in
+            VStack {
+                Button {
+                    if let chatUser = vm.chatUser {
+                        self.selectedUser = chatUser
+                        self.chatUser = user
+                        self.shouldNavigateToChatLogView.toggle()
                     }
-                    Divider().padding(.vertical, 8)
+                } label: {
+                    HStack(spacing: 16) {
+                        WebImage(url: URL(string: user.profileImageUrl))
+                            .resizable()
+                            .scaledToFill()
+                            .frame(width: 64, height: 64)
+                            .cornerRadius(64)
+                            .overlay(RoundedRectangle(cornerRadius: 64).stroke(Color.black, lineWidth: 1))
+                            .shadow(radius: 5)
+                        VStack(alignment: .leading, spacing: 8) {
+                            Text(user.email)
+                                .font(.system(size: 16, weight: .bold))
+                                .foregroundColor(Color(.label))
+                        }
+                        Spacer()
+                    }
+                    .padding()
+                    .background(user.isPinned ? Color.gray.opacity(0.2) : Color.clear)
+                    .cornerRadius(8)
                 }
-                .padding(.horizontal)
+                Divider().padding(.vertical, 8)
             }
+            .padding(.horizontal)
         }
     }
-    
+}
+
     private var newMessageButton: some View {
         Button {
             shouldNavigateToAddFriendView.toggle()
