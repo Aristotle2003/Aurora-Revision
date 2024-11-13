@@ -455,7 +455,6 @@
 				FB42CB852CD81D4600283244 /* AppDelegate.swift in Sources */,
 				FB7E20BE2CC15CAB00209582 /* ContactsView.swift in Sources */,
 				FB42CB832CD66D9E00283244 /* EditProfileView.swift in Sources */,
-				3A55E47F2CE1AE9A003FD336 /* CalendarView.swift in Sources */,
 				FB7E207B2CBCC6E900209582 /* LoginView.swift in Sources */,
 				FB83BDA22CDACB5400A7BE4E /* PhoneVerificationView.swift in Sources */,
 				FB7E20792CBCC6E900209582 /* SynxApp.swift in Sources */,

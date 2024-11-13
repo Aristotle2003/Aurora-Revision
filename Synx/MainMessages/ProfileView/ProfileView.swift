@@ -398,11 +398,7 @@ struct ProfileView: View {
                     // 删除成功后，跳转到 MainMessagesView
                     self.navigateToMainMessagesView = true
                 }
-                dispatchGroup.leave()
             }
-
-        // Begin tracking the second deletion
-        dispatchGroup.enter()
         FirebaseManager.shared.firestore
             .collection("friends")
             .document(chatUser.uid)
@@ -416,9 +412,6 @@ struct ProfileView: View {
                 }
             }
     }
-
-
-
     
     private func reportFriend() {
         let reportData: [String: Any] = [
