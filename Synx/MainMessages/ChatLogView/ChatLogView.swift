@@ -45,7 +45,6 @@ class ChatLogViewModel: ObservableObject {
     
     init(chatUser: ChatUser?) {
         self.chatUser = chatUser
-        startAutoSend()
         startSeenCheckTimer()
     }
 
@@ -290,6 +289,7 @@ struct ChatLogView: View {
         .navigationBarTitleDisplayMode(.inline)
         .onAppear {
             vm.initializeMessages()
+            vm.startAutoSend()
         }
         .onDisappear {
             vm.stopAutoSend()

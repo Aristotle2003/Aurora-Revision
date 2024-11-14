@@ -111,10 +111,25 @@ class MainMessagesViewModel: ObservableObject {
     
     
     
-    func handleSignOut(){
-        isUserCurrentlyLoggedOut.toggle()
-        try? FirebaseManager.shared.auth.signOut()
+    func handleSignOut() {
+        guard let currentUserID = FirebaseManager.shared.auth.currentUser?.uid else { return }
+        
+        // Reference to the user's FCM token in Firestore
+        let userRef = FirebaseManager.shared.firestore.collection("users").document(currentUserID)
+        
+        // Update the FCM token to an empty string
+        userRef.updateData(["fcmtoken": ""]) { error in
+            if let error = error {
+                print("Failed to update FCM token: \(error)")
+                return
+            }
+            
+            // Proceed to sign out if the FCM token update is successful
+            self.isUserCurrentlyLoggedOut.toggle()
+            try? FirebaseManager.shared.auth.signOut()
+        }
     }
+
     
 }
 

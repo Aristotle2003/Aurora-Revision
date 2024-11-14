@@ -103,7 +103,7 @@ class AppDelegate: UIResponder, UIApplicationDelegate, UNUserNotificationCenterD
     }
     
     // Fetch and store FCM token for a signed-in user
-    func fetchAndStoreFCMToken(for userID: String) {
+    func fetchAndStoreFCMToken(for userID: String) {   
         Messaging.messaging().token { token, error in
             if let token = token {
                 self.storeFCMTokenToFirestore(token, userID: userID)
