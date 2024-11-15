@@ -29,6 +29,8 @@ class MainMessagesViewModel: ObservableObject {
     @Published var isUserCurrentlyLoggedOut = false
     @Published var users = [ChatUser]()
     
+    var timer: Timer?
+    
     init() {
         /*if let appDelegate = UIApplication.shared.delegate as? AppDelegate {
             print("AppDelegate accessed successfully.")
@@ -47,6 +49,19 @@ class MainMessagesViewModel: ObservableObject {
     }
     
     @Published var recentMessages = [RecentMessage]()
+    
+    func startAutoFresh() {
+        timer = Timer.scheduledTimer(withTimeInterval: 15, repeats: true) { _ in
+            self.users.removeAll()
+            self.fetchAllFriends()
+        }
+    }
+    
+    func stopAutoFresh() {
+        timer?.invalidate()
+        timer = nil
+    }
+
     
     private func fetchAllFriends() {
         guard let uid = FirebaseManager.shared.auth.currentUser?.uid else {
@@ -109,6 +124,29 @@ class MainMessagesViewModel: ObservableObject {
         }
     }
     
+    func markMessageAsSeen(for userId: String) {
+            guard let currentUserId = FirebaseManager.shared.auth.currentUser?.uid else {
+                self.errorMessage = "Could not find firebase uid"
+                return
+            }
+
+            // Reference to the user's friend list
+            let friendRef = FirebaseManager.shared.firestore
+                .collection("friends")
+                .document(currentUserId)
+                .collection("friend_list")
+                .document(userId)
+
+            // Update `hasUnseenLatestMessage` to false
+            friendRef.updateData(["hasUnseenLatestMessage": false]) { error in
+                if let error = error {
+                    print("Failed to update hasUnseenLatestMessage: \(error)")
+                    return
+                }
+                print("Successfully updated hasUnseenLatestMessage to false")
+            }
+        }
+    
     
     
     func handleSignOut() {
@@ -118,7 +156,7 @@ class MainMessagesViewModel: ObservableObject {
         let userRef = FirebaseManager.shared.firestore.collection("users").document(currentUserID)
         
         // Update the FCM token to an empty string
-        userRef.updateData(["fcmtoken": ""]) { error in
+        userRef.updateData(["fcmToken": ""]) { error in
             if let error = error {
                 print("Failed to update FCM token: \(error)")
                 return
@@ -129,7 +167,6 @@ class MainMessagesViewModel: ObservableObject {
             try? FirebaseManager.shared.auth.signOut()
         }
     }
-
     
 }
 
@@ -187,6 +224,12 @@ struct MainMessagesView: View {
                         }
                     }
                 }
+        .onAppear{
+            vm.startAutoFresh()
+        }
+        .onDisappear{
+            vm.stopAutoFresh()
+        }
     }
     
     
@@ -275,42 +318,51 @@ struct MainMessagesView: View {
         .padding()
     }
     
-private var usersListView: some View {
-    ScrollView {
-        ForEach(vm.users) { user in
-            VStack {
-                Button {
-                    if let chatUser = vm.chatUser {
-                        self.selectedUser = chatUser
-                        self.chatUser = user
-                        self.shouldNavigateToChatLogView.toggle()
-                    }
-                } label: {
-                    HStack(spacing: 16) {
-                        WebImage(url: URL(string: user.profileImageUrl))
-                            .resizable()
-                            .scaledToFill()
-                            .frame(width: 64, height: 64)
-                            .cornerRadius(64)
-                            .overlay(RoundedRectangle(cornerRadius: 64).stroke(Color.black, lineWidth: 1))
-                            .shadow(radius: 5)
-                        VStack(alignment: .leading, spacing: 8) {
-                            Text(user.email)
-                                .font(.system(size: 16, weight: .bold))
-                                .foregroundColor(Color(.label))
+    private var usersListView: some View {
+        ScrollView {
+            ForEach(vm.users) { user in
+                VStack {
+                    Button {
+                        if let chatUser = vm.chatUser {
+                            self.selectedUser = chatUser
+                            self.chatUser = user
+                            self.shouldNavigateToChatLogView.toggle()
+                            vm.markMessageAsSeen(for: user.uid)
                         }
-                        Spacer()
+                        
+                    } label: {
+                        HStack(spacing: 16) {
+                            WebImage(url: URL(string: user.profileImageUrl))
+                                .resizable()
+                                .scaledToFill()
+                                .frame(width: 64, height: 64)
+                                .cornerRadius(64)
+                                .overlay(RoundedRectangle(cornerRadius: 64).stroke(Color.black, lineWidth: 1))
+                                .shadow(radius: 5)
+                            VStack(alignment: .leading, spacing: 8) {
+                                Text(user.email)
+                                    .font(.system(size: 16, weight: .bold))
+                                    .foregroundColor(Color(.label))
+                            }
+                            Spacer()
+                            if user.hasUnseenLatestMessage{
+                                Circle()
+                                    .fill(Color.red)
+                                    .frame(width: 12, height: 12)
+                            }
+                        }
+                        .padding()
+                        .background(user.isPinned ? Color.gray.opacity(0.2) : Color.clear)
+                        .cornerRadius(8)
                     }
-                    .padding()
-                    .background(user.isPinned ? Color.gray.opacity(0.2) : Color.clear)
-                    .cornerRadius(8)
+                    Divider().padding(.vertical, 8)
                 }
-                Divider().padding(.vertical, 8)
+                .padding(.horizontal)
             }
-            .padding(.horizontal)
         }
     }
-}
+
+
 
     private var newMessageButton: some View {
         Button {

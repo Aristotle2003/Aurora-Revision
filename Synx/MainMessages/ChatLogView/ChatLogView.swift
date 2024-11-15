@@ -45,7 +45,6 @@ class ChatLogViewModel: ObservableObject {
     
     init(chatUser: ChatUser?) {
         self.chatUser = chatUser
-        startSeenCheckTimer()
     }
 
     // Fetch the saved messages between the current user and the chat user
@@ -126,8 +125,7 @@ class ChatLogViewModel: ObservableObject {
 
     func startSeenCheckTimer() {
         markMessagesAsSeen()  // Mark as seen when the timer starts
-        seenCheckTimer = Timer.scheduledTimer(withTimeInterval: 1, repeats: true) { _ in
-            self.markMessagesAsSeen()
+        seenCheckTimer = Timer.scheduledTimer(withTimeInterval: 3, repeats: true) { _ in
         }
     }
 
@@ -156,6 +154,29 @@ class ChatLogViewModel: ObservableObject {
                 }
             }
     }
+    
+    func markMessageAsSeen(for userId: String) {
+            guard let currentUserId = FirebaseManager.shared.auth.currentUser?.uid else {
+                self.errorMessage = "Could not find firebase uid"
+                return
+            }
+
+            // Reference to the user's friend list
+            let friendRef = FirebaseManager.shared.firestore
+                .collection("friends")
+                .document(currentUserId)
+                .collection("friend_list")
+                .document(userId)
+
+            // Update `hasUnseenLatestMessage` to false
+            friendRef.updateData(["hasUnseenLatestMessage": false]) { error in
+                if let error = error {
+                    print("Failed to update hasUnseenLatestMessage: \(error)")
+                    return
+                }
+                print("Successfully updated hasUnseenLatestMessage to false")
+            }
+        }
     
     func fetchLatestMessages() {
         guard let fromId = FirebaseManager.shared.auth.currentUser?.uid else { return }
@@ -293,7 +314,7 @@ struct ChatLogView: View {
         }
         .onDisappear {
             vm.stopAutoSend()
-            vm.stopSeenCheckTimer()
+            vm.markMessageAsSeen(for: vm.chatUser?.uid ?? "")
         }
         .navigationBarBackButtonHidden(true) // Hide the default back button
         .navigationDestination(isPresented: $navigateToMainMessageView) {
