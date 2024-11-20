@@ -223,7 +223,14 @@ class ChatLogViewModel: ObservableObject {
         guard let fromId = FirebaseManager.shared.auth.currentUser?.uid else { return }
         guard let toId = chatUser?.uid else { return }
 
-        let messageData = ["fromId": fromId, "toId": toId, "text": chatText, "timeStamp": Timestamp(), "seen": false] as [String: Any]
+        let messageData: [String: Any] = [
+            "fromId": fromId,
+            "toId": toId,
+            "text": chatText,
+            "timeStamp": Timestamp(),
+            "seen": false,
+            "sender": "Me"
+        ]
         if chatText == latestSenderMessage?.text {
             self.fetchLatestMessages()
             return  // Skip sending if the message is the same as the previous one
@@ -238,9 +245,56 @@ class ChatLogViewModel: ObservableObject {
                     self.errorMessage = "Failed to send message: \(error)"
                     return
                 }
+
+                // 更新当前用户好友列表中的好友的 latestMessageTimestamp
+                self.updateFriendLatestMessageTimestampForRecipient(friendId: toId)
+                self.updateFriendLatestMessageTimestampForSelf(friendId: toId)
                 self.fetchLatestMessages()
             }
     }
+
+     // 更新当前用户好友列表中的好友的 latestMessageTimestamp
+    private func updateFriendLatestMessageTimestampForSelf(friendId: String) {
+        guard let uid = FirebaseManager.shared.auth.currentUser?.uid else { return }
+        let timestamp = Timestamp()
+    
+        let friendRef = FirebaseManager.shared.firestore
+            .collection("friends")
+            .document(uid)
+            .collection("friend_list")
+            .document(friendId)
+    
+        friendRef.updateData(["latestMessageTimestamp": timestamp]) { error in
+            if let error = error {
+                print("Failed to update latestMessageTimestamp for friend: \(error)")
+                return
+            }
+            print("Successfully updated latestMessageTimestamp for friend")
+        }
+    }
+    
+    private func updateFriendLatestMessageTimestampForRecipient(friendId: String) {
+        guard let uid = FirebaseManager.shared.auth.currentUser?.uid else { return }
+        let timestamp = Timestamp()
+    
+        let friendRef = FirebaseManager.shared.firestore
+            .collection("friends")
+            .document(friendId)
+            .collection("friend_list")
+            .document(uid)
+    
+        friendRef.updateData(["latestMessageTimestamp": timestamp]) { error in
+            if let error = error {
+                print("Failed to update latestMessageTimestamp for friend: \(error)")
+                return
+            }
+            print("Successfully updated latestMessageTimestamp for friend")
+        }
+    }
+
+
+    // 更新好友的好友列表中的当前用户的 latestMessageTimestamp
+    
 
     // Save the message to Firebase
     func saveMessage(sender: String, messageText: String, timestamp: Timestamp) {

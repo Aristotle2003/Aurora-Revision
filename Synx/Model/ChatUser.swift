@@ -1,4 +1,5 @@
 import Foundation
+import FirebaseFirestore
 
 struct ChatUser: Identifiable {
     
@@ -10,6 +11,7 @@ struct ChatUser: Identifiable {
     var hasPosted: Bool
     var isPinned: Bool
     var hasUnseenLatestMessage: Bool
+    var latestMessageTimestamp: Timestamp?  // 新增属性
     
     init(data: [String: Any]) {
         self.uid = data["uid"] as? String ?? ""
@@ -19,5 +21,6 @@ struct ChatUser: Identifiable {
         self.hasPosted = data["hasPosted"] as? Bool ?? false
         self.isPinned = data["isPinned"] as? Bool ?? false
         self.hasUnseenLatestMessage = data["hasUnseenLatestMessage"] as? Bool ?? false
+        self.latestMessageTimestamp = data["latestMessageTimestamp"] as? Timestamp  // 初始化
     }
 }

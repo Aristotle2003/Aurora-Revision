@@ -41,7 +41,7 @@ class MainMessagesViewModel: ObservableObject {
     }
     
     @Published var recentMessages = [RecentMessage]()
-    
+        
     func setupFriendListListener() {
         guard let uid = FirebaseManager.shared.auth.currentUser?.uid else {
             self.errorMessage = "Could not find firebase uid"
@@ -64,37 +64,30 @@ class MainMessagesViewModel: ObservableObject {
                     return
                 }
 
-                var pinnedAndUnreadUsers: [ChatUser] = []
-                var pinnedUsers: [ChatUser] = []
-                var unreadMessages: [ChatUser] = []
-                var unpinnedUsers: [ChatUser] = []
+                var users: [ChatUser] = []
 
                 for document in documents {
                     let data = document.data()
                     let user = ChatUser(data: data)
                     if user.uid != uid {
-                        if user.isPinned && user.hasUnseenLatestMessage {
-                            pinnedAndUnreadUsers.append(user)
-                        }
-                        else if user.isPinned {
-                            pinnedUsers.append(user)
-                        }
-                        else if user.hasUnseenLatestMessage {
-                            unreadMessages.append(user)
-                        }
-                        else {
-                            unpinnedUsers.append(user)
-                        }
+                        users.append(user)
                     }
                 }
 
+                // 分组并排序
+                let pinnedUsers = users.filter { $0.isPinned }.sorted {
+                    ($0.latestMessageTimestamp?.dateValue() ?? Date.distantPast) > ($1.latestMessageTimestamp?.dateValue() ?? Date.distantPast)
+                }
+
+                let unpinnedUsers = users.filter { !$0.isPinned }.sorted {
+                    ($0.latestMessageTimestamp?.dateValue() ?? Date.distantPast) > ($1.latestMessageTimestamp?.dateValue() ?? Date.distantPast)
+                }
+
                 DispatchQueue.main.async {
-                    // 将固定的好友置顶显示
-                    self.users = pinnedAndUnreadUsers + pinnedUsers + unreadMessages + unpinnedUsers
+                    self.users = pinnedUsers + unpinnedUsers
                 }
             }
     }
-    
     func stopListening() {
         listener?.remove()
         listener = nil
@@ -331,13 +324,25 @@ struct MainMessagesView: View {
                                 .cornerRadius(64)
                                 .overlay(RoundedRectangle(cornerRadius: 64).stroke(Color.black, lineWidth: 1))
                                 .shadow(radius: 5)
-                            VStack(alignment: .leading, spacing: 8) {
+                            
+                            VStack(alignment: .leading, spacing: 4) {
                                 Text(user.email)
                                     .font(.system(size: 16, weight: .bold))
                                     .foregroundColor(Color(.label))
+                                
+                                // 显示最新聊天时间
+                                if let timestamp = user.latestMessageTimestamp {
+                                    Text(formatTimestamp(timestamp))
+                                        .font(.system(size: 14))
+                                        .foregroundColor(Color.gray)
+                                } else {
+                                    Text("暂无消息")
+                                        .font(.system(size: 14))
+                                        .foregroundColor(Color.gray)
+                                }
                             }
                             Spacer()
-                            if user.hasUnseenLatestMessage{
+                            if user.hasUnseenLatestMessage {
                                 Circle()
                                     .fill(Color.red)
                                     .frame(width: 12, height: 12)
@@ -353,7 +358,6 @@ struct MainMessagesView: View {
             }
         }
     }
-
     private var newMessageButton: some View {
         Button {
             shouldNavigateToAddFriendView.toggle()
@@ -378,6 +382,36 @@ struct MainMessagesView: View {
                 self.selectedUser = vm.chatUser
                 shouldShowProfileView.toggle()
             }
+        }
+    }
+
+    func formatTimestamp(_ timestamp: Timestamp) -> String {
+        let date = timestamp.dateValue()
+        let formatter = DateFormatter()
+        let calendar = Calendar.current
+
+        if calendar.isDateInToday(date) {
+            // 如果是今天，显示时间，例如 "14:23"
+            formatter.dateFormat = "HH:mm"
+            return formatter.string(from: date)
+        } else if calendar.isDateInYesterday(date) {
+            // 如果是昨天，显示 "昨天"
+            return "昨天"
+        } else if calendar.isDate(date, equalTo: Date(), toGranularity: .weekOfYear) {
+            // 如果在本周内，显示星期几
+            let weekdaySymbols = ["周一", "周二", "周三", "周四", "周五", "周六", "周日"]
+            let weekday = calendar.component(.weekday, from: date)
+            print(weekday)
+            if weekday == 1 {
+                formatter.dateFormat = "yyyy/MM/dd"
+                return formatter.string(from: date)
+            } else {
+                return weekdaySymbols[(weekday + 5) % 7]
+            }// 注意：周日对应索引 0
+        } else {
+            // 否则，显示日期，例如 "2023/10/07"
+            formatter.dateFormat = "yyyy/MM/dd"
+            return formatter.string(from: date)
         }
     }
 }
