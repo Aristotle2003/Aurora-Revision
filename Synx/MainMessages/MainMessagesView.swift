@@ -29,69 +29,75 @@ class MainMessagesViewModel: ObservableObject {
     @Published var isUserCurrentlyLoggedOut = false
     @Published var users = [ChatUser]()
     
-    var timer: Timer?
+    var listener: ListenerRegistration?
     
     init() {
-        /*if let appDelegate = UIApplication.shared.delegate as? AppDelegate {
-            print("AppDelegate accessed successfully.")
-            appDelegate.fetchAndStoreFCMToken()
-        } else {
-            print("Failed to access AppDelegate.")
-        }
-
-        print("been here")*/
         DispatchQueue.main.async{
             self.isUserCurrentlyLoggedOut =
             FirebaseManager.shared.auth.currentUser?.uid == nil
         }
         fetchCurrentUser()
-        fetchAllFriends()
+        setupFriendListListener()
     }
     
     @Published var recentMessages = [RecentMessage]()
     
-    func startAutoFresh() {
-        timer = Timer.scheduledTimer(withTimeInterval: 15, repeats: true) { _ in
-            self.users.removeAll()
-            self.fetchAllFriends()
-        }
-    }
-    
-    func stopAutoFresh() {
-        timer?.invalidate()
-        timer = nil
-    }
-
-    
-    private func fetchAllFriends() {
+    func setupFriendListListener() {
         guard let uid = FirebaseManager.shared.auth.currentUser?.uid else {
             self.errorMessage = "Could not find firebase uid"
             return
         }
-        FirebaseManager.shared.firestore.collection("friends").document(uid).collection("friend_list")
-            .getDocuments { documentsSnapshot, error in
+
+        listener = FirebaseManager.shared.firestore
+            .collection("friends")
+            .document(uid)
+            .collection("friend_list")
+            .addSnapshotListener { querySnapshot, error in
                 if let error = error {
-                    self.errorMessage = "Failed to fetch users: \(error)"
-                    print("Failed to fetch users: \(error)")
+                    self.errorMessage = "Failed to listen for friend list changes: \(error)"
+                    print("Failed to listen for friend list changes: \(error)")
                     return
                 }
-                
-                documentsSnapshot?.documents.forEach({ snapshot in
-                    let data = snapshot.data()
+
+                guard let documents = querySnapshot?.documents else {
+                    self.errorMessage = "No friend list documents found"
+                    return
+                }
+
+                var pinnedAndUnreadUsers: [ChatUser] = []
+                var pinnedUsers: [ChatUser] = []
+                var unreadMessages: [ChatUser] = []
+                var unpinnedUsers: [ChatUser] = []
+
+                for document in documents {
+                    let data = document.data()
                     let user = ChatUser(data: data)
-                    if user.uid != FirebaseManager.shared.auth.currentUser?.uid && user.isPinned {
-                        self.users.append(.init(data: data))
+                    if user.uid != uid {
+                        if user.isPinned && user.hasUnseenLatestMessage {
+                            pinnedAndUnreadUsers.append(user)
+                        }
+                        else if user.isPinned {
+                            pinnedUsers.append(user)
+                        }
+                        else if user.hasUnseenLatestMessage {
+                            unreadMessages.append(user)
+                        }
+                        else {
+                            unpinnedUsers.append(user)
+                        }
                     }
-                })
-                
-                documentsSnapshot?.documents.forEach({ snapshot in
-                    let data = snapshot.data()
-                    let user = ChatUser(data: data)
-                    if user.uid != FirebaseManager.shared.auth.currentUser?.uid && !user.isPinned{
-                        self.users.append(.init(data: data))
-                    }
-                })
+                }
+
+                DispatchQueue.main.async {
+                    // 将固定的好友置顶显示
+                    self.users = pinnedAndUnreadUsers + pinnedUsers + unreadMessages + unpinnedUsers
+                }
             }
+    }
+    
+    func stopListening() {
+        listener?.remove()
+        listener = nil
     }
     
     private func fetchCurrentUser() {
@@ -101,8 +107,6 @@ class MainMessagesViewModel: ObservableObject {
             return
         }
 
-        
-        
         FirebaseManager.shared.firestore.collection("users").document(uid).getDocument { snapshot, error in
             if let error = error {
                 self.errorMessage = "Failed to fetch current user: \(error)"
@@ -113,41 +117,34 @@ class MainMessagesViewModel: ObservableObject {
             guard let data = snapshot?.data() else {
                 self.errorMessage = "No data found"
                 return
-                
             }
             
-            
             self.chatUser = ChatUser(data: data)
-            
-//            self.errorMessage = chatUser.profileImageUrl
-            
         }
     }
     
     func markMessageAsSeen(for userId: String) {
-            guard let currentUserId = FirebaseManager.shared.auth.currentUser?.uid else {
-                self.errorMessage = "Could not find firebase uid"
+        guard let currentUserId = FirebaseManager.shared.auth.currentUser?.uid else {
+            self.errorMessage = "Could not find firebase uid"
+            return
+        }
+        
+        // Reference to the user's friend list
+        let friendRef = FirebaseManager.shared.firestore
+            .collection("friends")
+            .document(currentUserId)
+            .collection("friend_list")
+            .document(userId)
+        
+        // Update `hasUnseenLatestMessage` to false
+        friendRef.updateData(["hasUnseenLatestMessage": false]) { error in
+            if let error = error {
+                print("Failed to update hasUnseenLatestMessage: \(error)")
                 return
             }
-
-            // Reference to the user's friend list
-            let friendRef = FirebaseManager.shared.firestore
-                .collection("friends")
-                .document(currentUserId)
-                .collection("friend_list")
-                .document(userId)
-
-            // Update `hasUnseenLatestMessage` to false
-            friendRef.updateData(["hasUnseenLatestMessage": false]) { error in
-                if let error = error {
-                    print("Failed to update hasUnseenLatestMessage: \(error)")
-                    return
-                }
-                print("Successfully updated hasUnseenLatestMessage to false")
-            }
+            print("Successfully updated hasUnseenLatestMessage to false")
         }
-    
-    
+    }
     
     func handleSignOut() {
         guard let currentUserID = FirebaseManager.shared.auth.currentUser?.uid else { return }
@@ -167,7 +164,6 @@ class MainMessagesViewModel: ObservableObject {
             try? FirebaseManager.shared.auth.signOut()
         }
     }
-    
 }
 
 struct MainMessagesView: View {
@@ -182,7 +178,6 @@ struct MainMessagesView: View {
     @State var errorMessage = ""
     @State var latestSenderMessage: ChatMessage?
     @State private var shouldShowFriendGroupView = false
-
     
     @ObservedObject private var vm = MainMessagesViewModel()
     @StateObject private var chatLogViewModel = ChatLogViewModel(chatUser: nil)
@@ -225,13 +220,12 @@ struct MainMessagesView: View {
                     }
                 }
         .onAppear{
-            vm.startAutoFresh()
+            vm.setupFriendListListener()
         }
         .onDisappear{
-            vm.stopAutoFresh()
+            vm.stopListening()
         }
     }
-    
     
     private var customNavBar: some View {
         HStack(spacing: 16) {
@@ -278,7 +272,6 @@ struct MainMessagesView: View {
                     .foregroundColor(Color(.label))
             }
 
-            
             // Mail Button - Navigates to FriendRequestsView
             Button(action: {
                 if let chatUser = vm.chatUser{
@@ -329,7 +322,6 @@ struct MainMessagesView: View {
                             self.shouldNavigateToChatLogView.toggle()
                             vm.markMessageAsSeen(for: user.uid)
                         }
-                        
                     } label: {
                         HStack(spacing: 16) {
                             WebImage(url: URL(string: user.profileImageUrl))
@@ -361,8 +353,6 @@ struct MainMessagesView: View {
             }
         }
     }
-
-
 
     private var newMessageButton: some View {
         Button {

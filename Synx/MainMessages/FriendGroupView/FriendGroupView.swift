@@ -1,6 +1,7 @@
 import SwiftUI
 import Firebase
 import SDWebImageSwiftUI
+import FirebaseAuth
 
 class FriendGroupViewModel: ObservableObject {
     @Published var promptText = ""
@@ -49,60 +50,47 @@ class FriendGroupViewModel: ObservableObject {
         }
     }
 
+ // 修改 fetchLatestResponses 函数，确保完成后的处理
     func fetchLatestResponses(for userId: String) {
         var allResponses: [FriendResponse] = []
         let group = DispatchGroup()
 
-        // Step 1: Fetch the current user's latest response
+        // 获取当前用户的响应
         group.enter()
-        fetchLatestResponse(for: userId) { latestMessage, timestamp in
-            if let latestMessage = latestMessage, let timestamp = timestamp {
-                allResponses.append(FriendResponse(
-                    uid: userId,
-                    email: self.selectedUser.email,
-                    profileImageUrl: self.selectedUser.profileImageUrl,
-                    latestMessage: latestMessage,
-                    timestamp: timestamp
-                ))
+        fetchLatestResponse(for: userId, email: self.selectedUser.email, profileImageUrl: self.selectedUser.profileImageUrl) { response in
+            if let response = response {
+                allResponses.append(response)
             }
             group.leave()
         }
 
-        // Step 2: Fetch friends' responses
+        // 获取好友的响应
         FirebaseManager.shared.firestore.collection("friends")
             .document(userId)
             .collection("friend_list")
             .getDocuments { friendSnapshot, error in
                 if let error = error {
-                    print("Failed to fetch friends: \(error.localizedDescription)")
+                    print("获取好友列表失败：\(error.localizedDescription)")
                     return
                 }
 
                 guard let friendDocs = friendSnapshot?.documents else {
-                    print("No friends found.")
+                    print("没有找到好友。")
                     return
                 }
 
                 for friendDoc in friendDocs {
                     let friendData = friendDoc.data()
                     guard let friendId = friendData["uid"] as? String,
-                          let email = friendData["email"] as? String,
-                          let profileImageUrl = friendData["profileImageUrl"] as? String else {
-                        print("Friend data missing fields")
+                        let email = friendData["email"] as? String,
+                        let profileImageUrl = friendData["profileImageUrl"] as? String else {
                         continue
                     }
 
                     group.enter()
-                    print("Fetching latest response for friend with ID: \(friendId)")
-                    self.fetchLatestResponse(for: friendId) { latestMessage, timestamp in
-                        if let latestMessage = latestMessage, let timestamp = timestamp {
-                            allResponses.append(FriendResponse(
-                                uid: friendId,
-                                email: email,
-                                profileImageUrl: profileImageUrl,
-                                latestMessage: latestMessage,
-                                timestamp: timestamp
-                            ))
+                    self.fetchLatestResponse(for: friendId, email: email, profileImageUrl: profileImageUrl) { response in
+                        if let response = response {
+                            allResponses.append(response)
                         }
                         group.leave()
                     }
@@ -110,12 +98,13 @@ class FriendGroupViewModel: ObservableObject {
 
                 group.notify(queue: .main) {
                     self.responses = allResponses.sorted { $0.timestamp > $1.timestamp }
-                    print("Fetched responses: \(self.responses)")
                 }
             }
     }
+        
 
-    private func fetchLatestResponse(for uid: String, completion: @escaping (String?, Date?) -> Void) {
+// 修改 fetchLatestResponse 函数，获取 likes 和 likedBy
+    private func fetchLatestResponse(for uid: String, email: String, profileImageUrl: String, completion: @escaping (FriendResponse?) -> Void) {
         FirebaseManager.shared.firestore.collection("response_to_prompt")
             .whereField("uid", isEqualTo: uid)
             .order(by: "timestamp", descending: true)
@@ -124,16 +113,28 @@ class FriendGroupViewModel: ObservableObject {
                 if let doc = snapshot?.documents.first {
                     let data = doc.data()
                     let latestMessage = data["text"] as? String ?? ""
-                    let timestamp = (data["timestamp"] as? Timestamp)?.dateValue()
-                    print("Fetched latest message for UID \(uid): \(latestMessage) at \(timestamp ?? Date())")
-                    completion(latestMessage, timestamp)
+                    let timestamp = (data["timestamp"] as? Timestamp)?.dateValue() ?? Date()
+                    let likes = data["likes"] as? Int ?? 0
+                    let likedBy = data["likedBy"] as? [String] ?? []
+                    let currentUserId = FirebaseManager.shared.auth.currentUser?.uid ?? ""
+                    let likedByCurrentUser = likedBy.contains(currentUserId)
+                    let response = FriendResponse(
+                        uid: uid,
+                        email: email,
+                        profileImageUrl: profileImageUrl,
+                        latestMessage: latestMessage,
+                        timestamp: timestamp,
+                        likes: likes,
+                        likedByCurrentUser: likedByCurrentUser,
+                        documentId: doc.documentID
+                    )
+                    completion(response)
                 } else {
-                    print("No response found for UID \(uid) – displaying default message.")
-                    completion(nil, nil)
+                    print("未找到 UID \(uid) 的响应")
+                    completion(nil)
                 }
             }
     }
-
     func fetchCurrentUserHasPostedStatus() {
         guard let uid = FirebaseManager.shared.auth.currentUser?.uid else { return }
 
@@ -161,6 +162,33 @@ class FriendGroupViewModel: ObservableObject {
             self.currentUserHasPosted = true
         }
     }
+
+    // 点赞或取消点赞
+    func toggleLike(for response: FriendResponse) {
+        guard let currentUserId = FirebaseManager.shared.auth.currentUser?.uid else {return}
+
+        let responseRef = FirebaseManager.shared.firestore
+            .collection("response_to_prompt")
+            .document(response.documentId)
+
+        let hasLiked = response.likedByCurrentUser
+
+        responseRef.updateData([
+            "likes": hasLiked ? FieldValue.increment(Int64(-1)) : FieldValue.increment(Int64(1)),
+            "likedBy": hasLiked ? FieldValue.arrayRemove([currentUserId]) : FieldValue.arrayUnion([currentUserId])
+        ]) { error in
+            if let error = error {
+                print("更新点赞状态失败：\(error.localizedDescription)")
+                return
+            }
+            DispatchQueue.main.async {
+                if let index = self.responses.firstIndex(where: { $0.id == response.id }) {
+                    self.responses[index].likedByCurrentUser.toggle()
+                    self.responses[index].likes += hasLiked ? -1 : 1
+                }
+            }
+        }
+    }
 }
 
 struct FriendResponse: Identifiable {
@@ -170,6 +198,9 @@ struct FriendResponse: Identifiable {
     let profileImageUrl: String
     let latestMessage: String
     let timestamp: Date
+    var likes: Int
+    var likedByCurrentUser: Bool
+    let documentId: String // 新增，以便在数据库操作中使用
 }
 
 struct FriendGroupView: View {
@@ -216,9 +247,10 @@ struct FriendGroupView: View {
             ScrollView {
                 VStack(alignment: .leading, spacing: 16) {
                     if vm.currentUserHasPosted {
+                        // 在 ForEach 循环中，修改显示每个响应的视图
                         ForEach(vm.responses) { response in
                             HStack(alignment: .top, spacing: 12) {
-                                // Profile image
+                                // 头像
                                 WebImage(url: URL(string: response.profileImageUrl))
                                     .resizable()
                                     .scaledToFill()
@@ -227,7 +259,7 @@ struct FriendGroupView: View {
                                     .overlay(Circle().stroke(Color.gray.opacity(0.5), lineWidth: 1))
 
                                 VStack(alignment: .leading, spacing: 4) {
-                                    // Username and timestamp
+                                    // 用户名和时间戳
                                     HStack {
                                         Text(response.email)
                                             .font(.headline)
@@ -237,13 +269,24 @@ struct FriendGroupView: View {
                                             .foregroundColor(.gray)
                                     }
 
-                                    // Message text
+                                    // 消息文本
                                     Text(response.latestMessage)
                                         .font(.body)
                                         .foregroundColor(.primary)
                                         .fixedSize(horizontal: false, vertical: true)
                                         .padding(.top, 2)
-                                        .frame(maxWidth: .infinity, alignment: .leading)
+
+                                    // 点赞按钮和数量
+                                    HStack {
+                                        Button(action: {
+                                            vm.toggleLike(for: response)
+                                        }) {
+                                            Image(systemName: response.likedByCurrentUser ? "heart.fill" : "heart")
+                                                .foregroundColor(response.likedByCurrentUser ? .red : .gray)
+                                        }
+                                        Text("\(response.likes)")
+                                            .font(.subheadline)
+                                    }
                                 }
                             }
                             Divider()
