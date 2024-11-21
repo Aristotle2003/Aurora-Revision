@@ -43,7 +43,7 @@ struct ProfileView: View {
                 .clipShape(Circle())
                 .shadow(radius: 10)
             
-            Text(chatUser.email)
+            Text(chatUser.username)
                 .font(.title)
                 .padding()
             
@@ -53,6 +53,7 @@ struct ProfileView: View {
                     Text("Age: \(info.age)")
                     Text("Gender: \(info.gender)")
                     Text("Location: \(info.location)")
+                    Text("Email: \(info.email)")
                     Text("Bio: \(info.bio)")
                 }
                 .padding()

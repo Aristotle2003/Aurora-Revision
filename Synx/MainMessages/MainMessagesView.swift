@@ -19,7 +19,6 @@ struct RecentMessage: Identifiable{
         self.profileImageUrl = data["profileImageUrl"] as? String ?? ""
         self.email = data["email"] as? String ?? ""
     }
-    
 }
 
 class MainMessagesViewModel: ObservableObject {
@@ -241,7 +240,7 @@ struct MainMessagesView: View {
             }
             
             VStack(alignment: .leading, spacing: 4) {
-                Text(vm.chatUser?.email.replacingOccurrences(of: "@gmail.com", with: "") ?? "")
+                Text(vm.chatUser?.username ?? "")
                     .font(.system(size: 24, weight: .bold))
                 HStack {
                     Circle()

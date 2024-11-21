@@ -11,6 +11,7 @@ struct FirebaseConstants {
     static let text = "text"
     static let seen = "seen"
     static let sender = "sender"
+    static let timestamp = "timestamp"
 }
 
 struct ChatMessage: Identifiable {
@@ -123,38 +124,85 @@ class ChatLogViewModel: ObservableObject {
         timer?.invalidate()
         timer = nil
     }
+    
+    func markLatestMessageAsSeen() {
+        guard let currentUserId = FirebaseManager.shared.auth.currentUser?.uid,
+              let chatUserId = chatUser?.uid else { return }
 
-    func startSeenCheckTimer() {
-        markMessagesAsSeen()  // Mark as seen when the timer starts
-        seenCheckTimer = Timer.scheduledTimer(withTimeInterval: 3, repeats: true) { _ in
-        }
-    }
-
-    func stopSeenCheckTimer() {
-        seenCheckTimer?.invalidate()
-        seenCheckTimer = nil
-    }
-
-    func markMessagesAsSeen() {
-        guard let fromId = chatUser?.uid else { return }
-        guard let toId = FirebaseManager.shared.auth.currentUser?.uid else { return }
-
+        // Fetch only the latest message from the recipient
         FirebaseManager.shared.firestore
             .collection("messages")
-            .document(fromId)
-            .collection(toId)
-            .whereField(FirebaseConstants.seen, isEqualTo: false)
-            .getDocuments { snapshot, error in
+            .document(chatUserId)
+            .collection(currentUserId)
+            .order(by: "timeStamp", descending: true)
+            .limit(to: 1) // Limit to the latest message
+            .getDocuments { querySnapshot, error in
                 if let error = error {
-                    self.errorMessage = "Failed to mark messages as seen: \(error)"
+                    print("Failed to fetch recipient's latest message: \(error)")
                     return
                 }
 
-                snapshot?.documents.forEach { document in
-                    document.reference.updateData([FirebaseConstants.seen: true])
+                guard let document = querySnapshot?.documents.first else {
+                    print("No messages found")
+                    return
+                }
+
+                let data = document.data()
+                if let seen = data["seen"] as? Bool, !seen {
+                    // Mark the latest message as seen
+                    document.reference.updateData(["seen": true]) { error in
+                        if let error = error {
+                            print("Failed to update the latest message as seen: \(error)")
+                        } else {
+                            print("Successfully marked the latest message as seen")
+                        }
+                    }
+                } else {
+                    print("The latest message is already marked as seen")
                 }
             }
     }
+
+    
+    /// Set active status to `true` for the current user to a specific chatUser
+        func setActiveStatusToTrue() {
+            guard let currentUserId = FirebaseManager.shared.auth.currentUser?.uid,
+                  let chatUserId = chatUser?.uid else { return }
+
+            let activeStatusRef = FirebaseManager.shared.firestore
+                .collection("activeStatus")
+                .document(currentUserId)
+                .collection("activeList")
+                .document(chatUserId)
+
+            activeStatusRef.setData(["isActive": true], merge: true) { error in
+                if let error = error {
+                    print("Failed to set active status to true: \(error)")
+                } else {
+                    print("Active status set to true for \(chatUserId)")
+                }
+            }
+        }
+
+        /// Set active status to `false` for the current user to a specific chatUser
+        func setActiveStatusToFalse() {
+            guard let currentUserId = FirebaseManager.shared.auth.currentUser?.uid,
+                  let chatUserId = chatUser?.uid else { return }
+
+            let activeStatusRef = FirebaseManager.shared.firestore
+                .collection("activeStatus")
+                .document(currentUserId)
+                .collection("activeList")
+                .document(chatUserId)
+
+            activeStatusRef.setData(["isActive": false], merge: true) { error in
+                if let error = error {
+                    print("Failed to set active status to false: \(error)")
+                } else {
+                    print("Active status set to false for \(chatUserId)")
+                }
+            }
+        }
     
     func markMessageAsSeen(for userId: String) {
             guard let currentUserId = FirebaseManager.shared.auth.currentUser?.uid else {
@@ -219,25 +267,38 @@ class ChatLogViewModel: ObservableObject {
             }
     }
 
-    // Handle sending a message
-    // Handle sending a message
-        func handleSend() {
-            guard let fromId = FirebaseManager.shared.auth.currentUser?.uid else { return }
-            guard let toId = chatUser?.uid else { return }
-
+    func handleSend() {
+        guard let fromId = FirebaseManager.shared.auth.currentUser?.uid else { return }
+        guard let toId = chatUser?.uid else { return }
+        
+        let recipientActiveStatusRef = FirebaseManager.shared.firestore
+            .collection("activeStatus")
+            .document(toId)
+            .collection("activeList")
+            .document(fromId)
+        
+        recipientActiveStatusRef.getDocument { snapshot, error in
+            if let error = error {
+                print("Failed to fetch recipient active status: \(error)")
+                return
+            }
+            
+            let isRecipientActiveToMe = snapshot?.data()?["isActive"] as? Bool ?? false
+            
             let messageData: [String: Any] = [
                 "fromId": fromId,
                 "toId": toId,
-                "text": chatText,
+                "text": self.chatText,
                 "timeStamp": Timestamp(),
-                "seen": false,
+                "seen": isRecipientActiveToMe, // Mark as seen if the recipient is active
                 "sender": "Me"
             ]
-            if chatText == latestSenderMessage?.text {
+            
+            if self.chatText == self.latestSenderMessage?.text {
                 self.fetchLatestMessages()
                 return  // Skip sending if the message is the same as the previous one
             }
-
+            
             FirebaseManager.shared.firestore
                 .collection("messages")
                 .document(fromId)
@@ -247,13 +308,14 @@ class ChatLogViewModel: ObservableObject {
                         self.errorMessage = "Failed to send message: \(error)"
                         return
                     }
-
+                    
                     // 更新当前用户好友列表中的好友的 latestMessageTimestamp
                     self.updateFriendLatestMessageTimestampForRecipient(friendId: toId)
                     self.updateFriendLatestMessageTimestampForSelf(friendId: toId)
                     self.fetchLatestMessages()
                 }
         }
+    }
 
          // 更新当前用户好友列表中的好友的 latestMessageTimestamp
         private func updateFriendLatestMessageTimestampForSelf(friendId: String) {
@@ -448,8 +510,15 @@ struct ChatLogView: View {
                                             Button(action: {
                                                 vm.saveMessage(sender: "You", messageText: recipientMessage.text, timestamp: recipientMessage.timeStamp)
                                             }) {
-                                                LottieAnimationViewContainer(filename: "Save Button")
-                                                    .frame(width: 24, height: 24)
+                                                if #available(iOS 18.0, *) {
+                                                    // iOS 18.0 or newer: Only show the first frame of the Lottie file
+                                                    LottieAnimationViewContainer(filename: "Save Button", isInteractive: false)
+                                                        .frame(width: 24, height: 24)
+                                                } else {
+                                                    // iOS versions below 18.0: Use full Lottie animation with interactivity
+                                                    LottieAnimationViewContainer(filename: "Save Button", isInteractive: true)
+                                                        .frame(width: 24, height: 24)
+                                                }
                                             }
                                             .padding(.trailing, 20)
                                         }
@@ -472,12 +541,12 @@ struct ChatLogView: View {
                                     HStack {
                                         if let senderMessage = vm.latestSenderMessage {
                                             if senderMessage.seen {
-                                                Image("seenbutton")
+                                                Image("Seen")
                                                     .resizable()
                                                     .scaledToFit()
                                                     .frame(width: 52, height: 19)
                                             } else {
-                                                Image("unseenbutton")
+                                                Image("Unseen")
                                                     .resizable()
                                                     .scaledToFit()
                                                     .frame(width: 44, height: 20)
@@ -513,17 +582,31 @@ struct ChatLogView: View {
                                             Button(action: {
                                                 vm.saveMessage(sender: "Me", messageText: vm.chatText, timestamp: Timestamp())
                                             }) {
-                                                LottieAnimationViewContainer(filename: "Save Button")
-                                                    .frame(width: 24, height: 24)
+                                                if #available(iOS 18.0, *) {
+                                                    // iOS 18.0 or newer: Only show the first frame of the Lottie file
+                                                    LottieAnimationViewContainer(filename: "Save Button", isInteractive: false)
+                                                        .frame(width: 24, height: 24)
+                                                } else {
+                                                    // iOS versions below 18.0: Use full Lottie animation with interactivity
+                                                    LottieAnimationViewContainer(filename: "Save Button", isInteractive: true)
+                                                        .frame(width: 24, height: 24)
+                                                }
                                             }
                                         }
 
                                         Button(action: {
-                                            vm.chatText = ""
-                                        }) {
-                                            LottieAnimationViewContainer(filename: "Clear Button")
-                                                .frame(width: 24, height: 24)
-                                        }
+                                                    vm.chatText = ""
+                                                }) {
+                                                    if #available(iOS 18.0, *) {
+                                                        // iOS 18.0 or newer: Only show the first frame of the Lottie file
+                                                        LottieAnimationViewContainer(filename: "Clear Button", isInteractive: false)
+                                                            .frame(width: 24, height: 24)
+                                                    } else {
+                                                        // iOS versions below 18.0: Use full Lottie animation with interactivity
+                                                        LottieAnimationViewContainer(filename: "Clear Button", isInteractive: true)
+                                                            .frame(width: 24, height: 24)
+                                                    }
+                                                }
                                     }
                                     .padding(.trailing, 20) // Align to the right
                                     .padding(.bottom, 24)  // Spacing from bottom edge
@@ -579,10 +662,13 @@ struct ChatLogView: View {
         .onAppear {
             vm.initializeMessages()
             vm.startAutoSend()
+            vm.setActiveStatusToTrue()
+            vm.markLatestMessageAsSeen()
         }
         .onDisappear {
             vm.stopAutoSend()
             vm.markMessageAsSeen(for: vm.chatUser?.uid ?? "")
+            vm.setActiveStatusToFalse()
         }
         .navigationBarBackButtonHidden(true) // Hide the default back button
         .navigationDestination(isPresented: $navigateToMainMessageView) {
@@ -637,11 +723,18 @@ struct ChatLogView: View {
                     // Save button for recipient's message
                     if  !recipientMessage.text.isEmpty {
                         Button(action: {
-                            vm.saveMessage(sender: "You", messageText: recipientMessage.text, timestamp: recipientMessage.timeStamp)
-                        }) {
-                            LottieAnimationViewContainer(filename: "Save Button")
-                                .frame(width: 24, height: 24)
-                        }
+                                    vm.chatText = ""
+                                }) {
+                                    if #available(iOS 18.0, *) {
+                                        // iOS 18.0 or newer: Only show the first frame of the Lottie file
+                                        LottieAnimationViewContainer(filename: "Clear Button", isInteractive: false)
+                                            .frame(width: 24, height: 24)
+                                    } else {
+                                        // iOS versions below 18.0: Use full Lottie animation with interactivity
+                                        LottieAnimationViewContainer(filename: "Clear Button", isInteractive: true)
+                                            .frame(width: 24, height: 24)
+                                    }
+                                }
                     }
                 }
                 .padding()
@@ -748,10 +841,9 @@ struct SavedMessagesView: View {
     }
 }
 
-import Lottie
-
 struct LottieAnimationViewContainer: UIViewRepresentable {
     var filename: String
+    var isInteractive: Bool
 
     class Coordinator: NSObject {
         var animationView: LottieAnimationView?
@@ -766,31 +858,35 @@ struct LottieAnimationViewContainer: UIViewRepresentable {
     }
 
     func makeUIView(context: Context) -> UIView {
-        let view = UIView(frame: .zero)
+        let containerView = UIView(frame: .zero)
         let animationView = LottieAnimationView(name: filename)
         animationView.contentMode = .scaleAspectFit
         animationView.loopMode = .playOnce
-
-        view.addSubview(animationView)
+        animationView.isUserInteractionEnabled = false // Disable direct interaction
+        
+        containerView.addSubview(animationView)
         animationView.translatesAutoresizingMaskIntoConstraints = false
         NSLayoutConstraint.activate([
-            animationView.widthAnchor.constraint(equalTo: view.widthAnchor),
-            animationView.heightAnchor.constraint(equalTo: view.heightAnchor)
+            animationView.widthAnchor.constraint(equalTo: containerView.widthAnchor),
+            animationView.heightAnchor.constraint(equalTo: containerView.heightAnchor)
         ])
 
         context.coordinator.animationView = animationView
 
-        // Add tap gesture recognizer
-        let tapGesture = UITapGestureRecognizer(target: context.coordinator, action: #selector(Coordinator.handleTap))
-        view.addGestureRecognizer(tapGesture)
+        if isInteractive {
+            // Add tap gesture recognizer to the containerView
+            let tapGesture = UITapGestureRecognizer(target: context.coordinator, action: #selector(Coordinator.handleTap))
+            containerView.addGestureRecognizer(tapGesture)
+        }
 
-        return view
+        return containerView
     }
 
     func updateUIView(_ uiView: UIView, context: Context) {
-        // Ensure the animation is reset to the starting frame
-        if let animationView = uiView.subviews.first as? LottieAnimationView {
-            animationView.currentFrame = 0
+        if let animationView = context.coordinator.animationView {
+            if !isInteractive {
+                animationView.currentFrame = 0
+            }
         }
     }
 }

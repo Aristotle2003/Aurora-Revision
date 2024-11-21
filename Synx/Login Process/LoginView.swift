@@ -33,15 +33,20 @@ struct LoginView: View {
         }
     }
     @State private var loginStatusMessage = ""
+    @State var haveUserName = false
     
     
     // Apple nonce
     @State private var nonce: String?
     
     var body: some View {
-        if isLogin{
+        if isLogin && haveUserName{
             MainMessagesView()
+        } else if isLogin && !haveUserName{
+            // 进入设置用户名界面
+            SetUsernameView(haveUserName: $haveUserName)
         }
+        
         else{
             NavigationView {
                 ScrollView {
@@ -213,6 +218,10 @@ struct LoginView: View {
                     .padding()
                     
                 }
+                // .onAppear{
+                //     checkIfUserHasUsername()
+                // }
+                
                 .navigationTitle(isPhoneLogin ? "One-step Sign In" : "Email Sign In")
                 .background(Color(.init(white: 0, alpha: 0.05))
                     .ignoresSafeArea())
@@ -289,7 +298,10 @@ struct LoginView: View {
                         if let data = snapshot?.data() {
                             let chatUser = ChatUser(data: data)
                             self.loginStatusMessage = "Successfully logged in as \(chatUser.email)"
-                            self.isLogin = true
+                            self.checkIfUserHasUsername { hasUsername in
+                                self.haveUserName = hasUsername
+                                self.isLogin = true
+                            }
                         // New user set up profile
                         } else {
                             self.showProfileSetup = true
@@ -347,7 +359,10 @@ struct LoginView: View {
                 return
             }
             self.loginStatusMessage = "Successfully logged in as user: \(result?.user.uid ?? "")"
-            self.isLogin = true
+            self.checkIfUserHasUsername { hasUsername in
+                self.haveUserName = hasUsername
+                self.isLogin = true
+            }
         }
     }
     
@@ -424,12 +439,29 @@ struct LoginView: View {
                         if let data = snapshot?.data() {
                             let chatUser = ChatUser(data: data)
                             self.loginStatusMessage = "Successfully logged in as \(chatUser.email)"
-                            self.isLogin = true
+                            self.checkIfUserHasUsername { hasUsername in
+                                self.haveUserName = hasUsername
+                                self.isLogin = true
+                            }
                         // New user set up profile
                         } else {
                             self.showProfileSetup = true
                         }
                     }
+            }
+        }
+    }
+
+    func checkIfUserHasUsername(completion: @escaping (Bool) -> Void) {
+        guard let uid = FirebaseManager.shared.auth.currentUser?.uid else { return }
+        let userRef = FirebaseManager.shared.firestore.collection("users").document(uid)
+        userRef.getDocument { snapshot, error in
+            if let data = snapshot?.data(), let username = data["username"] as? String, !username.isEmpty {
+                print(username)
+                completion(true)
+            } else {
+                print("No username")
+                completion(false)
             }
         }
     }
