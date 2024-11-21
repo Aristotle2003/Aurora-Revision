@@ -13,9 +13,12 @@
 		FB42CB852CD81D4600283244 /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = FB42CB842CD81D4600283244 /* AppDelegate.swift */; };
 		FB42CB882CD81DA000283244 /* GoogleSignIn in Frameworks */ = {isa = PBXBuildFile; productRef = FB42CB872CD81DA000283244 /* GoogleSignIn */; };
 		FB42CB8A2CD81DA000283244 /* GoogleSignInSwift in Frameworks */ = {isa = PBXBuildFile; productRef = FB42CB892CD81DA000283244 /* GoogleSignInSwift */; };
+		FB6764232CEE856400FCE17E /* Lottie in Frameworks */ = {isa = PBXBuildFile; productRef = FB6764222CEE856400FCE17E /* Lottie */; };
+		FB6764292CEEE82D00FCE17E /* Clear Button.json in Resources */ = {isa = PBXBuildFile; fileRef = FB6764282CEEE82D00FCE17E /* Clear Button.json */; };
+		FB67642B2CEEE83E00FCE17E /* Save Button.json in Resources */ = {isa = PBXBuildFile; fileRef = FB67642A2CEEE83E00FCE17E /* Save Button.json */; };
+		FB67642D2CEEE86A00FCE17E /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = FB67642C2CEEE86A00FCE17E /* Assets.xcassets */; };
 		FB7E20792CBCC6E900209582 /* SynxApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = FB7E20782CBCC6E900209582 /* SynxApp.swift */; };
 		FB7E207B2CBCC6E900209582 /* LoginView.swift in Sources */ = {isa = PBXBuildFile; fileRef = FB7E207A2CBCC6E900209582 /* LoginView.swift */; };
-		FB7E207D2CBCC6EA00209582 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = FB7E207C2CBCC6EA00209582 /* Assets.xcassets */; };
 		FB7E20802CBCC6EA00209582 /* Preview Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = FB7E207F2CBCC6EA00209582 /* Preview Assets.xcassets */; };
 		FB7E208A2CBCC6EB00209582 /* SynxTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = FB7E20892CBCC6EB00209582 /* SynxTests.swift */; };
 		FB7E20942CBCC6EB00209582 /* SynxUITests.swift in Sources */ = {isa = PBXBuildFile; fileRef = FB7E20932CBCC6EB00209582 /* SynxUITests.swift */; };
@@ -63,10 +66,12 @@
 		FB42CB7F2CD5B5A000283244 /* FriendGroupView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FriendGroupView.swift; sourceTree = "<group>"; };
 		FB42CB822CD66D9E00283244 /* EditProfileView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EditProfileView.swift; sourceTree = "<group>"; };
 		FB42CB842CD81D4600283244 /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
+		FB6764282CEEE82D00FCE17E /* Clear Button.json */ = {isa = PBXFileReference; lastKnownFileType = text.json; path = "Clear Button.json"; sourceTree = "<group>"; };
+		FB67642A2CEEE83E00FCE17E /* Save Button.json */ = {isa = PBXFileReference; lastKnownFileType = text.json; path = "Save Button.json"; sourceTree = "<group>"; };
+		FB67642C2CEEE86A00FCE17E /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		FB7E20752CBCC6E900209582 /* Synx.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Synx.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		FB7E20782CBCC6E900209582 /* SynxApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SynxApp.swift; sourceTree = "<group>"; };
 		FB7E207A2CBCC6E900209582 /* LoginView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LoginView.swift; sourceTree = "<group>"; };
-		FB7E207C2CBCC6EA00209582 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		FB7E207F2CBCC6EA00209582 /* Preview Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = "Preview Assets.xcassets"; sourceTree = "<group>"; };
 		FB7E20852CBCC6EB00209582 /* SynxTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = SynxTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		FB7E20892CBCC6EB00209582 /* SynxTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SynxTests.swift; sourceTree = "<group>"; };
@@ -97,6 +102,7 @@
 			files = (
 				FB83BD9D2CD8656D00A7BE4E /* FirebaseMessaging in Frameworks */,
 				FB7E20BB2CC017BC00209582 /* SDWebImageSwiftUI in Frameworks */,
+				FB6764232CEE856400FCE17E /* Lottie in Frameworks */,
 				FB7E20A42CBE262300209582 /* FirebaseAuth in Frameworks */,
 				FB42CB8A2CD81DA000283244 /* GoogleSignInSwift in Frameworks */,
 				FB7E20A62CBE262300209582 /* FirebaseStorage in Frameworks */,
@@ -170,6 +176,8 @@
 		FB7E20772CBCC6E900209582 /* Synx */ = {
 			isa = PBXGroup;
 			children = (
+				FB6764282CEEE82D00FCE17E /* Clear Button.json */,
+				FB67642A2CEEE83E00FCE17E /* Save Button.json */,
 				FB83BD952CD859BE00A7BE4E /* Synx.entitlements */,
 				FB83BD902CD81ECC00A7BE4E /* Info.plist */,
 				FBB505022CCEA62D00FF1C87 /* Login Process */,
@@ -178,7 +186,7 @@
 				FB7E20B32CBF23B200209582 /* MainMessages */,
 				FB7E20782CBCC6E900209582 /* SynxApp.swift */,
 				FB83BD982CD85E6600A7BE4E /* GoogleService-Info.plist */,
-				FB7E207C2CBCC6EA00209582 /* Assets.xcassets */,
+				FB67642C2CEEE86A00FCE17E /* Assets.xcassets */,
 				FB7E207E2CBCC6EA00209582 /* Preview Content */,
 			);
 			path = Synx;
@@ -319,6 +327,7 @@
 				FB42CB872CD81DA000283244 /* GoogleSignIn */,
 				FB42CB892CD81DA000283244 /* GoogleSignInSwift */,
 				FB83BD9C2CD8656D00A7BE4E /* FirebaseMessaging */,
+				FB6764222CEE856400FCE17E /* Lottie */,
 			);
 			productName = Synx;
 			productReference = FB7E20752CBCC6E900209582 /* Synx.app */;
@@ -396,6 +405,7 @@
 				FB7E20A22CBE262200209582 /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */,
 				FB7E20B92CC017BC00209582 /* XCRemoteSwiftPackageReference "SDWebImageSwiftUI" */,
 				FB42CB862CD81DA000283244 /* XCRemoteSwiftPackageReference "GoogleSignIn-iOS" */,
+				FB6764212CEE856300FCE17E /* XCRemoteSwiftPackageReference "lottie-ios" */,
 			);
 			productRefGroup = FB7E20762CBCC6E900209582 /* Products */;
 			projectDirPath = "";
@@ -413,8 +423,10 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				FB67642B2CEEE83E00FCE17E /* Save Button.json in Resources */,
 				FB7E20802CBCC6EA00209582 /* Preview Assets.xcassets in Resources */,
-				FB7E207D2CBCC6EA00209582 /* Assets.xcassets in Resources */,
+				FB6764292CEEE82D00FCE17E /* Clear Button.json in Resources */,
+				FB67642D2CEEE86A00FCE17E /* Assets.xcassets in Resources */,
 				FB83BD992CD85E6600A7BE4E /* GoogleService-Info.plist in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -801,6 +813,14 @@
 				minimumVersion = 8.0.0;
 			};
 		};
+		FB6764212CEE856300FCE17E /* XCRemoteSwiftPackageReference "lottie-ios" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/airbnb/lottie-ios";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 4.5.0;
+			};
+		};
 		FB7E20A22CBE262200209582 /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */ = {
 			isa = XCRemoteSwiftPackageReference;
 			repositoryURL = "https://github.com/firebase/firebase-ios-sdk";
@@ -829,6 +849,11 @@
 			isa = XCSwiftPackageProductDependency;
 			package = FB42CB862CD81DA000283244 /* XCRemoteSwiftPackageReference "GoogleSignIn-iOS" */;
 			productName = GoogleSignInSwift;
+		};
+		FB6764222CEE856400FCE17E /* Lottie */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = FB6764212CEE856300FCE17E /* XCRemoteSwiftPackageReference "lottie-ios" */;
+			productName = Lottie;
 		};
 		FB7E20A32CBE262300209582 /* FirebaseAuth */ = {
 			isa = XCSwiftPackageProductDependency;

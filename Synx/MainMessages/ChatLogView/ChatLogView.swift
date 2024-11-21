@@ -3,6 +3,7 @@ import SDWebImageSwiftUI
 import Firebase
 import FirebaseFirestore
 import FirebaseAuth
+import Lottie
 
 struct FirebaseConstants {
     static let fromId = "fromId"
@@ -219,83 +220,79 @@ class ChatLogViewModel: ObservableObject {
     }
 
     // Handle sending a message
-    func handleSend() {
-        guard let fromId = FirebaseManager.shared.auth.currentUser?.uid else { return }
-        guard let toId = chatUser?.uid else { return }
+    // Handle sending a message
+        func handleSend() {
+            guard let fromId = FirebaseManager.shared.auth.currentUser?.uid else { return }
+            guard let toId = chatUser?.uid else { return }
 
-        let messageData: [String: Any] = [
-            "fromId": fromId,
-            "toId": toId,
-            "text": chatText,
-            "timeStamp": Timestamp(),
-            "seen": false,
-            "sender": "Me"
-        ]
-        if chatText == latestSenderMessage?.text {
-            self.fetchLatestMessages()
-            return  // Skip sending if the message is the same as the previous one
+            let messageData: [String: Any] = [
+                "fromId": fromId,
+                "toId": toId,
+                "text": chatText,
+                "timeStamp": Timestamp(),
+                "seen": false,
+                "sender": "Me"
+            ]
+            if chatText == latestSenderMessage?.text {
+                self.fetchLatestMessages()
+                return  // Skip sending if the message is the same as the previous one
+            }
+
+            FirebaseManager.shared.firestore
+                .collection("messages")
+                .document(fromId)
+                .collection(toId)
+                .addDocument(data: messageData) { error in
+                    if let error = error {
+                        self.errorMessage = "Failed to send message: \(error)"
+                        return
+                    }
+
+                    // 更新当前用户好友列表中的好友的 latestMessageTimestamp
+                    self.updateFriendLatestMessageTimestampForRecipient(friendId: toId)
+                    self.updateFriendLatestMessageTimestampForSelf(friendId: toId)
+                    self.fetchLatestMessages()
+                }
         }
 
-        FirebaseManager.shared.firestore
-            .collection("messages")
-            .document(fromId)
-            .collection(toId)
-            .addDocument(data: messageData) { error in
+         // 更新当前用户好友列表中的好友的 latestMessageTimestamp
+        private func updateFriendLatestMessageTimestampForSelf(friendId: String) {
+            guard let uid = FirebaseManager.shared.auth.currentUser?.uid else { return }
+            let timestamp = Timestamp()
+        
+            let friendRef = FirebaseManager.shared.firestore
+                .collection("friends")
+                .document(uid)
+                .collection("friend_list")
+                .document(friendId)
+        
+            friendRef.updateData(["latestMessageTimestamp": timestamp]) { error in
                 if let error = error {
-                    self.errorMessage = "Failed to send message: \(error)"
+                    print("Failed to update latestMessageTimestamp for friend: \(error)")
                     return
                 }
-
-                // 更新当前用户好友列表中的好友的 latestMessageTimestamp
-                self.updateFriendLatestMessageTimestampForRecipient(friendId: toId)
-                self.updateFriendLatestMessageTimestampForSelf(friendId: toId)
-                self.fetchLatestMessages()
+                print("Successfully updated latestMessageTimestamp for friend")
             }
-    }
-
-     // 更新当前用户好友列表中的好友的 latestMessageTimestamp
-    private func updateFriendLatestMessageTimestampForSelf(friendId: String) {
-        guard let uid = FirebaseManager.shared.auth.currentUser?.uid else { return }
-        let timestamp = Timestamp()
-    
-        let friendRef = FirebaseManager.shared.firestore
-            .collection("friends")
-            .document(uid)
-            .collection("friend_list")
-            .document(friendId)
-    
-        friendRef.updateData(["latestMessageTimestamp": timestamp]) { error in
-            if let error = error {
-                print("Failed to update latestMessageTimestamp for friend: \(error)")
-                return
-            }
-            print("Successfully updated latestMessageTimestamp for friend")
         }
-    }
-    
-    private func updateFriendLatestMessageTimestampForRecipient(friendId: String) {
-        guard let uid = FirebaseManager.shared.auth.currentUser?.uid else { return }
-        let timestamp = Timestamp()
-    
-        let friendRef = FirebaseManager.shared.firestore
-            .collection("friends")
-            .document(friendId)
-            .collection("friend_list")
-            .document(uid)
-    
-        friendRef.updateData(["latestMessageTimestamp": timestamp]) { error in
-            if let error = error {
-                print("Failed to update latestMessageTimestamp for friend: \(error)")
-                return
+        
+        private func updateFriendLatestMessageTimestampForRecipient(friendId: String) {
+            guard let uid = FirebaseManager.shared.auth.currentUser?.uid else { return }
+            let timestamp = Timestamp()
+        
+            let friendRef = FirebaseManager.shared.firestore
+                .collection("friends")
+                .document(friendId)
+                .collection("friend_list")
+                .document(uid)
+        
+            friendRef.updateData(["latestMessageTimestamp": timestamp]) { error in
+                if let error = error {
+                    print("Failed to update latestMessageTimestamp for friend: \(error)")
+                    return
+                }
+                print("Successfully updated latestMessageTimestamp for friend")
             }
-            print("Successfully updated latestMessageTimestamp for friend")
         }
-    }
-
-
-    // 更新好友的好友列表中的当前用户的 latestMessageTimestamp
-    
-
     // Save the message to Firebase
     func saveMessage(sender: String, messageText: String, timestamp: Timestamp) {
         guard let fromId = FirebaseManager.shared.auth.currentUser?.uid else { return }
@@ -324,10 +321,229 @@ class ChatLogViewModel: ObservableObject {
 struct ChatLogView: View {
     @ObservedObject var vm: ChatLogViewModel
     @State private var navigateToMainMessageView = false
+    @State var message2 = ""
+    @FocusState private var isInputFocused: Bool
 
     var body: some View {
         NavigationStack {
-            HStack {
+            ZStack{
+                Image("chatlogviewbackground")
+                    .resizable()
+                    .ignoresSafeArea(.all, edges: .all)
+                VStack{
+                    let topbarheight = UIScreen.main.bounds.height * 0.07
+                    HStack{
+                        Button(action: {
+                            navigateToMainMessageView = true
+                        }) {
+                            Image("chatlogviewbackbutton")
+                                .resizable()
+                                .frame(width: 24, height: 24)
+                                .padding(.leading, 20)
+                                //.padding(8)
+                        }
+                        
+                        Spacer()
+                        Image("auroratext")
+                            .resizable()
+                            .scaledToFill()
+                            .frame(width: UIScreen.main.bounds.width * 0.1832, height: UIScreen.main.bounds.height * 0.0198)
+                            //.padding(12)
+                        
+                        Spacer()
+                        
+                        Button(action: {
+                            print("Three dots button tapped")
+                        }) {
+                            Image("chatlogviewthreedotsbutton")
+                                .resizable()
+                                .frame(width: 24, height: 24)
+                                .padding(.trailing, 20)
+                                //.padding(8)
+                        }
+                    }
+                    //.background(Color.white)
+                    .frame(height: topbarheight)
+                    
+                    let geoheight = UIScreen.main.bounds.height - topbarheight - UIScreen.main.bounds.height * 0.455 //不许动
+                    GeometryReader { geometry in
+                        let width = geometry.size.width * 0.895 // 90% of screen width
+                        let height = width * 0.549
+                        VStack(spacing: 16){
+                            ZStack {
+                                // Background Image
+                                Image("chatlogviewwhitebox")
+                                    .resizable()
+                                    .frame(width: width, height: height)
+
+                                // Content
+                                VStack(spacing: 12) { // 12 points of spacing between sections
+                                    // HStack for Profile Photo
+                                    HStack {
+                                        if let chatUser = vm.chatUser {
+                                            NavigationLink(destination: ProfileView(
+                                                chatUser: chatUser,
+                                                currentUser: getCurrentUser(),
+                                                isCurrentUser: false,
+                                                chatLogViewModel: vm
+                                            )) {
+                                                WebImage(url: URL(string: vm.chatUser?.profileImageUrl ?? ""))
+                                                    .resizable()
+                                                    .scaledToFill()
+                                                    .frame(width: 42, height: 42)
+                                                    .clipShape(Circle())
+                                            }
+                                        }
+                                        Spacer()
+                                    }
+                                    .padding(.leading, 20)
+                                    .padding(.top, 20)
+
+                                    // Scrollable Text Section
+                                    GeometryReader { geometry in
+                                        VStack {
+                                            Spacer(minLength: 0) // Top Spacer
+
+                                            if let recipientMessage = vm.latestRecipientMessage {
+                                                ScrollView {
+                                                    VStack {
+                                                        // Calculate dynamic spacing based on the number of lines
+                                                        Spacer(minLength: {
+                                                            let maxWidth = geometry.size.width - 40
+                                                            let fontHeight = UIFont.systemFont(ofSize: 18).lineHeight
+                                                            let lineCount = recipientMessage.text.boundingRect(
+                                                                with: CGSize(width: maxWidth, height: .infinity),
+                                                                options: [.usesLineFragmentOrigin, .usesFontLeading],
+                                                                attributes: [.font: UIFont.systemFont(ofSize: 18)],
+                                                                context: nil
+                                                            ).height / fontHeight
+
+                                                            if lineCount <= 1 {
+                                                                return max((geometry.size.height - 20) / 2, 0)
+                                                            } else if lineCount == 2 {
+                                                                return max((geometry.size.height - 45) / 1.7, 0)
+                                                            } else {
+                                                                return 0 // For 3+ lines, no additional spacer
+                                                            }
+                                                        }())
+
+                                                        Text(recipientMessage.text)
+                                                            .font(Font.system(size: 18))
+                                                            .multilineTextAlignment(.center)
+                                                            .foregroundColor(Color(red: 0.553, green: 0.525, blue: 0.525))
+                                                            .frame(maxWidth: geometry.size.width - 40)
+                                                            .padding(.horizontal, 20)
+                                                    }
+                                                }
+                                            }
+
+                                            Spacer(minLength: 0) // Bottom Spacer
+                                        }
+                                    }
+
+                                    // HStack for Save Button
+                                    HStack {
+                                        Spacer()
+                                        if let recipientMessage = vm.latestRecipientMessage, !recipientMessage.text.isEmpty {
+                                            Button(action: {
+                                                vm.saveMessage(sender: "You", messageText: recipientMessage.text, timestamp: recipientMessage.timeStamp)
+                                            }) {
+                                                LottieAnimationViewContainer(filename: "Save Button")
+                                                    .frame(width: 24, height: 24)
+                                            }
+                                            .padding(.trailing, 20)
+                                        }
+                                    }
+                                    .padding(.bottom, 24)
+                                }
+                            }
+                            //.background(Color.blue) // ZStack background color
+                            .frame(width: width, height: height)
+
+                            
+                            ZStack {
+                                // Background Image
+                                Image("chatlogviewpurplebox")
+                                    .resizable()
+                                    .frame(width: width, height: height)
+
+                                // Top-left Seen/Unseen Button
+                                VStack {
+                                    HStack {
+                                        if let senderMessage = vm.latestSenderMessage {
+                                            if senderMessage.seen {
+                                                Image("seenbutton")
+                                                    .resizable()
+                                                    .scaledToFit()
+                                                    .frame(width: 52, height: 19)
+                                            } else {
+                                                Image("unseenbutton")
+                                                    .resizable()
+                                                    .scaledToFit()
+                                                    .frame(width: 44, height: 20)
+                                            }
+                                        }
+                                        Spacer()
+                                    }
+                                    .padding(.leading, 20)
+                                    .padding(.top, 20)
+
+                                    Spacer() // Push everything else below
+                                }
+
+                                // Centered Text Input
+                                VStack {
+                                    Spacer() // Push TextField down
+                                    TextField("Type your message...", text: $vm.chatText)
+                                        .font(Font.system(size: 18))
+                                        .foregroundColor(Color(red: 0.553, green: 0.525, blue: 0.525))
+                                        .multilineTextAlignment(.center)
+                                        .focused($isInputFocused)
+                                        .background(Color.clear)
+                                        .padding(.horizontal, 20) // Ensure spacing from sides
+                                    Spacer() // Push TextField up
+                                }
+
+                                // Bottom Save and Clear Buttons
+                                VStack {
+                                    Spacer() // Push buttons to the bottom
+                                    HStack(spacing: 16) { // 20-point spacing between buttons
+                                        Spacer()
+                                        if !vm.chatText.isEmpty {
+                                            Button(action: {
+                                                vm.saveMessage(sender: "Me", messageText: vm.chatText, timestamp: Timestamp())
+                                            }) {
+                                                LottieAnimationViewContainer(filename: "Save Button")
+                                                    .frame(width: 24, height: 24)
+                                            }
+                                        }
+
+                                        Button(action: {
+                                            vm.chatText = ""
+                                        }) {
+                                            LottieAnimationViewContainer(filename: "Clear Button")
+                                                .frame(width: 24, height: 24)
+                                        }
+                                    }
+                                    .padding(.trailing, 20) // Align to the right
+                                    .padding(.bottom, 24)  // Spacing from bottom edge
+                                }
+                            }
+                            //.background(Color.blue)
+                            .frame(width: width, height: height)
+
+
+                        }
+                        .frame(maxWidth: .infinity, alignment: .center)
+                    }
+                    //.background(Color.blue)
+                    .frame(height: geoheight)
+                    
+                    Spacer()
+                }
+                .frame(maxHeight: .infinity)
+            }
+            /*HStack {
                 // Back button to navigate to MainMessagesView
                 Button(action: {
                     navigateToMainMessageView = true
@@ -358,10 +574,8 @@ struct ChatLogView: View {
             }
             .sheet(isPresented: $vm.showSavedMessagesWindow) {
                 SavedMessagesView(vm: vm)
-            }
+            }*/
         }
-        .navigationTitle(vm.chatUser?.email ?? "")
-        .navigationBarTitleDisplayMode(.inline)
         .onAppear {
             vm.initializeMessages()
             vm.startAutoSend()
@@ -398,14 +612,14 @@ struct ChatLogView: View {
                     chatLogViewModel: vm
                 )) {
                     WebImage(url: URL(string: vm.chatUser?.profileImageUrl ?? ""))
-                                                            .resizable()
-                                                            .scaledToFill()
-                                                            .frame(width: 50, height: 50)
-                                                            .clipShape(Circle())
-                                                            .overlay(
-                                                                Circle()
-                                                                    .stroke(Color(.systemGray4), lineWidth: 1)
-                                                            )
+                        .resizable()
+                        .scaledToFill()
+                        .frame(width: 50, height: 50)
+                        .clipShape(Circle())
+                        .overlay(
+                            Circle()
+                                .stroke(Color(.systemGray4), lineWidth: 1)
+                        )
                 }
             }
 
@@ -425,8 +639,8 @@ struct ChatLogView: View {
                         Button(action: {
                             vm.saveMessage(sender: "You", messageText: recipientMessage.text, timestamp: recipientMessage.timeStamp)
                         }) {
-                            Image(systemName: "square.and.arrow.down")
-                                .padding()
+                            LottieAnimationViewContainer(filename: "Save Button")
+                                .frame(width: 24, height: 24)
                         }
                     }
                 }
@@ -531,5 +745,52 @@ struct SavedMessagesView: View {
             }
         }
         .padding()
+    }
+}
+
+import Lottie
+
+struct LottieAnimationViewContainer: UIViewRepresentable {
+    var filename: String
+
+    class Coordinator: NSObject {
+        var animationView: LottieAnimationView?
+
+        @objc func handleTap() {
+            animationView?.play()
+        }
+    }
+
+    func makeCoordinator() -> Coordinator {
+        Coordinator()
+    }
+
+    func makeUIView(context: Context) -> UIView {
+        let view = UIView(frame: .zero)
+        let animationView = LottieAnimationView(name: filename)
+        animationView.contentMode = .scaleAspectFit
+        animationView.loopMode = .playOnce
+
+        view.addSubview(animationView)
+        animationView.translatesAutoresizingMaskIntoConstraints = false
+        NSLayoutConstraint.activate([
+            animationView.widthAnchor.constraint(equalTo: view.widthAnchor),
+            animationView.heightAnchor.constraint(equalTo: view.heightAnchor)
+        ])
+
+        context.coordinator.animationView = animationView
+
+        // Add tap gesture recognizer
+        let tapGesture = UITapGestureRecognizer(target: context.coordinator, action: #selector(Coordinator.handleTap))
+        view.addGestureRecognizer(tapGesture)
+
+        return view
+    }
+
+    func updateUIView(_ uiView: UIView, context: Context) {
+        // Ensure the animation is reset to the starting frame
+        if let animationView = uiView.subviews.first as? LottieAnimationView {
+            animationView.currentFrame = 0
+        }
     }
 }
