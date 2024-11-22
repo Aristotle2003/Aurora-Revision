@@ -2,10 +2,13 @@ import SwiftUI
 import Firebase
 
 // MARK: - Message Model
-struct Message {
+struct Message: Hashable {
+    let id: String // Unique message ID
     let sender: String
     let text: String
     let timestamp: Date
+    let fromId: String
+    let toId: String
 }
 
 // Date formatter for displaying timestamps
@@ -36,12 +39,15 @@ class MessagesViewModel: ObservableObject {
                 var messagesByDate: [Date: [Message]] = [:]
                 snapshot?.documents.forEach { document in
                     let data = document.data()
-                    let sender = data[FirebaseConstants.sender] as? String ?? ""
-                    let text = data[FirebaseConstants.text] as? String ?? ""
+                    let id = document.documentID
+                    let sender = data["sender"] as? String ?? ""
+                    let text = data["text"] as? String ?? ""
                     let timestamp = data["timestamp"] as? Timestamp ?? Timestamp()
+                    let fromId = data["fromId"] as? String ?? ""
+                    let toId = data["toId"] as? String ?? ""
                     let date = timestamp.dateValue()
 
-                    let message = Message(sender: sender, text: text, timestamp: date)
+                    let message = Message(id: id, sender: sender, text: text, timestamp: date, fromId: fromId, toId: toId)
 
                     let calendar = Calendar.current
                     let components = calendar.dateComponents([.year, .month, .day], from: date)
@@ -62,24 +68,58 @@ class MessagesViewModel: ObservableObject {
 struct CalendarMessagesView: View {
     @ObservedObject var messagesViewModel: MessagesViewModel
     @State private var selectedDate: Date? = nil
+    @State private var isEditing: Bool = false
+    @State private var selectedMessages: Set<Message> = []
 
     var body: some View {
         VStack {
             // Calendar UI
             CalendarView(selectedDate: $selectedDate)
 
+            // Edit Button
+            HStack {
+                if isEditing {
+                    Button("Delete") {
+                        deleteSelectedMessages()
+                    }
+                    .disabled(selectedMessages.isEmpty)
+                    .padding()
+                }
+
+                Spacer()
+
+                Button(isEditing ? "Done" : "Edit") {
+                    isEditing.toggle()
+                    if !isEditing {
+                        selectedMessages.removeAll()
+                    }
+                }
+                .padding()
+            }
+
             // Display messages for the selected date
             if let selectedDate = selectedDate {
                 if let messages = messagesViewModel.messagesByDate[selectedDate] {
-                    List(messages.sorted(by: { $0.timestamp < $1.timestamp }), id: \.timestamp) { message in
-                        VStack(alignment: .leading) {
-                            Text(message.sender)
-                                .font(.headline)
-                            Text(message.text)
-                                .font(.subheadline)
-                            Text("\(message.timestamp, formatter: dateFormatter)")
-                                .font(.caption)
-                                .foregroundColor(.gray)
+                    List(messages.sorted(by: { $0.timestamp < $1.timestamp }), id: \.id) { message in
+                        HStack {
+                            if isEditing {
+                                Button(action: {
+                                    toggleMessageSelection(message)
+                                }) {
+                                    Image(systemName: selectedMessages.contains(message) ? "checkmark.circle.fill" : "circle")
+                                        .foregroundColor(.blue)
+                                }
+                            }
+
+                            VStack(alignment: .leading) {
+                                Text(message.sender)
+                                    .font(.headline)
+                                Text(message.text)
+                                    .font(.subheadline)
+                                Text("\(message.timestamp, formatter: dateFormatter)")
+                                    .font(.caption)
+                                    .foregroundColor(.gray)
+                            }
                         }
                     }
                 } else {
@@ -93,8 +133,49 @@ struct CalendarMessagesView: View {
         }
         .navigationTitle("Messages Calendar")
     }
+
+    // Toggle message selection in edit mode
+    private func toggleMessageSelection(_ message: Message) {
+        if selectedMessages.contains(message) {
+            selectedMessages.remove(message)
+        } else {
+            selectedMessages.insert(message)
+        }
+    }
+
+    // Delete selected messages
+    private func deleteSelectedMessages() {
+        guard let selectedDate = selectedDate else { return }
+        guard let messagesToDelete = messagesViewModel.messagesByDate[selectedDate]?.filter({ selectedMessages.contains($0) }) else { return }
+
+        // Delete messages from Firestore
+        for message in messagesToDelete {
+            deleteMessageFromFirestore(message)
+        }
+
+        // Remove messages locally
+        messagesViewModel.messagesByDate[selectedDate]?.removeAll(where: { selectedMessages.contains($0) })
+        selectedMessages.removeAll()
+    }
+
+    // Firestore deletion logic
+    private func deleteMessageFromFirestore(_ message: Message) {
+        FirebaseManager.shared.firestore
+            .collection("saving_messages")
+            .document(message.fromId)
+            .collection(message.toId)
+            .document(message.id)
+            .delete { error in
+                if let error = error {
+                    print("Error deleting message: \(error)")
+                } else {
+                    print("Message deleted successfully")
+                }
+            }
+    }
 }
 
+// MARK: - CalendarView
 struct CalendarView: View {
     @Binding var selectedDate: Date?
     @State private var currentMonth: Date = Date()

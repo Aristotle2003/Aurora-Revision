@@ -364,7 +364,9 @@ class ChatLogViewModel: ObservableObject {
         let saveData: [String: Any] = [
             FirebaseConstants.sender: sender,
             FirebaseConstants.text: messageText,
-            "timestamp": timestamp
+            "timestamp": timestamp,
+            "fromId": fromId,
+            "toId": toId
         ]
 
         FirebaseManager.shared.firestore
@@ -384,7 +386,6 @@ class ChatLogViewModel: ObservableObject {
 struct ChatLogView: View {
     @ObservedObject var vm: ChatLogViewModel
     @State private var navigateToMainMessageView = false
-    @State var message2 = ""
     @FocusState private var isInputFocused: Bool
 
     var body: some View {
@@ -510,17 +511,17 @@ struct ChatLogView: View {
                                                     }
                                                 }
                                             }
-
+                                            
                                             Spacer(minLength: 0) // Bottom Spacer
                                         }
                                     }
-
+                                    
                                     // HStack for Save Button
                                     HStack {
                                         Spacer()
                                         if let recipientMessage = vm.latestRecipientMessage, !recipientMessage.text.isEmpty {
                                             Button(action: {
-                                                vm.saveMessage(sender: "You", messageText: recipientMessage.text, timestamp: recipientMessage.timeStamp)
+                                                vm.saveMessage(sender: vm.chatUser?.username ?? "", messageText: recipientMessage.text, timestamp: recipientMessage.timeStamp)
                                             }) {
                                                 if #available(iOS 18.0, *) {
                                                     // iOS 18.0 or newer: Only show the first frame of the Lottie file
@@ -574,15 +575,27 @@ struct ChatLogView: View {
 
                                 // Centered Text Input
                                 VStack {
-                                    Spacer() // Push TextField down
-                                    TextField("Type your message...", text: $vm.chatText)
-                                        .font(Font.system(size: 18))
-                                        .foregroundColor(Color(red: 0.553, green: 0.525, blue: 0.525))
-                                        .multilineTextAlignment(.center)
-                                        .focused($isInputFocused)
-                                        .background(Color.clear)
-                                        .padding(.horizontal, 20) // Ensure spacing from sides
-                                    Spacer() // Push TextField up
+                                    Spacer() // Push TextEditor down
+
+                                    ScrollView {
+                                        TextEditor(text: $vm.chatText)
+                                            .font(Font.system(size: 18))
+                                            .foregroundColor(Color(red: 0.553, green: 0.525, blue: 0.525))
+                                            .focused($isInputFocused)
+                                            .multilineTextAlignment(.center) // Center-align text inside TextEditor
+                                            .background(Color.clear) // Transparent background
+                                            .scrollContentBackground(.hidden) // Ensures scrollable area is transparent
+                                            .frame(maxWidth: .infinity, minHeight: 50) // Flexible width and minimum height
+                                            .padding(.horizontal, 20) // Add spacing from sides
+                                    }
+                                    .frame(height: 60) // Set the height of the ScrollView
+                                    .padding(.top, 5)
+                                    .padding(.horizontal, 20)
+
+                                    Spacer() // Push TextEditor
+                                }
+                                .onAppear {
+                                    isInputFocused = true // Auto-focus the TextEditor
                                 }
 
                                 // Bottom Save and Clear Buttons

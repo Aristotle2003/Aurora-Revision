@@ -43,7 +43,7 @@ struct FriendRequestsView: View {
                                 .shadow(radius: 5)
                             
                             VStack(alignment: .leading) {
-                                Text(request.fromEmail)
+                                Text(request.username)
                                     .font(.headline)
                             }
                             
