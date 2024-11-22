@@ -166,6 +166,7 @@ class ChatLogViewModel: ObservableObject {
     
     /// Set active status to `true` for the current user to a specific chatUser
         func setActiveStatusToTrue() {
+            
             guard let currentUserId = FirebaseManager.shared.auth.currentUser?.uid,
                   let chatUserId = chatUser?.uid else { return }
 
@@ -454,6 +455,17 @@ struct ChatLogView: View {
                                                     .scaledToFill()
                                                     .frame(width: 42, height: 42)
                                                     .clipShape(Circle())
+                                            }
+                                        }
+                                        VStack(alignment: .leading, spacing: 4) {
+                                            if let username = vm.chatUser?.username {
+                                                Text(username)
+                                                    .font(.headline) // Customize font style
+                                                    .foregroundColor(.primary) // Set text color
+                                            } else {
+                                                Text("Unknown User") // Fallback text
+                                                    .font(.subheadline)
+                                                    .foregroundColor(.secondary)
                                             }
                                         }
                                         Spacer()

@@ -325,7 +325,7 @@ struct MainMessagesView: View {
                                 .shadow(radius: 5)
                             
                             VStack(alignment: .leading, spacing: 4) {
-                                Text(user.email)
+                                Text(user.username)
                                     .font(.system(size: 16, weight: .bold))
                                     .foregroundColor(Color(.label))
                                 
@@ -357,6 +357,7 @@ struct MainMessagesView: View {
             }
         }
     }
+    
     private var newMessageButton: some View {
         Button {
             shouldNavigateToAddFriendView.toggle()

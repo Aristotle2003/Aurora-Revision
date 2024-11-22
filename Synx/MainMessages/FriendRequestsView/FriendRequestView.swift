@@ -132,7 +132,8 @@ struct FriendRequestsView: View {
                 let senderData: [String: Any] = [
                     "uid": request.fromId,
                     "email": request.fromEmail,
-                    "profileImageUrl": request.profileImageUrl
+                    "profileImageUrl": request.profileImageUrl,
+                    "username": request.username
                 ]
 
                 FirebaseManager.shared.firestore
@@ -150,7 +151,8 @@ struct FriendRequestsView: View {
                         let currentUserData: [String: Any] = [
                             "uid": currentUser.uid,
                             "email": currentUser.email,
-                            "profileImageUrl": currentUser.profileImageUrl
+                            "profileImageUrl": currentUser.profileImageUrl,
+                            "username": currentUser.username
                         ]
 
                         FirebaseManager.shared.firestore
@@ -217,12 +219,13 @@ struct FriendRequestsView: View {
 struct FriendRequest: Identifiable {
     let id = UUID()
     let documentId: String
-    let fromId, fromEmail, profileImageUrl: String
+    let fromId, fromEmail, profileImageUrl, username: String
     
     init(documentId: String, data: [String: Any]) {
         self.documentId = documentId
         self.fromId = data["fromUid"] as? String ?? ""
         self.fromEmail = data["fromEmail"] as? String ?? ""
         self.profileImageUrl = data["profileImageUrl"] as? String ?? ""
+        self.username = data["username"] as? String ?? ""
     }
 }

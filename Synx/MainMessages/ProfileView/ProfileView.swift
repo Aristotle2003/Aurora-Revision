@@ -281,6 +281,7 @@ struct ProfileView: View {
             "fromUid": currentUser.uid,
             "fromEmail": currentUser.email,
             "profileImageUrl": currentUser.profileImageUrl,
+            "username": currentUser.username,
             "status": "pending",
             "timestamp": Timestamp()
         ]
