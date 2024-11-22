@@ -1,7 +1,6 @@
-## Change to be done:
-- [x] ChatlogView中，对方头像需要被加到对方聊天框的左上角，点击的时候需要进入其profile
-- [ ] MainMessageView 加头像框
-- [ ] 朋友圈只有你发表评论之后才能看见别人的评论
-
-## Bugs
-- [ ] Recent chat will not disappear immediately after deleting a friend
+## Command for Cloud functions
+1. Reset hasposted to false for all users: curl -X POST https://us-central1-aurora-519ef.cloudfunctions.net/resetHasPosted
+2. Send custom notification to every user: 
+curl -X POST https://us-central1-aurora-519ef.cloudfunctions.net/sendCustomNotificationToAllUsers \
+-H "Content-Type: application/json" \
+-d '{"title": "Aurora", "body": "Daily Aurora posted"}'
