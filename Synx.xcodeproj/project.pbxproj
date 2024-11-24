@@ -16,8 +16,8 @@
 		FB6764232CEE856400FCE17E /* Lottie in Frameworks */ = {isa = PBXBuildFile; productRef = FB6764222CEE856400FCE17E /* Lottie */; };
 		FB6764292CEEE82D00FCE17E /* Clear Button.json in Resources */ = {isa = PBXBuildFile; fileRef = FB6764282CEEE82D00FCE17E /* Clear Button.json */; };
 		FB67642B2CEEE83E00FCE17E /* Save Button.json in Resources */ = {isa = PBXBuildFile; fileRef = FB67642A2CEEE83E00FCE17E /* Save Button.json */; };
-		FB67642D2CEEE86A00FCE17E /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = FB67642C2CEEE86A00FCE17E /* Assets.xcassets */; };
 		FB67642F2CEFBD4300FCE17E /* SetUsernameView.swift in Sources */ = {isa = PBXBuildFile; fileRef = FB67642E2CEFBD4300FCE17E /* SetUsernameView.swift */; };
+		FB6764312CF0DEC900FCE17E /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = FB6764302CF0DEC900FCE17E /* Assets.xcassets */; };
 		FB7E20792CBCC6E900209582 /* SynxApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = FB7E20782CBCC6E900209582 /* SynxApp.swift */; };
 		FB7E207B2CBCC6E900209582 /* LoginView.swift in Sources */ = {isa = PBXBuildFile; fileRef = FB7E207A2CBCC6E900209582 /* LoginView.swift */; };
 		FB7E20802CBCC6EA00209582 /* Preview Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = FB7E207F2CBCC6EA00209582 /* Preview Assets.xcassets */; };
@@ -69,8 +69,8 @@
 		FB42CB842CD81D4600283244 /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
 		FB6764282CEEE82D00FCE17E /* Clear Button.json */ = {isa = PBXFileReference; lastKnownFileType = text.json; path = "Clear Button.json"; sourceTree = "<group>"; };
 		FB67642A2CEEE83E00FCE17E /* Save Button.json */ = {isa = PBXFileReference; lastKnownFileType = text.json; path = "Save Button.json"; sourceTree = "<group>"; };
-		FB67642C2CEEE86A00FCE17E /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		FB67642E2CEFBD4300FCE17E /* SetUsernameView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SetUsernameView.swift; sourceTree = "<group>"; };
+		FB6764302CF0DEC900FCE17E /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		FB7E20752CBCC6E900209582 /* Synx.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Synx.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		FB7E20782CBCC6E900209582 /* SynxApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SynxApp.swift; sourceTree = "<group>"; };
 		FB7E207A2CBCC6E900209582 /* LoginView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LoginView.swift; sourceTree = "<group>"; };
@@ -188,7 +188,7 @@
 				FB7E20B32CBF23B200209582 /* MainMessages */,
 				FB7E20782CBCC6E900209582 /* SynxApp.swift */,
 				FB83BD982CD85E6600A7BE4E /* GoogleService-Info.plist */,
-				FB67642C2CEEE86A00FCE17E /* Assets.xcassets */,
+				FB6764302CF0DEC900FCE17E /* Assets.xcassets */,
 				FB7E207E2CBCC6EA00209582 /* Preview Content */,
 			);
 			path = Synx;
@@ -429,7 +429,7 @@
 				FB67642B2CEEE83E00FCE17E /* Save Button.json in Resources */,
 				FB7E20802CBCC6EA00209582 /* Preview Assets.xcassets in Resources */,
 				FB6764292CEEE82D00FCE17E /* Clear Button.json in Resources */,
-				FB67642D2CEEE86A00FCE17E /* Assets.xcassets in Resources */,
+				FB6764312CF0DEC900FCE17E /* Assets.xcassets in Resources */,
 				FB83BD992CD85E6600A7BE4E /* GoogleService-Info.plist in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;

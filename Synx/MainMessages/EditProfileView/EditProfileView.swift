@@ -9,13 +9,15 @@ struct EditProfileView: View {
     @State private var email: String = ""
     @State private var bio: String = ""
     @State private var location: String = ""
-    @Environment(\.dismiss) var dismiss 
+    @State private var username: String = ""
+    @Environment(\.dismiss) var dismiss
     @State private var backToProfileView = false
     @ObservedObject var chatLogViewModel: ChatLogViewModel
     
     var body: some View {
         Form {
             Section(header: Text("Basic Information")) {
+                TextField("Username", text: $username)
                 TextField("Age", text: $age)
                 TextField("Gender", text: $gender)
                 TextField("Email", text: $email)
@@ -54,6 +56,7 @@ struct EditProfileView: View {
                     self.email = data["email"] as? String ?? ""
                     self.bio = data["bio"] as? String ?? ""
                     self.location = data["location"] as? String ?? ""
+                    self.username = data["username"] as? String ?? ""
                 } else if let error = error {
                     print("Error loading current information: \(error)")
                 }
@@ -66,7 +69,8 @@ struct EditProfileView: View {
             "gender": gender,
             "email": email,
             "bio": bio,
-            "location": location
+            "location": location,
+            "username": username
         ]
         
         FirebaseManager.shared.firestore
@@ -81,5 +85,49 @@ struct EditProfileView: View {
                     print("Profile information saved successfully!")
                 }
             }
+        self.updateUsername()
+    }
+    
+    private func updateUsername(){
+        guard let uid = FirebaseManager.shared.auth.currentUser?.uid else { return }
+        
+        var updatedData: [String: Any] = ["username": username]
+        
+        saveUsernameToCentralDb(uid: uid, data: updatedData)
+    }
+    
+    private func saveUsernameToCentralDb(uid: String, data: [String: Any]) {
+        let userRef = FirebaseManager.shared.firestore.collection("users").document(uid)
+        userRef.updateData(data) { error in
+            if let error = error {
+                print("Failed to update profile: \(error)")
+                return
+            }
+            print("Profile updated successfully")
+            // 更新好友列表中的用户名和头像
+            saveUsernameToFriends(uid: uid, data: data)
+        }
+    }
+
+    private func saveUsernameToFriends(uid: String, data: [String: Any]) {
+        let friendsRef = FirebaseManager.shared.firestore.collection("friends").document(uid).collection("friend_list")
+        friendsRef.getDocuments { snapshot, error in
+            if let error = error {
+                print("Failed to fetch friends: \(error)")
+                return
+            }
+            guard let documents = snapshot?.documents else { return }
+            for document in documents {
+                let friendId = document.documentID
+                let friendRef = FirebaseManager.shared.firestore.collection("friends").document(friendId).collection("friend_list").document(uid)
+                friendRef.updateData(data) { error in
+                    if let error = error {
+                        print("Failed to update friend profile: \(error)")
+                    } else {
+                        print("Friend profile updated successfully")
+                    }
+                }
+            }
+        }
     }
 }

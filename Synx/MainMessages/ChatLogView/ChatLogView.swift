@@ -461,14 +461,15 @@ struct ChatLogView: View {
                                         VStack(alignment: .leading, spacing: 4) {
                                             if let username = vm.chatUser?.username {
                                                 Text(username)
-                                                    .font(.headline) // Customize font style
-                                                    .foregroundColor(.primary) // Set text color
+                                                    .font(.system(size: 16, weight: .bold))
+                                                    .foregroundColor(Color(red: 0.49, green: 0.52, blue: 0.75)) // Set text color
                                             } else {
                                                 Text("Unknown User") // Fallback text
                                                     .font(.subheadline)
                                                     .foregroundColor(.secondary)
                                             }
                                         }
+                                        .padding(.leading, 7)
                                         Spacer()
                                     }
                                     .padding(.leading, 20)

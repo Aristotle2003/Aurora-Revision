@@ -7,7 +7,7 @@ struct ChatUser: Identifiable {
     let uid: String
     let email: String
     let username: String
-    let profileImageUrl: String
+    var profileImageUrl: String
     let fcmToken: String
     var hasPosted: Bool
     var isPinned: Bool

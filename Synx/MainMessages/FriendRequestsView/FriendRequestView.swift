@@ -9,8 +9,6 @@ struct FriendRequestsView: View {
     @State private var errorMessage = ""
     @State private var navigateToMainMessage = false
     
-    
-
     var body: some View {
         NavigationStack{
             VStack {
@@ -77,13 +75,11 @@ struct FriendRequestsView: View {
             .navigationDestination(isPresented: $navigateToMainMessage) {
                 MainMessagesView()
             }
-            
         }
     }
 
     // Fetch friend requests
     private func fetchFriendRequests() {
-        print(1)
         print("Fetching friend requests for user ID: \(currentUser.uid)")
 
         FirebaseManager.shared.firestore
@@ -93,13 +89,13 @@ struct FriendRequestsView: View {
             .getDocuments { snapshot, error in
                 if let error = error {
                     self.errorMessage = "Failed to fetch friend requests: \(error)"
-                    print("Error fetching friend requests:", error) // Debug: Print error
+                    print("Error fetching friend requests:", error)
                     return
                 }
 
                 guard let documents = snapshot?.documents, !documents.isEmpty else {
                     self.errorMessage = "No friend requests found"
-                    print("No friend requests found for user \(currentUser.uid)") // Debug: Print no requests
+                    print("No friend requests found for user \(currentUser.uid)")
                     return
                 }
 
@@ -108,14 +104,42 @@ struct FriendRequestsView: View {
                     return FriendRequest(documentId: document.documentID, data: data)
                 }
 
-                print("Fetched friend requests:", self.friendRequests) // Debug: Print fetched requests
+                // Fetch detailed user info for each friend request
+                self.fetchFriendRequestDetails()
             }
     }
 
+private func fetchFriendRequestDetails() {
+    for (index, request) in friendRequests.enumerated() {
+        FirebaseManager.shared.firestore
+            .collection("users")
+            .document(request.fromId)
+            .getDocument { snapshot, error in
+                if let error = error {
+                    self.errorMessage = "Failed to fetch user info: \(error)"
+                    print("Error fetching user info:", error)
+                    return
+                }
+
+                guard let data = snapshot?.data() else {
+                    self.errorMessage = "No user data found"
+                    print("No user data found for UID \(request.fromId)")
+                    return
+                }
+
+                let username = data["username"] as? String ?? ""
+                let fromEmail = data["email"] as? String ?? ""
+                let profileImageUrl = data["profileImageUrl"] as? String ?? ""
+
+                self.friendRequests[index].username = username
+                self.friendRequests[index].fromEmail = fromEmail
+                self.friendRequests[index].profileImageUrl = profileImageUrl
+            }
+    }
+}
 
     // Accept friend request
     private func acceptFriendRequest(_ request: FriendRequest) {
-
         // Delete the friend request document
         FirebaseManager.shared.firestore
             .collection("friend_request")
@@ -175,7 +199,6 @@ struct FriendRequestsView: View {
 
     // Reject friend request
     private func rejectFriendRequest(_ request: FriendRequest) {
-        
         FirebaseManager.shared.firestore
             .collection("friend_request")
             .document(currentUser.uid)
@@ -219,13 +242,13 @@ struct FriendRequestsView: View {
 struct FriendRequest: Identifiable {
     let id = UUID()
     let documentId: String
-    let fromId, fromEmail, profileImageUrl, username: String
+    let fromId: String
+    var fromEmail: String = ""
+    var profileImageUrl: String = ""
+    var username: String = ""
     
     init(documentId: String, data: [String: Any]) {
         self.documentId = documentId
         self.fromId = data["fromUid"] as? String ?? ""
-        self.fromEmail = data["fromEmail"] as? String ?? ""
-        self.profileImageUrl = data["profileImageUrl"] as? String ?? ""
-        self.username = data["username"] as? String ?? ""
     }
 }

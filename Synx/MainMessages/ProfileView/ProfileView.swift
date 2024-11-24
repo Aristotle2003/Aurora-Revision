@@ -15,10 +15,36 @@ struct ProfileView: View {
     @State private var reportContent = ""
     @State private var showDeleteConfirmation = false
     @State private var navigateToMainMessagesView = false
+    @State private var showImagePicker = false
+    @State private var selectedImage: UIImage? = nil
+    @State private var showConfirmationDialog = false
+    @State private var savingImageUrl = ""
+    @State private var showTemporaryImage = false
+    @State private var shouldShowLogOutOptions = false
+    @State private var isUserCurrentlyLoggedOut = false
 
     @ObservedObject var chatLogViewModel: ChatLogViewModel
     @StateObject private var messagesViewModel = MessagesViewModel()
     @Environment(\.presentationMode) var presentationMode
+    
+    private func handleSignOut() {
+        guard let currentUserID = FirebaseManager.shared.auth.currentUser?.uid else { return }
+        
+        // Reference to the user's FCM token in Firestore
+        let userRef = FirebaseManager.shared.firestore.collection("users").document(currentUserID)
+        
+        // Update the FCM token to an empty string
+        userRef.updateData(["fcmToken": ""]) { error in
+            if let error = error {
+                print("Failed to update FCM token: \(error)")
+                return
+            }
+            
+            // Proceed to sign out if the FCM token update is successful
+            self.isUserCurrentlyLoggedOut.toggle()
+            try? FirebaseManager.shared.auth.signOut()
+        }
+    }
 
     var body: some View {
         VStack {
@@ -36,18 +62,40 @@ struct ProfileView: View {
                 Spacer()
             }
             
-            WebImage(url: URL(string: chatUser.profileImageUrl))
-                .resizable()
-                .scaledToFill()
-                .frame(width: 150, height: 150)
-                .clipShape(Circle())
-                .shadow(radius: 10)
+            if !showTemporaryImage{
+                WebImage(url: URL(string: chatUser.profileImageUrl))
+                    .resizable()
+                    .scaledToFill()
+                    .frame(width: 150, height: 150)
+                    .clipShape(Circle())
+                    .shadow(radius: 10)
+                    .onTapGesture {
+                        if isCurrentUser {
+                            showImagePicker = true
+                        }
+                    }
+            }
+            else{
+                WebImage(url: URL(string: self.savingImageUrl))
+                    .resizable()
+                    .scaledToFill()
+                    .frame(width: 150, height: 150)
+                    .clipShape(Circle())
+                    .shadow(radius: 10)
+                    .onTapGesture {
+                        if isCurrentUser {
+                            showImagePicker = true
+                        }
+                    }
+            }
             
             Text(chatUser.username)
                 .font(.title)
                 .padding()
             
             if isCurrentUser, let info = basicInfo {
+                Text("Username: \(info.username)")
+                    .font(.title)
                 // 当前用户的基本信息
                 VStack(alignment: .leading, spacing: 5) {
                     Text("Age: \(info.age)")
@@ -58,6 +106,8 @@ struct ProfileView: View {
                 }
                 .padding()
             } else if let otherInfo = otherUserInfo {
+                Text("Username: \(otherInfo.username)")
+                    .font(.title)
                 // 其他用户的基本信息
                 VStack(alignment: .leading, spacing: 5) {
                     Text("Age: \(otherInfo.age)")
@@ -86,6 +136,30 @@ struct ProfileView: View {
                 }
                 .position(x: UIScreen.main.bounds.width - 140, y: -100)
                 .padding()
+                
+                // Gear Button - Shows Sign-Out Options
+                Button(action: {
+                    shouldShowLogOutOptions.toggle()
+                }) {
+                    Image(systemName: "gear")
+                        .font(.system(size: 24, weight: .bold))
+                        .foregroundColor(Color(.label))
+                }
+                .actionSheet(isPresented: $shouldShowLogOutOptions) {
+                    ActionSheet(
+                        title: Text("Settings"),
+                        message: Text("What do you want to do?"),
+                        buttons: [
+                            .destructive(Text("Sign Out"), action: {
+                                handleSignOut()
+                            }),
+                            .cancel()
+                        ]
+                    )
+                }
+                .fullScreenCover(isPresented: $isUserCurrentlyLoggedOut) {
+                    LoginView()
+                }
             } else {
                 if isFriend {
                     friendOptions
@@ -108,6 +182,9 @@ struct ProfileView: View {
                     self.otherUserInfo = info
                 }
             }
+        }
+        .onDisappear{
+            self.showTemporaryImage = false
         }
         .sheet(isPresented: $showReportSheet) {
             VStack(spacing: 20) {
@@ -144,6 +221,26 @@ struct ProfileView: View {
             }
             .padding()
         }
+        .sheet(isPresented: $showImagePicker) {
+            ImagePicker(image: $selectedImage)
+                .onDisappear {
+                    if let selectedImage = selectedImage {
+                        updateProfilePhoto()
+                        print("Image selected successfully!")
+                        showConfirmationDialog = true
+                    } else {
+                        print("No image selected.")
+                    }
+                }
+        }
+        .alert(isPresented: $showConfirmationDialog) {
+                    Alert(
+                        title: Text("Confirm Photo"),
+                        message: Text("Are you sure you want to use this photo?"),
+                        primaryButton: .default(Text("Yes"), action: updateProfilePhoto),
+                        secondaryButton: .cancel()
+                    )
+                }
         .navigationDestination(isPresented: $navigateToMainMessagesView) {
             MainMessagesView()
         }
@@ -160,6 +257,74 @@ struct ProfileView: View {
 
         .navigationBarBackButtonHidden(true)
     }
+    
+    private func updateProfilePhoto() {
+        guard let uid = FirebaseManager.shared.auth.currentUser?.uid else { return }
+        
+        var updatedData: [String: Any] = [:]
+        
+        if let selectedImage = selectedImage {
+            // 上传新头像
+            let ref = FirebaseManager.shared.storage.reference(withPath: uid)
+            if let imageData = selectedImage.jpegData(compressionQuality: 0.5) {
+                ref.putData(imageData, metadata: nil) { metadata, error in
+                    if let error = error {
+                        print("Failed to upload image: \(error)")
+                        return
+                    }
+                    ref.downloadURL { url, error in
+                        if let error = error {
+                            print("Failed to get download URL: \(error)")
+                            return
+                        }
+                        if let url = url {
+                            updatedData["profileImageUrl"] = url.absoluteString
+                            self.savingImageUrl = url.absoluteString
+                            self.showTemporaryImage = true
+                            self.saveProfilePhotoToCentralDb(uid: uid, data: updatedData)
+                        }
+                    }
+                }
+            }
+        } else {
+            print("Wrong")
+        }
+    }
+
+    private func saveProfilePhotoToCentralDb(uid: String, data: [String: Any]) {
+        let userRef = FirebaseManager.shared.firestore.collection("users").document(uid)
+        userRef.updateData(data) { error in
+            if let error = error {
+                print("Failed to update profile: \(error)")
+                return
+            }
+            print("Profile updated successfully")
+            self.updateProfilePhotoToFriends(uid: uid, data: data)
+        }
+    }
+
+    private func updateProfilePhotoToFriends(uid: String, data: [String: Any]) {
+        let friendsRef = FirebaseManager.shared.firestore.collection("friends").document(uid).collection("friend_list")
+        friendsRef.getDocuments { snapshot, error in
+            if let error = error {
+                print("Failed to fetch friends: \(error)")
+                return
+            }
+            guard let documents = snapshot?.documents else { return }
+            for document in documents {
+                let friendId = document.documentID
+                let friendRef = FirebaseManager.shared.firestore.collection("friends").document(friendId).collection("friend_list").document(uid)
+                friendRef.updateData(data) { error in
+                    if let error = error {
+                        print("Failed to update friend profile: \(error)")
+                    } else {
+                        print("Friend profile updated successfully")
+                    }
+                }
+            }
+        }
+    }
+
     
     // 好友选项
     private var friendOptions: some View {
@@ -315,15 +480,20 @@ struct ProfileView: View {
                         gender: data["gender"] as? String ?? "",
                         email: data["email"] as? String ?? "",
                         bio: data["bio"] as? String ?? "",
-                        location: data["location"] as? String ?? ""
+                        location: data["location"] as? String ?? "",
+                        username: data["username"] as? String ?? ""
                     )
                     completion(info)
                 } else if let error = error {
                     print("Error fetching basic information: \(error)")
-                    completion(nil)
+                    completion(nil) // Explicitly return nil if an error occurs
+                } else {
+                    print("No data found for userId: \(userId)")
+                    completion(nil) // Explicitly return nil if no data is found
                 }
             }
     }
+
     
     private func pinToTop() {
         FirebaseManager.shared.firestore
@@ -442,4 +612,5 @@ struct BasicInfo {
     var email: String
     var bio: String
     var location: String
+    var username: String
 }
