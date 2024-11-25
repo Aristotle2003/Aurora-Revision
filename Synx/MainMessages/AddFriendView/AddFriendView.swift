@@ -106,7 +106,7 @@ struct AddFriendView: View {
     @Environment(\.presentationMode) var presentationMode
     
     @StateObject var vm = AddFriendViewModel()
-    let shareableURL = URL(string: "https://www.google.com/")!
+    let shareableURL = URL(string: "https://apps.apple.com/us/app/xor/id6621190086")!
     
     @State private var isSharing = false
     
