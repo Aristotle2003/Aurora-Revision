@@ -1,10 +1,3 @@
-//
-//  SignUp.swift
-//  Synx
-//
-//  Created by Zifan Deng on 11/3/24.
-//
-
 import SwiftUI
 import Firebase
 import FirebaseAuth
@@ -65,15 +58,15 @@ struct SignUpView: View {
             .background(Color(.init(white: 0, alpha: 0.05))
                 .ignoresSafeArea())
         }
-        .fullScreenCover(isPresented: $showProfileSetup) {
-            if let uid = FirebaseManager.shared.auth.currentUser?.uid {
-                ProfileSetupView(
-                    isLogin: $isLogin,
-                    uid: uid,  // Use the directly retrieved UID
-                    identifier: email
-                )
-            }
-        }
+//        .fullScreenCover(isPresented: $showProfileSetup) {
+//            if let uid = FirebaseManager.shared.auth.currentUser?.uid {
+//                ProfileSetupView(
+//                    isLogin: $isLogin,
+//                    uid: uid,  // Use the directly retrieved UID
+//                    username: email
+//                )
+//            }
+//        }
     }
     
     

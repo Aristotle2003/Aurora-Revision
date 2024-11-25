@@ -200,7 +200,7 @@ struct FriendResponse: Identifiable {
     let timestamp: Date
     var likes: Int
     var likedByCurrentUser: Bool
-    let documentId: String // 新增，以便在数据库操作中使用
+    let documentId: String
 }
 
 struct FriendGroupView: View {

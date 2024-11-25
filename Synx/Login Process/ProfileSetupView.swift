@@ -1,27 +1,20 @@
-//
-//  ProfileSetupView.swift
-//  Synx
-//
-//  Created by Zifan Deng on 11/5/24.
-//
-
 import SwiftUI
 import Firebase
 import FirebaseAuth
 import GoogleSignIn
 
-
-// Profile picture selection view
 struct ProfileSetupView: View {
     @Environment(\.dismiss) var dismiss
     @Binding var isLogin: Bool
-    
     let uid: String
-    let identifier: String
+    let phone: String
+    let email: String
     
     @State private var showImagePicker = false
     @State private var statusMessage = ""
     @State private var image: UIImage?
+    @State private var username: String = ""
+    
     
     var body: some View {
         NavigationView {
@@ -57,8 +50,12 @@ struct ProfileSetupView: View {
                         )
                     }
                     
+                    TextField("Enter your username", text: $username)
+                        .textFieldStyle(RoundedBorderTextFieldStyle())
+                        .padding(.horizontal)
+                    
                     Button {
-                        persistImageToStorage()
+                        validateAndPersistUserProfile()
                     } label: {
                         HStack {
                             Spacer()
@@ -71,8 +68,9 @@ struct ProfileSetupView: View {
                         .background(Color.blue)
                         .cornerRadius(8)
                     }
-                    .disabled(image == nil)
-                    .opacity(image == nil ? 0.6 : 1)
+                    .disabled(image == nil || username.isEmpty)
+                    .opacity((image == nil || username.isEmpty) ? 0.6 : 1)
+                    
                     
                     if !statusMessage.isEmpty {
                         Text(statusMessage)
@@ -95,7 +93,16 @@ struct ProfileSetupView: View {
     }
     
     
-    private func persistImageToStorage() {
+    private func validateAndPersistUserProfile() {
+        guard !username.isEmpty else {
+            statusMessage = "Username cannot be empty"
+            return
+        }
+        handleImage()
+    }
+    
+    
+    private func handleImage() {
         guard let image = self.image else {
             statusMessage = "Please select a profile picture"
             return
@@ -127,8 +134,10 @@ struct ProfileSetupView: View {
     private func storeUserInformation(imageProfileUrl: URL) {
         let userData: [String: Any] = [
             "uid": uid,
-            "email": identifier,
-            "profileImageUrl": imageProfileUrl.absoluteString
+            "phoneNumber": phone,
+            "email": email,
+            "profileImageUrl": imageProfileUrl.absoluteString,
+            "username": username
         ]
         
         FirebaseManager.shared.firestore.collection("users")
@@ -137,12 +146,32 @@ struct ProfileSetupView: View {
                     self.statusMessage = "Failed to save user data: \(err.localizedDescription)"
                     return
                 }
+                
+                saveUsernameToBasicInfo()
+                
                 self.isLogin = true
                 dismiss()
             }
     }
     
+    private func saveUsernameToBasicInfo() {
+        let userRef = FirebaseManager.shared.firestore
+            .collection("basic_information")
+            .document(uid)
+            .collection("information")
+            .document("profile")
+        
+        userRef.setData(["username": username], merge: true) { error in
+            if let error = error {
+                self.statusMessage = "Failed to save username to basic information: \(error.localizedDescription)"
+            } else {
+                print("Saving username to basic information successfully")
+            }
+        }
+    }
 }
+
+
 
 #Preview {
     LoginView()

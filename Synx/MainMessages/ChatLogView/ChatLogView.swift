@@ -267,6 +267,8 @@ class ChatLogViewModel: ObservableObject {
                 }
             }
     }
+    
+    
 
     func handleSend() {
         guard let fromId = FirebaseManager.shared.auth.currentUser?.uid else { return }
@@ -387,6 +389,7 @@ struct ChatLogView: View {
     @ObservedObject var vm: ChatLogViewModel
     @State private var navigateToMainMessageView = false
     @FocusState private var isInputFocused: Bool
+    @State private var isAppInBackground = false
 
     var body: some View {
         NavigationStack {
@@ -690,17 +693,57 @@ struct ChatLogView: View {
             vm.startAutoSend()
             vm.setActiveStatusToTrue()
             vm.markLatestMessageAsSeen()
+            addAppLifecycleObservers()
         }
         .onDisappear {
             vm.stopAutoSend()
             vm.markMessageAsSeen(for: vm.chatUser?.uid ?? "")
             vm.setActiveStatusToFalse()
+            removeAppLifecycleObservers()
         }
         .navigationBarBackButtonHidden(true) // Hide the default back button
         .navigationDestination(isPresented: $navigateToMainMessageView) {
             MainMessagesView()
         }
     }
+    
+    @State private var backgroundObserver: NSObjectProtocol?
+    @State private var foregroundObserver: NSObjectProtocol?
+    
+    private func addAppLifecycleObservers() {
+            // Save references to the observers
+            self.backgroundObserver = NotificationCenter.default.addObserver(forName: UIApplication.didEnterBackgroundNotification, object: nil, queue: .main) { _ in
+                isAppInBackground = true
+                appWentToBackground()
+            }
+
+            self.foregroundObserver = NotificationCenter.default.addObserver(forName: UIApplication.willEnterForegroundNotification, object: nil, queue: .main) { _ in
+                isAppInBackground = false
+                appCameToForeground()
+            }
+        }
+
+        private func removeAppLifecycleObservers() {
+            if let backgroundObserver = backgroundObserver {
+                NotificationCenter.default.removeObserver(backgroundObserver)
+            }
+
+            if let foregroundObserver = foregroundObserver {
+                NotificationCenter.default.removeObserver(foregroundObserver)
+            }
+        }
+
+        private func appWentToBackground() {
+            print("App went to background")
+            vm.stopAutoSend()
+            vm.setActiveStatusToFalse()
+        }
+
+        private func appCameToForeground() {
+            print("App came to foreground")
+            vm.startAutoSend()
+            vm.setActiveStatusToTrue()
+        }
     
     private func getCurrentUser() -> ChatUser {
             guard let currentUser = FirebaseManager.shared.auth.currentUser else {

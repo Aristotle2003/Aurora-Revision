@@ -175,7 +175,7 @@ struct CalendarMessagesView: View {
     }
 }
 
-// MARK: - CalendarView
+
 struct CalendarView: View {
     @Binding var selectedDate: Date?
     @State private var currentMonth: Date = Date()

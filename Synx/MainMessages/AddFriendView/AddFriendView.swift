@@ -7,6 +7,7 @@
 
 import SwiftUI
 import SDWebImageSwiftUI
+import UIKit
 
 // MARK: - AddFriendViewModel (Add Friends View Model)
 class AddFriendViewModel: ObservableObject {
@@ -86,12 +87,35 @@ class AddFriendViewModel: ObservableObject {
     }
 }
 
+struct ShareSheet: UIViewControllerRepresentable {
+    let activityItems: [Any]
+    let applicationActivities: [UIActivity]? = nil
+    
+    func makeUIViewController(context: Context) -> UIActivityViewController {
+        UIActivityViewController(activityItems: activityItems, applicationActivities: applicationActivities)
+    }
+    
+    func updateUIViewController(_ uiViewController: UIActivityViewController, context: Context) {
+        // No update needed
+    }
+}
+
 struct AddFriendView: View {
     
     let didSelectNewUser: (ChatUser) -> ()
     @Environment(\.presentationMode) var presentationMode
     
     @StateObject var vm = AddFriendViewModel()
+    let shareableURL = URL(string: "https://www.google.com/")!
+    
+    @State private var isSharing = false
+    
+    
+
+    private func showActivityViewController(from rootViewController: UIViewController) {
+        let activityVC = UIActivityViewController(activityItems: [shareableURL], applicationActivities: nil)
+        rootViewController.present(activityVC, animated: true, completion: nil)
+    }
     
     var body: some View {
         NavigationView {
@@ -101,6 +125,27 @@ struct AddFriendView: View {
                     vm.filterUsers()
                 }
                 .padding(.vertical, 8)
+                
+                // Share link button
+                                Button(action: {
+                                    isSharing = true
+                                }) {
+                                    HStack {
+                                        Image(systemName: "square.and.arrow.up")
+                                            .font(.system(size: 20))
+                                        Text("Share Invite Link")
+                                            .font(.system(size: 16))
+                                    }
+                                    .foregroundColor(.blue)
+                                    .padding(.vertical, 10)
+                                    .frame(maxWidth: .infinity)
+                                    .background(Color(.systemGray6))
+                                    .cornerRadius(8)
+                                }
+                                .padding(.horizontal)
+                                .sheet(isPresented: $isSharing) {
+                                    ShareSheet(activityItems: [shareableURL])
+                                }
                 
                 ScrollView {
                     if !vm.errorMessage.isEmpty {

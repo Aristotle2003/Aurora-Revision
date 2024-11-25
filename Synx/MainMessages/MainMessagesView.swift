@@ -1,6 +1,7 @@
 import SwiftUI
 import SDWebImageSwiftUI
 import Firebase
+import FirebaseMessaging
 
 struct RecentMessage: Identifiable{
     var id: String{documentId}
@@ -40,6 +41,33 @@ class MainMessagesViewModel: ObservableObject {
     }
     
     @Published var recentMessages = [RecentMessage]()
+    
+    func fetchAndStoreFCMToken() {
+        guard let userID = FirebaseManager.shared.auth.currentUser?.uid else {
+                print("User not signed in.")
+                return
+            }
+            
+            Messaging.messaging().token { token, error in
+                if let token = token {
+                    self.storeFCMTokenToFirestore(token, userID: userID)
+                    print("Fetched and stored FCM Token: \(token)")
+                } else if let error = error {
+                    print("Error fetching FCM token: \(error)")
+                }
+            }
+        }
+        
+        private func storeFCMTokenToFirestore(_ token: String, userID: String) {
+            let userRef = Firestore.firestore().collection("users").document(userID)
+            userRef.setData(["fcmToken": token], merge: true) { error in
+                if let error = error {
+                    print("Error updating FCM token in Firestore: \(error)")
+                } else {
+                    print("FCM token updated successfully in Firestore.")
+                }
+            }
+        }
         
     func setupFriendListListener() {
         guard let uid = FirebaseManager.shared.auth.currentUser?.uid else {
@@ -425,6 +453,7 @@ struct MainMessagesView: View {
         }
         .onAppear{
             vm.setupFriendListListener()
+            vm.fetchAndStoreFCMToken()
         }
         .onDisappear{
             vm.stopListening()
