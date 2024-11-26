@@ -7,7 +7,7 @@ import CryptoKit
 
 struct LoginView: View {
     @Environment(\.window) var window
-    @AppStorage("tutorialEnabled") var tutorialEnabled: Bool = true
+    
     
     @State var isLogin = false
     
@@ -23,16 +23,17 @@ struct LoginView: View {
     }
     
     @State private var loginStatusMessage = ""
+    @State private var hasSeenTutorial = false
     
     // Apple nonce
     @State private var nonce: String?
     
     
     var body: some View {
-        if isLogin && !tutorialEnabled{
+        if isLogin && hasSeenTutorial{
             MainMessagesView()
         }
-        else if isLogin && tutorialEnabled{
+        else if isLogin && !hasSeenTutorial{
             TutorialView()
         }
         else{
@@ -253,6 +254,7 @@ struct LoginView: View {
                         
                         // User exists
                         if let data = snapshot?.data() {
+                            checkTutorialStatus()
                             self.isLogin = true
                         // New user set up profile
                         } else {
@@ -308,6 +310,7 @@ struct LoginView: View {
                         
                         // User exists
                         if let data = snapshot?.data() {
+                            checkTutorialStatus()
                             self.isLogin = true
                         // New user set up profile
                         } else {
@@ -317,6 +320,23 @@ struct LoginView: View {
             }
         }
     }
+    private func checkTutorialStatus() {
+            guard let uid = FirebaseManager.shared.auth.currentUser?.uid else { return }
+
+            FirebaseManager.shared.firestore
+                .collection("users")
+                .document(uid)
+                .getDocument { snapshot, error in
+                    if let error = error {
+                        print("Failed to fetch tutorial status: \(error)")
+                        hasSeenTutorial = false
+                    } else if let data = snapshot?.data(), let seen = data["seen_tutorial"] as? Bool {
+                        hasSeenTutorial = seen
+                    } else {
+                        hasSeenTutorial = false
+                    }
+                }
+        }
     
     private func randomNonceString(length: Int = 32) -> String {
         precondition(length > 0)

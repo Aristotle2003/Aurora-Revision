@@ -21,21 +21,6 @@ class TutorialManager: ObservableObject {
         "Need a fresh start? Tap the clear button to wipe your chatbox clean. Warning: If the message isn’t saved, it’s gone forever. Poof.",
         "And that’s the basics! Grab some friends and enjoy Aurora together!"
     ]
-    
-    func startTutorial() {
-        DispatchQueue.global().async {
-            for message in self.tutorialScript {
-                DispatchQueue.main.async {
-                    self.messages.append(message)
-                }
-                Thread.sleep(forTimeInterval: 5) // Wait 5 seconds between messages
-            }
-            DispatchQueue.main.async {
-                self.showTutorial = false
-                UserDefaults.standard.set(true, forKey: "HasSeenTutorial")
-            }
-        }
-    }
 }
 
 struct TutorialView: View {
@@ -43,7 +28,7 @@ struct TutorialView: View {
     @State private var tutorialtext = ""
     @State private var bottext = ""
     @FocusState private var isInputFocused: Bool
-    @AppStorage("tutorialEnabled") var tutorialEnabled: Bool = true
+    @State private var activeTimers: [Timer] = []
     
     var body: some View {
         NavigationStack {
@@ -56,7 +41,8 @@ struct TutorialView: View {
                     HStack{
                         Button(action: {
                             navigateToMainMessageView = true
-                            tutorialEnabled = true
+                            saveTutorialSeenStatus()
+                            navigateToMainMessageView = true
                         }) {
                             Image("chatlogviewbackbutton")
                                 .resizable()
@@ -262,14 +248,19 @@ struct TutorialView: View {
                 }
                 .frame(maxHeight: .infinity)
             }
+            .navigationBarBackButtonHidden(true) // Hide the default back button
+            .navigationDestination(isPresented: $navigateToMainMessageView) {
+                MainMessagesView()
+            }
+            .onAppear {
+                animateText()
+            }
+            .onDisappear {
+                invalidateTimers() // Invalidate timers when the view disappears
+            }
+            
         }
-        .navigationBarBackButtonHidden(true) // Hide the default back button
-        .navigationDestination(isPresented: $navigateToMainMessageView) {
-            MainMessagesView()
-        }
-        .onAppear {
-            animateText()
-        }
+        
         
     }
     func calculateDynamicSpacing(geometry: GeometryProxy, botText: String) -> CGFloat {
@@ -291,6 +282,30 @@ struct TutorialView: View {
         }
     }
     
+    private func saveTutorialSeenStatus() {
+        guard let uid = FirebaseManager.shared.auth.currentUser?.uid else { return }
+        
+        // Save "seen_tutorial" to Firestore
+        FirebaseManager.shared.firestore
+            .collection("users")
+            .document(uid)
+            .setData(["seen_tutorial": true], merge: true) { error in
+                if let error = error {
+                    print("Failed to save tutorial seen status: \(error)")
+                } else {
+                    print("Tutorial seen status saved successfully.")
+                }
+            }
+    }
+    
+    private func invalidateTimers() {
+        for timer in activeTimers {
+            timer.invalidate()
+        }
+        activeTimers.removeAll()
+    }
+    
+    
     private func animateText() {
         let sentences = [
             "I’m LumiBot; your guide to exploring Aurora!",
@@ -300,7 +315,7 @@ struct TutorialView: View {
             "If you ever want to save a message, hit the save button. You can access it later in chat histories.",
             "Heads up, your friend will get notified when you save their message.",
             "Need a fresh start? Tap the clear button to wipe your chatbox clean.",
-            "Warning: If the message isn’t saved, it’s gone forever. Poof. ",
+            "Warning: If the message isn’t saved, it’s gone forever. Poof.",
             "And that’s that basics! Grab some friends and enjoy Aurora together!"
         ]
         var currentSentenceIndex = 0
@@ -309,7 +324,7 @@ struct TutorialView: View {
             var currentIndex = 0
             bottext = "" // Clear the text for the new sentence
             
-            Timer.scheduledTimer(withTimeInterval: 0.1, repeats: true) { timer in
+            let timer = Timer.scheduledTimer(withTimeInterval: 0.1, repeats: true) { timer in
                 if currentIndex < sentence.count {
                     let index = sentence.index(sentence.startIndex, offsetBy: currentIndex)
                     bottext.append(sentence[index])
@@ -319,6 +334,7 @@ struct TutorialView: View {
                     completion()
                 }
             }
+            activeTimers.append(timer) // Keep track of active timers
         }
         
         func showNextSentence() {

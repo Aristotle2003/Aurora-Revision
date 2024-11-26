@@ -306,7 +306,7 @@ struct MainMessagesView: View {
     @State var latestSenderMessage: ChatMessage?
     @State private var shouldShowFriendGroupView = false
     
-    @ObservedObject var vm = MainMessagesViewModel()
+    @ObservedObject private var vm = MainMessagesViewModel()
     @StateObject private var chatLogViewModel = ChatLogViewModel(chatUser: nil)
     @State private var showFriendRequestsView = false
     
