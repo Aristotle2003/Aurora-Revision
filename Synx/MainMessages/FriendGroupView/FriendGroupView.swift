@@ -15,13 +15,17 @@ class FriendGroupViewModel: ObservableObject {
     init(selectedUser: ChatUser) {
         self.selectedUser = selectedUser
         fetchCurrentUserHasPostedStatus()
+        fetchPrompt()
+        fetchLatestResponses(for: selectedUser.uid)
     }
     
     func fetchPrompt() {
         FirebaseManager.shared.firestore.collection("prompts").document("currentPrompt")
             .getDocument { snapshot, error in
                 if let data = snapshot?.data(), let prompt = data["text"] as? String {
-                    self.promptText = prompt
+                    DispatchQueue.main.async {
+                        self.promptText = prompt
+                    }
                     print("Fetched prompt: \(prompt)")
                 } else {
                     print("Failed to fetch prompt: \(error?.localizedDescription ?? "Unknown error")")
@@ -41,8 +45,11 @@ class FriendGroupViewModel: ObservableObject {
         
         responseRef.setData(data) { error in
             if error == nil {
-                self.responseText = ""
-                self.showResponseInput = false
+                DispatchQueue.main.async {
+                    self.responseText = ""
+                    self.showResponseInput = false
+                    self.currentUserHasPosted = true
+                }
                 print("Response submitted successfully")
                 self.updateHasPostedStatus(for: userId)  // 更新 hasPosted 状态
                 self.fetchLatestResponses(for: userId)  // Refresh responses after submission
@@ -52,7 +59,6 @@ class FriendGroupViewModel: ObservableObject {
         }
     }
     
-    // 修改 fetchLatestResponses 函数，确保完成后的处理
     func fetchLatestResponses(for userId: String) {
         var allResponses: [FriendResponse] = []
         let group = DispatchGroup()
@@ -104,8 +110,6 @@ class FriendGroupViewModel: ObservableObject {
             }
     }
     
-    
-    // 修改 fetchLatestResponse 函数，获取 likes 和 likedBy
     private func fetchLatestResponse(for uid: String, email: String, profileImageUrl: String, completion: @escaping (FriendResponse?) -> Void) {
         FirebaseManager.shared.firestore.collection("response_to_prompt")
             .whereField("uid", isEqualTo: uid)
@@ -130,13 +134,18 @@ class FriendGroupViewModel: ObservableObject {
                         likedByCurrentUser: likedByCurrentUser,
                         documentId: doc.documentID
                     )
-                    completion(response)
+                    DispatchQueue.main.async {
+                        completion(response)
+                    }
                 } else {
                     print("未找到 UID \(uid) 的响应")
-                    completion(nil)
+                    DispatchQueue.main.async {
+                        completion(nil)
+                    }
                 }
             }
     }
+    
     func fetchCurrentUserHasPostedStatus() {
         guard let uid = FirebaseManager.shared.auth.currentUser?.uid else { return }
         
@@ -147,7 +156,9 @@ class FriendGroupViewModel: ObservableObject {
             }
             
             if let data = snapshot?.data() {
-                self.currentUserHasPosted = data["hasPosted"] as? Bool ?? false
+                DispatchQueue.main.async {
+                    self.currentUserHasPosted = data["hasPosted"] as? Bool ?? false
+                }
             }
         }
     }
@@ -161,7 +172,9 @@ class FriendGroupViewModel: ObservableObject {
                 return
             }
             print("User's hasPosted status updated successfully.")
-            self.currentUserHasPosted = true
+            DispatchQueue.main.async {
+                self.currentUserHasPosted = true
+            }
         }
     }
     
@@ -303,7 +316,6 @@ struct FriendGroupView: View {
                                 .scaledToFit()
                                 .frame(width: 100, height: 100)
                                 .foregroundColor(.gray)
-                            //                                .padding()
                             
                             Text("发布一条动态以解锁好友圈")
                                 .font(.headline)
@@ -336,10 +348,6 @@ struct FriendGroupView: View {
         )
         .navigationDestination(isPresented: $navigateToMainMessage){
             MainMessagesView()
-        }
-        .onAppear {
-            vm.fetchPrompt()
-            vm.fetchLatestResponses(for: selectedUser.uid)
         }
     }
 }
