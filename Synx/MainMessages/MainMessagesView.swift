@@ -29,7 +29,15 @@ class MainMessagesViewModel: ObservableObject {
     @Published var isUserCurrentlyLoggedOut = false
     @Published var users = [ChatUser]()
     
-    var listener: ListenerRegistration?
+    var messageListener: ListenerRegistration?
+    var friendRequestListener: ListenerRegistration? // 新增好友申请监听器变量
+    var friendGroupListener: ListenerRegistration?
+    
+    @Published var recentMessages = [RecentMessage]()
+    @Published var hasNewFriendRequest = false // 用于跟踪是否有新的好友申请
+    @Published var hasNewFriendGroup = false // 用于跟踪是否有新的朋友圈消息
+    @AppStorage("lastCheckedTimestamp") var lastCheckedTimestamp: Double = 0
+    private var lastLikesCount: [String: Int] = [:]
     
     init() {
         DispatchQueue.main.async{
@@ -38,44 +46,43 @@ class MainMessagesViewModel: ObservableObject {
         }
         fetchCurrentUser()
         setupFriendListListener()
+        setupFriendRequestListener()
     }
-    
-    @Published var recentMessages = [RecentMessage]()
     
     func fetchAndStoreFCMToken() {
         guard let userID = FirebaseManager.shared.auth.currentUser?.uid else {
-                print("User not signed in.")
-                return
-            }
-            
-            Messaging.messaging().token { token, error in
-                if let token = token {
-                    self.storeFCMTokenToFirestore(token, userID: userID)
-                    print("Fetched and stored FCM Token: \(token)")
-                } else if let error = error {
-                    print("Error fetching FCM token: \(error)")
-                }
-            }
+            print("User not signed in.")
+            return
         }
         
-        private func storeFCMTokenToFirestore(_ token: String, userID: String) {
-            let userRef = Firestore.firestore().collection("users").document(userID)
-            userRef.setData(["fcmToken": token], merge: true) { error in
-                if let error = error {
-                    print("Error updating FCM token in Firestore: \(error)")
-                } else {
-                    print("FCM token updated successfully in Firestore.")
-                }
+        Messaging.messaging().token { token, error in
+            if let token = token {
+                self.storeFCMTokenToFirestore(token, userID: userID)
+                print("Fetched and stored FCM Token: \(token)")
+            } else if let error = error {
+                print("Error fetching FCM token: \(error)")
             }
         }
-        
+    }
+    
+    private func storeFCMTokenToFirestore(_ token: String, userID: String) {
+        let userRef = Firestore.firestore().collection("users").document(userID)
+        userRef.setData(["fcmToken": token], merge: true) { error in
+            if let error = error {
+                print("Error updating FCM token in Firestore: \(error)")
+            } else {
+                print("FCM token updated successfully in Firestore.")
+            }
+        }
+    }
+    
     func setupFriendListListener() {
         guard let uid = FirebaseManager.shared.auth.currentUser?.uid else {
             self.errorMessage = "Could not find firebase uid"
             return
         }
-
-        listener = FirebaseManager.shared.firestore
+        
+        messageListener = FirebaseManager.shared.firestore
             .collection("friends")
             .document(uid)
             .collection("friend_list")
@@ -85,14 +92,14 @@ class MainMessagesViewModel: ObservableObject {
                     print("Failed to listen for friend list changes: \(error)")
                     return
                 }
-
+                
                 guard let documents = querySnapshot?.documents else {
                     self.errorMessage = "No friend list documents found"
                     return
                 }
-
+                
                 var users: [ChatUser] = []
-
+                
                 for document in documents {
                     let data = document.data()
                     let user = ChatUser(data: data)
@@ -100,24 +107,124 @@ class MainMessagesViewModel: ObservableObject {
                         users.append(user)
                     }
                 }
-
+                
                 // 分组并排序
                 let pinnedUsers = users.filter { $0.isPinned }.sorted {
                     ($0.latestMessageTimestamp?.dateValue() ?? Date.distantPast) > ($1.latestMessageTimestamp?.dateValue() ?? Date.distantPast)
                 }
-
+                
                 let unpinnedUsers = users.filter { !$0.isPinned }.sorted {
                     ($0.latestMessageTimestamp?.dateValue() ?? Date.distantPast) > ($1.latestMessageTimestamp?.dateValue() ?? Date.distantPast)
                 }
-
+                
                 DispatchQueue.main.async {
                     self.users = pinnedUsers + unpinnedUsers
                 }
             }
     }
+    
+    func setupFriendRequestListener() {
+        guard let uid = FirebaseManager.shared.auth.currentUser?.uid else {
+            self.errorMessage = "Could not find firebase uid"
+            return
+        }
+        
+        friendRequestListener = FirebaseManager.shared.firestore
+            .collection("friend_request")
+            .document(uid)
+            .collection("request_list")
+            .whereField("status", isEqualTo: "pending")
+            .addSnapshotListener { [weak self] snapshot, error in
+                if let error = error {
+                    print("Failed to listen for friend requests: \(error)")
+                    return
+                }
+                
+                guard let documents = snapshot?.documents else { return }
+                
+                DispatchQueue.main.async {
+                    // 如果有未处理的好友申请，设置 hasNewFriendRequest 为 true
+                    self?.hasNewFriendRequest = !documents.isEmpty
+                }
+            }
+    }
+    
+    func setupFriendGroupListener() {
+        guard let currentUserUid = FirebaseManager.shared.auth.currentUser?.uid else {
+            self.errorMessage = "Could not find firebase uid"
+            return
+        }
+        
+        // Remove any existing listener
+        friendGroupListener?.remove()
+        friendGroupListener = nil
+        
+        // Set up the Firestore listener
+        friendGroupListener = FirebaseManager.shared.firestore
+            .collection("response_to_prompt")
+            .addSnapshotListener { [weak self] snapshot, error in
+                if let error = error {
+                    print("Failed to listen for friend group messages: \(error)")
+                    return
+                }
+                
+                guard let snapshot = snapshot else { return }
+                
+                // Fetch friend list dynamically
+                self?.fetchFriendList { friendUIDs in
+                    let changes = snapshot.documentChanges.filter { change in
+                        let data = change.document.data()
+                        let authorUid = data["uid"] as? String ?? ""
+                        
+                        // Relevant updates: from friends or self
+                        return friendUIDs.contains(authorUid) || authorUid == currentUserUid
+                    }
+                    
+                    DispatchQueue.main.async {
+                        // If there are any changes, set the flag to true
+                        self?.hasNewFriendGroup = !changes.isEmpty
+                    }
+                }
+            }
+    }
+
+
+    
+    
+    func fetchFriendList(completion: @escaping ([String]) -> Void) {
+        guard let uid = FirebaseManager.shared.auth.currentUser?.uid else {
+            self.errorMessage = "Could not find firebase uid"
+            return
+        }
+        
+        FirebaseManager.shared.firestore
+            .collection("friends")
+            .document(uid)
+            .collection("friend_list")
+            .getDocuments { snapshot, error in
+                if let error = error {
+                    print("Failed to fetch friend list: \(error)")
+                    return
+                }
+                
+                guard let documents = snapshot?.documents else {
+                    print("No friend list documents found")
+                    return
+                }
+                
+                let friendUIDs = documents.map { $0.documentID }
+                completion(friendUIDs)
+            }
+        
+    }
+    
     func stopListening() {
-        listener?.remove()
-        listener = nil
+        messageListener?.remove()
+        messageListener = nil
+        friendRequestListener?.remove()
+        friendRequestListener = nil
+        friendGroupListener?.remove()
+        friendGroupListener = nil
     }
     
     private func fetchCurrentUser() {
@@ -126,7 +233,7 @@ class MainMessagesViewModel: ObservableObject {
             self.errorMessage = "Could not find firebase uid"
             return
         }
-
+        
         FirebaseManager.shared.firestore.collection("users").document(uid).getDocument { snapshot, error in
             if let error = error {
                 self.errorMessage = "Failed to fetch current user: \(error)"
@@ -199,15 +306,16 @@ struct MainMessagesView: View {
     @State var latestSenderMessage: ChatMessage?
     @State private var shouldShowFriendGroupView = false
     
-    @ObservedObject private var vm = MainMessagesViewModel()
+    @ObservedObject var vm = MainMessagesViewModel()
     @StateObject private var chatLogViewModel = ChatLogViewModel(chatUser: nil)
+    @State private var showFriendRequestsView = false
     
     var body: some View {
         NavigationStack {
             ZStack {
                 Color(red: 0.976, green: 0.980, blue: 1.0)
                     .ignoresSafeArea()
-
+                
                 VStack(spacing: 0) {
                     // Header Section
                     ZStack {
@@ -217,37 +325,47 @@ struct MainMessagesView: View {
                             .scaledToFit()
                             .frame(maxWidth: .infinity)
                             .ignoresSafeArea()
-
+                        
                         // Header Title
                         
-                           
-                            HStack {
-                                Image("spacerformainmessageviewtopleft")
-                                    .resizable()
-                                    .frame(width: 36, height: 36)
-                                    .padding(.leading, 28)
-                                Spacer()
-                                Image("auroratext")
-                                    .resizable()
-                                    .scaledToFill()
-                                    .frame(width: UIScreen.main.bounds.width * 0.1832,
-                                           height: UIScreen.main.bounds.height * 0.0198)
-                                Spacer()
-                                
+                        
+                        HStack {
+                            Image("spacerformainmessageviewtopleft")
+                                .resizable()
+                                .frame(width: 36, height: 36)
+                                .padding(.leading, 28)
+                            Spacer()
+                            Image("auroratext")
+                                .resizable()
+                                .scaledToFill()
+                                .frame(width: UIScreen.main.bounds.width * 0.1832,
+                                       height: UIScreen.main.bounds.height * 0.0198)
+                            Spacer()
+                            
+                            HStack{
                                 Button(action: {
                                     if let chatUser = vm.chatUser{
                                         self.selectedUser = chatUser
                                         shouldShowFriendRequests.toggle()
                                     }
                                 }) {
-                                    Image("notificationbutton")
-                                        .resizable()
-                                        .frame(width: 36, height: 36)
-                                        .padding(.trailing, 28)
-                                    //.padding(8)
+                                    ZStack{
+                                        Image("notificationbutton")
+                                            .resizable()
+                                            .frame(width: 36, height: 36)
+                                            .padding(.trailing, 28)
+                                        if vm.hasNewFriendRequest {
+                                            Circle()
+                                                .fill(Color.red)
+                                                .frame(width: 12, height: 12)
+                                                .offset(x: 10, y: -10)
+                                        }
+                                        //.padding(8)
+                                    }
                                 }
                             }
-                            
+                        }
+                        
                         
                     }
                     .frame(height: UIScreen.main.bounds.height * 0.07) // Set header height
@@ -255,17 +373,17 @@ struct MainMessagesView: View {
                     ZStack{
                         
                         /*ScrollView {
-                            LazyVStack(spacing: 8) {
-                                ForEach(0..<50, id: \.self) { index in
-                                    Image("pinnedperson")
-                                        .resizable()
-                                        .scaledToFit()
-                                        .padding(.top, index == 0 ? 8 : 0)
-                                }
-                            }
-                            .padding(.horizontal, 20) // Add horizontal padding for nicer layout
-                            .padding(.bottom, 0) // Ensure no extra padding at the bottom
-                        }*/
+                         LazyVStack(spacing: 8) {
+                         ForEach(0..<50, id: \.self) { index in
+                         Image("pinnedperson")
+                         .resizable()
+                         .scaledToFit()
+                         .padding(.top, index == 0 ? 8 : 0)
+                         }
+                         }
+                         .padding(.horizontal, 20) // Add horizontal padding for nicer layout
+                         .padding(.bottom, 0) // Ensure no extra padding at the bottom
+                         }*/
                         ScrollView {
                             LazyVStack(spacing: 8) {
                                 ForEach(vm.users) { user in
@@ -290,7 +408,7 @@ struct MainMessagesView: View {
                                                     .scaledToFit()
                                                     .cornerRadius(16)
                                             }
-
+                                            
                                             // Overlay Content
                                             HStack(spacing: 16) {
                                                 // User Profile Image
@@ -299,13 +417,13 @@ struct MainMessagesView: View {
                                                     .scaledToFill()
                                                     .frame(width: 45, height: 45)
                                                     .clipShape(Circle())
-
+                                                
                                                 VStack(alignment: .leading, spacing: 4) {
                                                     // User Name
                                                     Text(user.username)
                                                         .font(.system(size: 16, weight: .bold))
                                                         .foregroundColor(Color(red: 0.49, green: 0.52, blue: 0.75))
-
+                                                    
                                                     // Latest Message Timestamp or Placeholder
                                                     if let timestamp = user.latestMessageTimestamp {
                                                         Text(formatTimestamp(timestamp))
@@ -317,9 +435,9 @@ struct MainMessagesView: View {
                                                             .foregroundColor(Color.gray)
                                                     }
                                                 }
-
+                                                
                                                 Spacer()
-
+                                                
                                                 // Unseen Message Indicator
                                                 if user.hasUnseenLatestMessage {
                                                     Circle()
@@ -336,19 +454,19 @@ struct MainMessagesView: View {
                             }
                             .padding(.top, 8)
                         }
-
+                        
                         /*VStack{
-                            Spacer()
+                         Spacer()
                          
-                            Image("navigationbar")
-                                .resizable()
-                                .scaledToFill()
-                                .frame(maxWidth: .infinity)
-                                .ignoresSafeArea(edges: .bottom) // Touch bottom edge
-                        }*/
+                         Image("navigationbar")
+                         .resizable()
+                         .scaledToFill()
+                         .frame(maxWidth: .infinity)
+                         .ignoresSafeArea(edges: .bottom) // Touch bottom edge
+                         }*/
                         VStack {
                             Spacer()
-
+                            
                             // Navigation Bar with Buttons
                             ZStack {
                                 // Navigation Bar Image
@@ -357,21 +475,38 @@ struct MainMessagesView: View {
                                     .scaledToFit()
                                     .frame(maxWidth: .infinity)
                                     .ignoresSafeArea(edges: .bottom) // Touch bottom edge
-
+                                
                                 // Buttons on Navigation Bar
                                 HStack(spacing: 60) { // Adjust spacing as needed
                                     Button(action: {
                                         if let chatUser = vm.chatUser {
                                             self.selectedUser = chatUser
                                             shouldShowFriendGroupView.toggle()
+                                            // 重置朋友圈更新状态
+                                            vm.hasNewFriendGroup = false
+                                            
+                                            // 更新 lastCheckedTimestamp
+                                            let currentDate = Date()
+                                            vm.lastCheckedTimestamp = currentDate.timeIntervalSince1970
+                                            // vm.friendGroupListener?.remove()
+                                            // vm.friendGroupListener = nil
+                                            // vm.setupFriendGroupListener()
+                                            
                                         }
                                     }) {
                                         Image("dailyaurorabutton")
                                             .resizable()
                                             .scaledToFit()
                                             .frame(width: 36, height: 36) // Set button size
+                                        
+                                        if vm.hasNewFriendGroup {
+                                            Circle()
+                                                .fill(Color.red)
+                                                .frame(width: 12, height: 12)
+                                                .offset(x: 20, y: -10)
+                                        }
                                     }
-
+                                    
                                     Button(action: {
                                         print("Button 2 tapped")
                                     }) {
@@ -380,7 +515,7 @@ struct MainMessagesView: View {
                                             .scaledToFit()
                                             .frame(width: 36, height: 36)
                                     }
-
+                                    
                                     Button(action: {
                                         shouldNavigateToAddFriendView.toggle()
                                     }) {
@@ -389,7 +524,7 @@ struct MainMessagesView: View {
                                             .scaledToFit()
                                             .frame(width: 36, height: 36)
                                     }
-
+                                    
                                     Button(action: {
                                         if let chatUser = vm.chatUser {
                                             self.selectedUser = chatUser
@@ -407,7 +542,7 @@ struct MainMessagesView: View {
                                 .padding(.bottom, 20) // Adjust to align buttons vertically over the navigation bar
                             }
                         }
-
+                        
                     }
                 }
             }
@@ -453,6 +588,8 @@ struct MainMessagesView: View {
         }
         .onAppear{
             vm.setupFriendListListener()
+            vm.setupFriendRequestListener()
+            vm.setupFriendGroupListener()
             vm.fetchAndStoreFCMToken()
         }
         .onDisappear{
@@ -504,7 +641,7 @@ struct MainMessagesView: View {
                     .font(.system(size: 24, weight: .bold))
                     .foregroundColor(Color(.label))
             }
-
+            
             // Mail Button - Navigates to FriendRequestsView
             Button(action: {
                 if let chatUser = vm.chatUser{
@@ -625,12 +762,12 @@ struct MainMessagesView: View {
             }
         }
     }
-
+    
     func formatTimestamp(_ timestamp: Timestamp) -> String {
         let date = timestamp.dateValue()
         let formatter = DateFormatter()
         let calendar = Calendar.current
-
+        
         if calendar.isDateInToday(date) {
             // 如果是今天，显示时间，例如 "14:23"
             formatter.dateFormat = "HH:mm"

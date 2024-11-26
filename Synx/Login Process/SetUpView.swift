@@ -4,7 +4,6 @@ import FirebaseAuth
 import GoogleSignIn
 
 
-// SignUp for email and password users
 struct SignUpView: View {
     @Environment(\.dismiss) var dismiss
     @Binding var isLogin: Bool

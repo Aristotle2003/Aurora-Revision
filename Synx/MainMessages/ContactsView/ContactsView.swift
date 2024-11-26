@@ -1,4 +1,5 @@
 import SwiftUI
+import FirebaseCore
 import SDWebImageSwiftUI
 
 class CreateNewMessageViewModel: ObservableObject {
@@ -38,7 +39,7 @@ class CreateNewMessageViewModel: ObservableObject {
                 })
                 
                 // Sort users by the first letter of their email
-                self.users.sort { $0.email.lowercased() < $1.email.lowercased() }
+                self.users.sort { $0.username.lowercased() < $1.username.lowercased() }
                 
                 // Initialize filtered users with all users
                 self.filterUsers()
@@ -50,9 +51,9 @@ class CreateNewMessageViewModel: ObservableObject {
             filteredUsers = users // Show all friends if search text is empty
         } else {
             filteredUsers = users.filter { user in
-                let email = user.email.lowercased()
+                let username = user.username.lowercased()
                 let searchQuery = searchText.lowercased()
-                return email.contains(searchQuery)
+                return username.contains(searchQuery)
             }
         }
     }
@@ -62,18 +63,18 @@ class CreateNewMessageViewModel: ObservableObject {
         fetchAllFriends()
     }
     
-//     // Group users by the first letter of their email
-//     func groupedUsers() -> [String: [ChatUser]] {
-//         Dictionary(grouping: filteredUsers) { user in
-//             String(user.email.prefix(1)).uppercased()
-//         }
-//     }
-// }
-
+    //     // Group users by the first letter of their email
+    //     func groupedUsers() -> [String: [ChatUser]] {
+    //         Dictionary(grouping: filteredUsers) { user in
+    //             String(user.email.prefix(1)).uppercased()
+    //         }
+    //     }
+    // }
+    
     // Group users by the first letter of their email
     func groupedUsers() -> [String: [ChatUser]] {
         Dictionary(grouping: filteredUsers) { user in
-            let firstLetter = String(user.email.prefix(1)).uppercased()
+            let firstLetter = String(user.username.prefix(1)).uppercased()
             let regex = try! NSRegularExpression(pattern: "^[A-Z]$")
             let range = NSRange(location: 0, length: firstLetter.utf16.count)
             if regex.firstMatch(in: firstLetter, options: [], range: range) != nil {
@@ -98,84 +99,136 @@ struct CreateNewMessageView: View {
     
     var body: some View {
         NavigationView {
-            VStack {
-                // Search Bar
-                SearchBar(text: $vm.searchText) {
-                    vm.filterUsers()
-                }
-                .padding(.vertical, 8)
-                
-                ScrollView {
-                    if !vm.errorMessage.isEmpty {
-                        Text(vm.errorMessage)
-                            .foregroundColor(.red)
-                            .padding()
-                    }
-                    
-                    LazyVStack(spacing: 0) {
-                        ForEach(vm.groupedUsers().keys.sorted(), id: \.self) { key in
-                            Section(header: Text(key)
-                                        .font(.headline)
-                                        .padding(.leading, 16)
-                                        .padding(.vertical, 4)
-                                        .background(Color(.systemGray6))) {
-                                ForEach(vm.groupedUsers()[key]!) { user in
-                                    Button {
-                                        presentationMode.wrappedValue.dismiss()
-                                        didSelectNewUser(user)  // Direct selection from CreateNewMessageView
-                                    } label: {
-                                        HStack(spacing: 16) {
-                                            WebImage(url: URL(string: user.profileImageUrl))
-                                                .resizable()
-                                                .scaledToFill()
-                                                .frame(width: 50, height: 50)
-                                                .clipShape(Circle())
-                                                .overlay(
-                                                    Circle()
-                                                        .stroke(Color(.systemGray4), lineWidth: 1)
-                                                )
-                                            
-                                            Text(user.email)
-                                                .foregroundColor(.primary)
-                                                .font(.system(size: 16))
-                                            
-                                            Spacer()
-                                        }
-                                        .padding(.horizontal)
-                                        .padding(.vertical, 12)
-                                    }
-                                    
-                                    Divider()
-                                        .padding(.leading, 76)
-                                }
+            ZStack{
+                Color(red: 0.976, green: 0.980, blue: 1.0)
+                    .ignoresSafeArea()
+                VStack{
+                    ZStack{
+                        Image("liuhaier")
+                            .resizable()
+                            .scaledToFit()
+                            .frame(maxWidth: .infinity)
+                            .ignoresSafeArea()
+                        HStack {
+                            Image("spacerformainmessageviewtopleft")
+                                .resizable()
+                                .frame(width: 36, height: 36)
+                                .padding(.leading, 28)
+                            Spacer()
+                            Image("auroratext")
+                                .resizable()
+                                .scaledToFill()
+                                .frame(width: UIScreen.main.bounds.width * 0.1832,
+                                       height: UIScreen.main.bounds.height * 0.0198)
+                            Spacer()
+                            
+                            Button(action: {
+                                isShowingAddFriendView = true
+                            }) {
+                                Image("addfriendbutton")
+                                    .resizable()
+                                    .frame(width: 24, height: 24)
+                                    .padding(.trailing, 28)
                             }
                         }
                     }
+                    .frame(height: UIScreen.main.bounds.height * 0.07)
+                    
+                    SearchBar(text: $vm.searchText) {
+                        vm.filterUsers()
+                    }
+                    .padding(.vertical, 4)
+                    
+                    ScrollView {
+                        if !vm.errorMessage.isEmpty {
+                            Text(vm.errorMessage)
+                                .foregroundColor(.red)
+                                .padding()
+                        }
+                        
+                        LazyVStack(spacing: 8) {
+                            ForEach(vm.groupedUsers().keys.sorted(), id: \.self) { key in
+                                Section(header:
+                                            HStack {
+                                    Text(key)
+                                        .font(.headline.bold()) // Bold font
+                                        .foregroundColor(Color.gray) // Grey color
+                                        .padding(.leading, 20) // Align to the left with padding
+                                    Spacer()
+                                }
+                                    .padding(.vertical, 4) // Vertical padding for spacing
+                                    .background(Color(.clear))
+                                ){
+                                    ForEach(vm.groupedUsers()[key]!) { user in
+                                        Button {
+                                            presentationMode.wrappedValue.dismiss()
+                                            didSelectNewUser(user)  // Direct selection from CreateNewMessageView
+                                        } label: {
+                                            ZStack {
+                                                // Background bubble image
+                                                Image("contactsbubble")
+                                                    .resizable()
+                                                    .scaledToFit()
+                                                    .cornerRadius(16)
+                                                
+                                                // User content
+                                                HStack(spacing: 16) {
+                                                    WebImage(url: URL(string: user.profileImageUrl))
+                                                        .resizable()
+                                                        .scaledToFill()
+                                                        .frame(width: 45, height: 45)
+                                                        .clipShape(Circle())
+                                                    VStack(alignment: .leading, spacing: 4) {
+                                                        
+                                                        Text(user.username)
+                                                            .font(.system(size: 16, weight: .bold))
+                                                            .foregroundColor(Color(red: 0.49, green: 0.52, blue: 0.75))
+                                                        
+                                                        if let timestamp = user.latestMessageTimestamp {
+                                                            Text(formatTimestamp(timestamp))
+                                                                .font(.system(size: 14))
+                                                                .foregroundColor(Color.gray)
+                                                        } else {
+                                                            Text("")
+                                                                .font(.system(size: 14))
+                                                                .foregroundColor(Color.gray)
+                                                        }
+                                                    }
+                                                    
+                                                    Spacer()
+                                                }
+                                                .padding(.leading, 16)
+                                            }
+                                            .padding(.horizontal, 20)
+                                            .padding(.bottom, 0)
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                        .padding(.top, 8)
+                    }
+                    // Dismiss button at the bottom
+                    Button(action: {
+                        presentationMode.wrappedValue.dismiss()
+                    }) {
+                        Text("Dismiss")
+                            .font(.system(size: 18, weight: .semibold))
+                            .foregroundColor(.white)
+                            .frame(maxWidth: .infinity, maxHeight: 44)
+                            .background(Color.blue)
+                            .cornerRadius(10)
+                            .padding(.horizontal, 16)
+                            .padding(.bottom, 20)
+                    }
                 }
             }
+            
             .onChange(of: hasSelectedUserFromAddFriendView) { oldValue, newValue in
                 if newValue, let user = selectedUserFromAddFriendView {
                     didSelectNewUser(user)  // Handle the user passed from AddFriendView
                     selectedUserFromAddFriendView = nil  // Reset after handling
                     hasSelectedUserFromAddFriendView = false  // Reset the flag
-                }
-            }
-            .navigationTitle("Contacts")
-            .navigationBarTitleDisplayMode(.inline)
-            .toolbar {
-                ToolbarItem(placement: .navigationBarLeading) {
-                    Button("Cancel") {
-                        presentationMode.wrappedValue.dismiss()
-                    }
-                }
-                
-                // "+" Button for adding new friends
-                ToolbarItem(placement: .navigationBarTrailing) {
-                    Button(action: {
-                        isShowingAddFriendView = true  // Navigate to AddFriendView
-                    }) {
-                        Image(systemName: "plus")
-                    }
                 }
             }
             .sheet(isPresented: $isShowingAddFriendView) {
@@ -189,39 +242,59 @@ struct CreateNewMessageView: View {
             }
         }
     }
+    
+    func formatTimestamp(_ timestamp: Timestamp) -> String {
+        let date = timestamp.dateValue()
+        let formatter = DateFormatter()
+        let calendar = Calendar.current
+        
+        if calendar.isDateInToday(date) {
+            // 如果是今天，显示时间，例如 "14:23"
+            formatter.dateFormat = "HH:mm"
+            return formatter.string(from: date)
+        } else if calendar.isDateInYesterday(date) {
+            // 如果是昨天，显示 "昨天"
+            return "Yesterday"
+        } else if calendar.isDate(date, equalTo: Date(), toGranularity: .weekOfYear) {
+            // 如果在本周内，显示星期几
+            let weekdaySymbols = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"]
+            let weekday = calendar.component(.weekday, from: date)
+            print(weekday)
+            if weekday == 1 {
+                formatter.dateFormat = "yyyy/MM/dd"
+                return formatter.string(from: date)
+            } else {
+                return weekdaySymbols[(weekday + 5) % 7]
+            }// 注意：周日对应索引 0
+        } else {
+            // 否则，显示日期，例如 "2023/10/07"
+            formatter.dateFormat = "yyyy/MM/dd"
+            return formatter.string(from: date)
+        }
+    }
 }
 
 struct SearchBar: View {
     @Binding var text: String
-    var onSearch: () -> Void  // Add callback for search action
-    
-    // Add focus state
-    @FocusState private var isFocused: Bool
+    var onSearch: () -> Void  // Callback for the search action
     
     var body: some View {
         HStack {
-            // Search icon and button
-            Button(action: {
-                onSearch()  // Trigger search
-                // Dismiss keyboard when search button is tapped
-                UIApplication.shared.sendAction(#selector(UIResponder.resignFirstResponder),
-                                             to: nil, from: nil, for: nil)
-            }) {
-                Image(systemName: "magnifyingglass")
-                    .foregroundColor(.gray)
-                    .frame(width: 20, height: 20)
-            }
+            Spacer()
+            Image(systemName: "magnifyingglass")
+                .foregroundColor(.gray)
             
             // Search input field
-            TextField("Search by email or phone", text: $text)
-                .textFieldStyle(RoundedBorderTextFieldStyle())
-                .focused($isFocused)
-                .submitLabel(.search)  // Shows search button on keyboard
+            TextField("Search friends", text: $text)
+                .font(.system(size: 14)) // Set font size
+                .foregroundColor(.gray)
+                .submitLabel(.search) // Enable "Search" key on keyboard
                 .onSubmit {
-                    onSearch()  // Trigger search when return key is pressed
+                    onSearch()  // Trigger search when "Search" key is pressed
                 }
             
-            // Clear button
+            
+            // Clear button (conditionally shown)
             if !text.isEmpty {
                 Button(action: {
                     text = ""  // Clear search text
@@ -232,7 +305,14 @@ struct SearchBar: View {
                 }
             }
         }
-        .padding(.horizontal)
+        .padding(10) // Add padding inside the search bar
+        .background(
+            RoundedRectangle(cornerRadius: 20) // Round corners
+                .fill(Color.white) // White background
+            
+        )
+        .frame(maxWidth: .infinity) // Centralized horizontally
+        .padding(.horizontal, 20) // Add spacing from edges
     }
 }
 

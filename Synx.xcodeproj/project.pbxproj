@@ -7,6 +7,8 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		FB0F8AFB2CF52ABE00A37CED /* TutorialView.swift in Sources */ = {isa = PBXBuildFile; fileRef = FB0F8AFA2CF52ABE00A37CED /* TutorialView.swift */; };
+		FB0F8AFD2CF56EC200A37CED /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = FB0F8AFC2CF56EC200A37CED /* Assets.xcassets */; };
 		FB3C61182CE0F497001A0922 /* CalendarView.swift in Sources */ = {isa = PBXBuildFile; fileRef = FB3C61172CE0F497001A0922 /* CalendarView.swift */; };
 		FB42CB802CD5B5A000283244 /* FriendGroupView.swift in Sources */ = {isa = PBXBuildFile; fileRef = FB42CB7F2CD5B5A000283244 /* FriendGroupView.swift */; };
 		FB42CB832CD66D9E00283244 /* EditProfileView.swift in Sources */ = {isa = PBXBuildFile; fileRef = FB42CB822CD66D9E00283244 /* EditProfileView.swift */; };
@@ -15,7 +17,6 @@
 		FB6764232CEE856400FCE17E /* Lottie in Frameworks */ = {isa = PBXBuildFile; productRef = FB6764222CEE856400FCE17E /* Lottie */; };
 		FB6764292CEEE82D00FCE17E /* Clear Button.json in Resources */ = {isa = PBXBuildFile; fileRef = FB6764282CEEE82D00FCE17E /* Clear Button.json */; };
 		FB67642B2CEEE83E00FCE17E /* Save Button.json in Resources */ = {isa = PBXBuildFile; fileRef = FB67642A2CEEE83E00FCE17E /* Save Button.json */; };
-		FB6764312CF0DEC900FCE17E /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = FB6764302CF0DEC900FCE17E /* Assets.xcassets */; };
 		FB7E20792CBCC6E900209582 /* SynxApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = FB7E20782CBCC6E900209582 /* SynxApp.swift */; };
 		FB7E207B2CBCC6E900209582 /* LoginView.swift in Sources */ = {isa = PBXBuildFile; fileRef = FB7E207A2CBCC6E900209582 /* LoginView.swift */; };
 		FB7E20802CBCC6EA00209582 /* Preview Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = FB7E207F2CBCC6EA00209582 /* Preview Assets.xcassets */; };
@@ -61,12 +62,13 @@
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXFileReference section */
+		FB0F8AFA2CF52ABE00A37CED /* TutorialView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TutorialView.swift; sourceTree = "<group>"; };
+		FB0F8AFC2CF56EC200A37CED /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		FB3C61172CE0F497001A0922 /* CalendarView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CalendarView.swift; sourceTree = "<group>"; };
 		FB42CB7F2CD5B5A000283244 /* FriendGroupView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FriendGroupView.swift; sourceTree = "<group>"; };
 		FB42CB822CD66D9E00283244 /* EditProfileView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EditProfileView.swift; sourceTree = "<group>"; };
 		FB6764282CEEE82D00FCE17E /* Clear Button.json */ = {isa = PBXFileReference; lastKnownFileType = text.json; path = "Clear Button.json"; sourceTree = "<group>"; };
 		FB67642A2CEEE83E00FCE17E /* Save Button.json */ = {isa = PBXFileReference; lastKnownFileType = text.json; path = "Save Button.json"; sourceTree = "<group>"; };
-		FB6764302CF0DEC900FCE17E /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		FB7E20752CBCC6E900209582 /* Synx.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Synx.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		FB7E20782CBCC6E900209582 /* SynxApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SynxApp.swift; sourceTree = "<group>"; };
 		FB7E207A2CBCC6E900209582 /* LoginView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LoginView.swift; sourceTree = "<group>"; };
@@ -178,13 +180,14 @@
 				FB67642A2CEEE83E00FCE17E /* Save Button.json */,
 				FB83BD952CD859BE00A7BE4E /* Synx.entitlements */,
 				FB83BD902CD81ECC00A7BE4E /* Info.plist */,
+				FB0F8AFA2CF52ABE00A37CED /* TutorialView.swift */,
 				FBB505022CCEA62D00FF1C87 /* Login Process */,
 				FB7E20BF2CC165D500209582 /* Model */,
 				FB7E20B62CC0112C00209582 /* Utils */,
 				FB7E20B32CBF23B200209582 /* MainMessages */,
 				FB7E20782CBCC6E900209582 /* SynxApp.swift */,
 				FB83BD982CD85E6600A7BE4E /* GoogleService-Info.plist */,
-				FB6764302CF0DEC900FCE17E /* Assets.xcassets */,
+				FB0F8AFC2CF56EC200A37CED /* Assets.xcassets */,
 				FB7E207E2CBCC6EA00209582 /* Preview Content */,
 			);
 			path = Synx;
@@ -423,8 +426,8 @@
 				FB67642B2CEEE83E00FCE17E /* Save Button.json in Resources */,
 				FB7E20802CBCC6EA00209582 /* Preview Assets.xcassets in Resources */,
 				FB6764292CEEE82D00FCE17E /* Clear Button.json in Resources */,
-				FB6764312CF0DEC900FCE17E /* Assets.xcassets in Resources */,
 				FB83BD992CD85E6600A7BE4E /* GoogleService-Info.plist in Resources */,
+				FB0F8AFD2CF56EC200A37CED /* Assets.xcassets in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -451,6 +454,7 @@
 			files = (
 				FB42CB802CD5B5A000283244 /* FriendGroupView.swift in Sources */,
 				FB3C61182CE0F497001A0922 /* CalendarView.swift in Sources */,
+				FB0F8AFB2CF52ABE00A37CED /* TutorialView.swift in Sources */,
 				FB7E20C12CC165E400209582 /* ChatUser.swift in Sources */,
 				FBA6BD1D2CCD696F0019A5E1 /* ProfileView.swift in Sources */,
 				FB7E20C52CC565EA00209582 /* ChatLogView.swift in Sources */,

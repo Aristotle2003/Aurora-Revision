@@ -9,14 +9,14 @@ class FriendGroupViewModel: ObservableObject {
     @Published var responses = [FriendResponse]()
     @Published var showResponseInput = false
     @Published var currentUserHasPosted = false  // 新增属性
-
+    
     private var selectedUser: ChatUser
-
+    
     init(selectedUser: ChatUser) {
         self.selectedUser = selectedUser
         fetchCurrentUserHasPostedStatus()
     }
-
+    
     func fetchPrompt() {
         FirebaseManager.shared.firestore.collection("prompts").document("currentPrompt")
             .getDocument { snapshot, error in
@@ -28,15 +28,17 @@ class FriendGroupViewModel: ObservableObject {
                 }
             }
     }
-
+    
     func submitResponse(for userId: String) {
         let responseRef = FirebaseManager.shared.firestore.collection("response_to_prompt").document()
         let data: [String: Any] = [
             "uid": userId,
             "text": responseText,
-            "timestamp": Timestamp()
+            "timestamp": Timestamp(),
+            "likes": 0,
+            "likedBy": []
         ]
-
+        
         responseRef.setData(data) { error in
             if error == nil {
                 self.responseText = ""
@@ -49,12 +51,12 @@ class FriendGroupViewModel: ObservableObject {
             }
         }
     }
-
- // 修改 fetchLatestResponses 函数，确保完成后的处理
+    
+    // 修改 fetchLatestResponses 函数，确保完成后的处理
     func fetchLatestResponses(for userId: String) {
         var allResponses: [FriendResponse] = []
         let group = DispatchGroup()
-
+        
         // 获取当前用户的响应
         group.enter()
         fetchLatestResponse(for: userId, email: self.selectedUser.email, profileImageUrl: self.selectedUser.profileImageUrl) { response in
@@ -63,7 +65,7 @@ class FriendGroupViewModel: ObservableObject {
             }
             group.leave()
         }
-
+        
         // 获取好友的响应
         FirebaseManager.shared.firestore.collection("friends")
             .document(userId)
@@ -73,20 +75,20 @@ class FriendGroupViewModel: ObservableObject {
                     print("获取好友列表失败：\(error.localizedDescription)")
                     return
                 }
-
+                
                 guard let friendDocs = friendSnapshot?.documents else {
                     print("没有找到好友。")
                     return
                 }
-
+                
                 for friendDoc in friendDocs {
                     let friendData = friendDoc.data()
                     guard let friendId = friendData["uid"] as? String,
-                        let email = friendData["email"] as? String,
-                        let profileImageUrl = friendData["profileImageUrl"] as? String else {
+                          let email = friendData["email"] as? String,
+                          let profileImageUrl = friendData["profileImageUrl"] as? String else {
                         continue
                     }
-
+                    
                     group.enter()
                     self.fetchLatestResponse(for: friendId, email: email, profileImageUrl: profileImageUrl) { response in
                         if let response = response {
@@ -95,15 +97,15 @@ class FriendGroupViewModel: ObservableObject {
                         group.leave()
                     }
                 }
-
+                
                 group.notify(queue: .main) {
                     self.responses = allResponses.sorted { $0.timestamp > $1.timestamp }
                 }
             }
     }
-        
-
-// 修改 fetchLatestResponse 函数，获取 likes 和 likedBy
+    
+    
+    // 修改 fetchLatestResponse 函数，获取 likes 和 likedBy
     private func fetchLatestResponse(for uid: String, email: String, profileImageUrl: String, completion: @escaping (FriendResponse?) -> Void) {
         FirebaseManager.shared.firestore.collection("response_to_prompt")
             .whereField("uid", isEqualTo: uid)
@@ -137,19 +139,19 @@ class FriendGroupViewModel: ObservableObject {
     }
     func fetchCurrentUserHasPostedStatus() {
         guard let uid = FirebaseManager.shared.auth.currentUser?.uid else { return }
-
+        
         FirebaseManager.shared.firestore.collection("users").document(uid).getDocument { snapshot, error in
             if let error = error {
                 print("Failed to fetch current user: \(error.localizedDescription)")
                 return
             }
-
+            
             if let data = snapshot?.data() {
                 self.currentUserHasPosted = data["hasPosted"] as? Bool ?? false
             }
         }
     }
-
+    
     func updateHasPostedStatus(for userId: String) {
         FirebaseManager.shared.firestore.collection("users").document(userId).updateData([
             "hasPosted": true
@@ -162,17 +164,17 @@ class FriendGroupViewModel: ObservableObject {
             self.currentUserHasPosted = true
         }
     }
-
+    
     // 点赞或取消点赞
     func toggleLike(for response: FriendResponse) {
         guard let currentUserId = FirebaseManager.shared.auth.currentUser?.uid else {return}
-
+        
         let responseRef = FirebaseManager.shared.firestore
             .collection("response_to_prompt")
             .document(response.documentId)
-
+        
         let hasLiked = response.likedByCurrentUser
-
+        
         responseRef.updateData([
             "likes": hasLiked ? FieldValue.increment(Int64(-1)) : FieldValue.increment(Int64(1)),
             "likedBy": hasLiked ? FieldValue.arrayRemove([currentUserId]) : FieldValue.arrayUnion([currentUserId])
@@ -200,7 +202,7 @@ struct FriendResponse: Identifiable {
     let timestamp: Date
     var likes: Int
     var likedByCurrentUser: Bool
-    let documentId: String
+    let documentId: String // 新增，以便在数据库操作中使用
 }
 
 struct FriendGroupView: View {
@@ -208,12 +210,12 @@ struct FriendGroupView: View {
     @Environment(\.presentationMode) var presentationMode
     @State var navigateToMainMessage = false
     let selectedUser: ChatUser
-
+    
     init(selectedUser: ChatUser) {
         self.selectedUser = selectedUser
         _vm = ObservedObject(wrappedValue: FriendGroupViewModel(selectedUser: selectedUser))
     }
-
+    
     var body: some View {
         VStack(alignment: .leading, spacing: 16) {
             // Prompt display
@@ -223,13 +225,13 @@ struct FriendGroupView: View {
                 .frame(maxWidth: .infinity, alignment: .leading)
                 .background(RoundedRectangle(cornerRadius: 12).fill(Color.gray.opacity(0.1)))
                 .padding(.bottom, 8)
-
+            
             // Reply button and input
             Button("Reply") {
                 vm.showResponseInput = true
             }
             .frame(maxWidth: .infinity, alignment: .leading)
-
+            
             if vm.showResponseInput {
                 VStack(alignment: .leading) {
                     TextField("Write your response...", text: $vm.responseText)
@@ -242,7 +244,7 @@ struct FriendGroupView: View {
                     .padding(.top, 4)
                 }
             }
-
+            
             // Scroll view for responses
             ScrollView {
                 VStack(alignment: .leading, spacing: 16) {
@@ -257,7 +259,7 @@ struct FriendGroupView: View {
                                     .frame(width: 40, height: 40)
                                     .clipShape(Circle())
                                     .overlay(Circle().stroke(Color.gray.opacity(0.5), lineWidth: 1))
-
+                                
                                 VStack(alignment: .leading, spacing: 4) {
                                     // 用户名和时间戳
                                     HStack {
@@ -268,14 +270,14 @@ struct FriendGroupView: View {
                                             .font(.footnote)
                                             .foregroundColor(.gray)
                                     }
-
+                                    
                                     // 消息文本
                                     Text(response.latestMessage)
                                         .font(.body)
                                         .foregroundColor(.primary)
                                         .fixedSize(horizontal: false, vertical: true)
                                         .padding(.top, 2)
-
+                                    
                                     // 点赞按钮和数量
                                     HStack {
                                         Button(action: {
@@ -301,12 +303,12 @@ struct FriendGroupView: View {
                                 .scaledToFit()
                                 .frame(width: 100, height: 100)
                                 .foregroundColor(.gray)
-//                                .padding()
-
+                            //                                .padding()
+                            
                             Text("发布一条动态以解锁好友圈")
                                 .font(.headline)
                                 .padding()
-
+                            
                             Button(action: {
                                 vm.showResponseInput = true
                             }) {
@@ -333,7 +335,7 @@ struct FriendGroupView: View {
             }
         )
         .navigationDestination(isPresented: $navigateToMainMessage){
-                MainMessagesView()
+            MainMessagesView()
         }
         .onAppear {
             vm.fetchPrompt()

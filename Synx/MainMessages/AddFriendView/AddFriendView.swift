@@ -8,84 +8,141 @@
 import SwiftUI
 import SDWebImageSwiftUI
 import UIKit
+import Contacts
 
-// MARK: - AddFriendViewModel (Add Friends View Model)
 class AddFriendViewModel: ObservableObject {
-    
-    @Published var users = [ChatUser]()          // Stores all users who are not friends
-    @Published var filteredUsers = [ChatUser]()  // Stores search results
-    @Published var errorMessage = ""             // Stores error messages
-    @Published var searchText = "" {             // Stores current search query
+    @Published var users = [ChatUser]()           // All users who are not friends
+    @Published var recommendedUsers = [ChatUser]() // Users recommended based on iPhone contacts
+    @Published var randomUsers = [ChatUser]()      // Remaining users
+    @Published var searchText = "" {               // Current search query
         didSet {
             filterUsers()
         }
     }
+    @Published var errorMessage = ""              // Error message
+    
+    private var allUsers = [ChatUser]()           // Full list of non-friend users before filtering
     
     init() {
         fetchNonFriendUsers()
     }
     
     func fetchNonFriendUsers() {
-            guard let uid = FirebaseManager.shared.auth.currentUser?.uid else {
-                self.errorMessage = "User not authenticated"
-                return
+        guard let uid = FirebaseManager.shared.auth.currentUser?.uid else {
+            self.errorMessage = "User not authenticated"
+            return
+        }
+        
+        // Fetch all users
+        FirebaseManager.shared.firestore.collection("users")
+            .getDocuments { [weak self] snapshot, error in
+                if let error = error {
+                    self?.errorMessage = "Failed to fetch users: \(error)"
+                    return
+                }
+                
+                guard let self = self else { return }
+                
+                var allUsers = [ChatUser]()
+                snapshot?.documents.forEach { document in
+                    let user = ChatUser(data: document.data())
+                    if user.uid != uid { // Exclude current user
+                        allUsers.append(user)
+                    }
+                }
+                
+                // Fetch friend list
+                FirebaseManager.shared.firestore.collection("friends").document(uid).collection("friend_list")
+                    .getDocuments { [weak self] friendSnapshot, error in
+                        if let error = error {
+                            self?.errorMessage = "Failed to fetch friends: \(error)"
+                            return
+                        }
+                        
+                        let friendIDs = friendSnapshot?.documents.map { $0.documentID } ?? []
+                        
+                        // Exclude friends
+                        self?.allUsers = allUsers.filter { !friendIDs.contains($0.uid) }
+                        
+                        // Process recommended users
+                        self?.processRecommendedUsers()
+                    }
+            }
+    }
+    
+    private func processRecommendedUsers() {
+        fetchUserContacts { [weak self] contactNumbers in
+            guard let self = self else { return }
+            
+            // Filter recommended users
+            self.recommendedUsers = self.allUsers.filter { user in
+                contactNumbers.contains(user.phoneNumber)
             }
             
-            // Step 1: Fetch all users excluding the current user
-            FirebaseManager.shared.firestore.collection("users")
-                .getDocuments { documentsSnapshot, error in
-                    if let error = error {
-                        self.errorMessage = "Failed to fetch users: \(error)"
-                        return
-                    }
-                    
-                    var allUsers = [ChatUser]()
-                    
-                    documentsSnapshot?.documents.forEach { snapshot in
-                        let data = snapshot.data()
-                        let user = ChatUser(data: data)
-                        if user.uid != uid {  // Exclude the current user
-                            allUsers.append(user)
-                        }
-                    }
-                    
-                    // Step 2: Fetch friend list of the current user
-                    FirebaseManager.shared.firestore.collection("friends").document(uid).collection("friend_list")
-                        .getDocuments { friendSnapshot, error in
-                            if let error = error {
-                                self.errorMessage = "Failed to fetch friends: \(error)"
-                                return
-                            }
-                            
-                            // Extract friend IDs
-                            let friendIDs = friendSnapshot?.documents.map { $0.documentID } ?? []
-                            
-                            // Filter out friends from allUsers
-                            self.users = allUsers.filter { !friendIDs.contains($0.uid) }
-                            
-                            // Sort users alphabetically
-                            self.users.sort { $0.email.lowercased() < $1.email.lowercased() }
-                            
-                            // Update filtered users based on search text
-                            self.filterUsers()
-                        }
-                }
+            // Filter random users excluding recommended users
+            let recommendedUIDs = Set(self.recommendedUsers.map { $0.uid })
+            self.randomUsers = self.allUsers.filter { !recommendedUIDs.contains($0.uid) }
+            
+            // Sort random users alphabetically
+            self.randomUsers.sort { $0.username.lowercased() < $1.username.lowercased() }
+            
+            // Initial filtering for random users
+            self.filterUsers()
+        }
     }
-
     
-    func filterUsers() {
-        if searchText.isEmpty {
-            let maxUsers = min(users.count, 10)
-            filteredUsers = Array(users[0..<maxUsers])
-        } else {
-            filteredUsers = users.filter { user in
-                let email = user.email.lowercased()
-                let searchQuery = searchText.lowercased()
-                return email.contains(searchQuery)
+    private func fetchUserContacts(completion: @escaping ([String]) -> Void) {
+        let store = CNContactStore()
+        store.requestAccess(for: .contacts) { granted, error in
+            if granted {
+                let keys = [CNContactPhoneNumbersKey] as [CNKeyDescriptor]
+                let request = CNContactFetchRequest(keysToFetch: keys)
+                var contactNumbers = [String]()
+                
+                do {
+                    try store.enumerateContacts(with: request) { contact, _ in
+                        contact.phoneNumbers.forEach { number in
+                            let phoneNumber = number.value.stringValue
+                            contactNumbers.append(phoneNumber.filter("0123456789".contains)) // Clean phone number
+                        }
+                    }
+                    completion(contactNumbers)
+                } catch {
+                    completion([])
+                }
+            } else {
+                completion([])
             }
         }
     }
+    
+    func filterUsers() {
+        DispatchQueue.main.async {
+            if self.searchText.isEmpty {
+                // When there's no search text, keep Recommended Users as they are
+                self.recommendedUsers = self.allUsers.filter { user in
+                    self.recommendedUsers.contains(where: { $0.uid == user.uid })
+                }
+                
+                // Exclude recommended users from random users and randomly select 10
+                let recommendedUIDs = Set(self.recommendedUsers.map { $0.uid })
+                let remainingUsers = self.allUsers.filter { !recommendedUIDs.contains($0.uid) }
+                self.randomUsers = Array(remainingUsers.shuffled().prefix(10))
+            } else {
+                // Flatten into a single filtered list when searching
+                let query = self.searchText.lowercased()
+                self.randomUsers = self.allUsers.filter { user in
+                    user.email.lowercased().contains(query) || user.phoneNumber.contains(query)
+                }
+                // Keep Recommended Users intact during search
+                self.recommendedUsers.removeAll()
+            }
+        }
+    }
+
+
 }
+
 
 struct ShareSheet: UIViewControllerRepresentable {
     let activityItems: [Any]
@@ -101,102 +158,83 @@ struct ShareSheet: UIViewControllerRepresentable {
 }
 
 struct AddFriendView: View {
-    
     let didSelectNewUser: (ChatUser) -> ()
     @Environment(\.presentationMode) var presentationMode
-    
     @StateObject var vm = AddFriendViewModel()
-    let shareableURL = URL(string: "https://apps.apple.com/us/app/xor/id6621190086")!
-    
     @State private var isSharing = false
-    
-    
-
-    private func showActivityViewController(from rootViewController: UIViewController) {
-        let activityVC = UIActivityViewController(activityItems: [shareableURL], applicationActivities: nil)
-        rootViewController.present(activityVC, animated: true, completion: nil)
-    }
+    let shareableURL = URL(string: "https://apps.apple.com/us/app/xor/id6621190086")!
     
     var body: some View {
         NavigationView {
             VStack {
-
-                SearchBar(text: $vm.searchText) {
+                SearchBar(text: $vm.searchText){
                     vm.filterUsers()
                 }
-                .padding(.vertical, 8)
+                    .padding(.vertical, 8)
                 
-                // Share link button
-                                Button(action: {
-                                    isSharing = true
-                                }) {
-                                    HStack {
-                                        Image(systemName: "square.and.arrow.up")
-                                            .font(.system(size: 20))
-                                        Text("Share Invite Link")
-                                            .font(.system(size: 16))
-                                    }
-                                    .foregroundColor(.blue)
-                                    .padding(.vertical, 10)
-                                    .frame(maxWidth: .infinity)
-                                    .background(Color(.systemGray6))
-                                    .cornerRadius(8)
-                                }
-                                .padding(.horizontal)
-                                .sheet(isPresented: $isSharing) {
-                                    ShareSheet(activityItems: [shareableURL])
-                                }
+                Button(action: {
+                    isSharing = true
+                }) {
+                    HStack {
+                        Image(systemName: "square.and.arrow.up")
+                        Text("Share Invite Link")
+                    }
+                    .foregroundColor(.blue)
+                }
+                .sheet(isPresented: $isSharing) {
+                    ShareSheet(activityItems: [shareableURL])
+                }
                 
                 ScrollView {
-                    if !vm.errorMessage.isEmpty {
-                        Text(vm.errorMessage)
-                            .foregroundColor(.red)
-                            .padding()
-                    }
-                    
-                    LazyVStack(spacing: 0) {
-                        ForEach(vm.filteredUsers) { user in
-                            Button {
-                                presentationMode.wrappedValue.dismiss()  // Dismiss AddFriendView
-                                didSelectNewUser(user)
-                            } label: {
-                                HStack(spacing: 16) {
-                                    WebImage(url: URL(string: user.profileImageUrl))
-                                        .resizable()
-                                        .scaledToFill()
-                                        .frame(width: 50, height: 50)
-                                        .clipShape(Circle())
-                                        .overlay(
-                                            Circle()
-                                                .stroke(Color(.systemGray4), lineWidth: 1)
-                                        )
-                                    
-                                    Text(user.email)
-                                        .foregroundColor(.primary)
-                                        .font(.system(size: 16))
-                                    
-                                    Spacer()
+                    VStack(alignment: .leading, spacing: 16) {
+                        // Recommended Users Section
+                        if !vm.recommendedUsers.isEmpty {
+                            Section(header: Text("Recommended Users").font(.headline)) {
+                                ForEach(vm.recommendedUsers) { user in
+                                    userRow(for: user)
                                 }
-                                .padding(.horizontal)
-                                .padding(.vertical, 12)
                             }
-                            
-                            Divider()
-                                .padding(.leading, 76)
+                        }
+                        
+                        // Random People Section
+                        if !vm.randomUsers.isEmpty {
+                            Section(header: Text("Random People").font(.headline)) {
+                                ForEach(vm.randomUsers) { user in
+                                    userRow(for: user)
+                                }
+                            }
                         }
                     }
                 }
             }
             .navigationTitle("Add Friend")
-            .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .navigationBarLeading) {
                     Button("Cancel") {
-                        // Dismiss the Add Friend View
                         presentationMode.wrappedValue.dismiss()
                     }
                 }
             }
         }
+    }
+    
+    @ViewBuilder
+    private func userRow(for user: ChatUser) -> some View {
+        Button {
+            presentationMode.wrappedValue.dismiss()
+            didSelectNewUser(user)
+        } label: {
+            HStack {
+                WebImage(url: URL(string: user.profileImageUrl))
+                    .resizable()
+                    .scaledToFill()
+                    .frame(width: 50, height: 50)
+                    .clipShape(Circle())
+                Text(user.username)
+                Spacer()
+            }
+            .padding(.vertical, 8)
+        }
+        .background(Divider(), alignment: .bottom)
     }
 }

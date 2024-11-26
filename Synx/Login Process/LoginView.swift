@@ -7,6 +7,7 @@ import CryptoKit
 
 struct LoginView: View {
     @Environment(\.window) var window
+    @AppStorage("tutorialEnabled") var tutorialEnabled: Bool = true
     
     @State var isLogin = false
     
@@ -28,8 +29,11 @@ struct LoginView: View {
     
     
     var body: some View {
-        if isLogin{
+        if isLogin && !tutorialEnabled{
             MainMessagesView()
+        }
+        else if isLogin && tutorialEnabled{
+            TutorialView()
         }
         else{
             NavigationView {
