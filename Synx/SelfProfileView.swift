@@ -1,8 +1,15 @@
+//
+//  SelfProvileView.swift
+//  Synx
+//
+//  Created by Shawn on 11/26/24.
+//
+
 import SwiftUI
 import SDWebImageSwiftUI
-import Firebase
+import FirebaseCore
 
-struct ProfileView: View {
+struct SelfProfileView: View {
     let chatUser: ChatUser
     let currentUser: ChatUser
     let isCurrentUser: Bool
@@ -47,215 +54,200 @@ struct ProfileView: View {
     }
 
     var body: some View {
-        VStack {
-            // 自定义返回按钮
-            HStack {
-                Button(action: {
-                    presentationMode.wrappedValue.dismiss()
-                }) {
-                    HStack {
-                        Image(systemName: "chevron.left")
-                        Text("Back")
-                    }
-                }
-                .padding()
-                Spacer()
-            }
-            
-            if !showTemporaryImage{
-                WebImage(url: URL(string: chatUser.profileImageUrl))
-                    .resizable()
-                    .scaledToFill()
-                    .frame(width: 150, height: 150)
-                    .clipShape(Circle())
-                    .shadow(radius: 10)
-                    .onTapGesture {
-                        if isCurrentUser {
-                            showImagePicker = true
+        NavigationStack{
+            VStack {
+                if !showTemporaryImage{
+                    WebImage(url: URL(string: chatUser.profileImageUrl))
+                        .resizable()
+                        .scaledToFill()
+                        .frame(width: 150, height: 150)
+                        .clipShape(Circle())
+                        .shadow(radius: 10)
+                        .onTapGesture {
+                            if isCurrentUser {
+                                showImagePicker = true
+                            }
                         }
-                    }
-            }
-            else{
-                WebImage(url: URL(string: self.savingImageUrl))
-                    .resizable()
-                    .scaledToFill()
-                    .frame(width: 150, height: 150)
-                    .clipShape(Circle())
-                    .shadow(radius: 10)
-                    .onTapGesture {
-                        if isCurrentUser {
-                            showImagePicker = true
+                }
+                else{
+                    WebImage(url: URL(string: self.savingImageUrl))
+                        .resizable()
+                        .scaledToFill()
+                        .frame(width: 150, height: 150)
+                        .clipShape(Circle())
+                        .shadow(radius: 10)
+                        .onTapGesture {
+                            if isCurrentUser {
+                                showImagePicker = true
+                            }
                         }
-                    }
-            }
-            
-            Text(chatUser.username)
-                .font(.title)
-                .padding()
-            
-            if isCurrentUser, let info = basicInfo {
-                Text("Username: \(info.username)")
-                    .font(.title)
-                // 当前用户的基本信息
-                VStack(alignment: .leading, spacing: 5) {
-                    Text("Age: \(info.age)")
-                    Text("Gender: \(info.gender)")
-                    Text("Location: \(info.location)")
-                    Text("Email: \(info.email)")
-                    Text("Bio: \(info.bio)")
                 }
-                .padding()
-            } else if let otherInfo = otherUserInfo {
-                Text("Username: \(otherInfo.username)")
-                    .font(.title)
-                // 其他用户的基本信息
-                VStack(alignment: .leading, spacing: 5) {
-                    Text("Age: \(otherInfo.age)")
-                        .font(.headline)
-                        .foregroundColor(.blue)
-                    Text("Gender: \(otherInfo.gender)")
-                        .font(.headline)
-                        .foregroundColor(.blue)
-                    Text("Location: \(otherInfo.location)")
-                        .font(.headline)
-                        .foregroundColor(.blue)
-                    Text("Bio: \(otherInfo.bio)")
-                        .font(.headline)
-                        .foregroundColor(.blue)
-                }
-                .padding()
-                .background(Color.blue.opacity(0.1))
-                .cornerRadius(10)
-            }
-            
-            if isCurrentUser {
-                // 编辑按钮
-                NavigationLink(destination: EditProfileView(currentUser: currentUser, chatUser: chatUser, chatLogViewModel: chatLogViewModel)) {
-                    Image(systemName: "pencil")
-                        .font(.title2)
-                }
-                .position(x: UIScreen.main.bounds.width - 140, y: -100)
-                .padding()
                 
-                // Gear Button - Shows Sign-Out Options
-                Button(action: {
-                    shouldShowLogOutOptions.toggle()
-                }) {
-                    Image(systemName: "gear")
-                        .font(.system(size: 24, weight: .bold))
-                        .foregroundColor(Color(.label))
-                }
-                .actionSheet(isPresented: $shouldShowLogOutOptions) {
-                    ActionSheet(
-                        title: Text("Settings"),
-                        message: Text("What do you want to do?"),
-                        buttons: [
-                            .destructive(Text("Sign Out"), action: {
-                                handleSignOut()
-                            }),
-                            .cancel()
-                        ]
-                    )
-                }
-                .fullScreenCover(isPresented: $isUserCurrentlyLoggedOut) {
-                    LoginView()
-                }
-            } else {
-                if isFriend {
-                    friendOptions
-                } else {
-                    strangerOptions
-                }
-            }
-            
-            Spacer()
-        }
-        .padding()
-        .onAppear {
-            checkIfFriend()
-            if isCurrentUser {
-                fetchBasicInfo(for: currentUser.uid) { info in
-                    self.basicInfo = info
-                }
-            } else {
-                fetchBasicInfo(for: chatUser.uid) { info in
-                    self.otherUserInfo = info
-                }
-            }
-        }
-        .onDisappear{
-            self.showTemporaryImage = false
-        }
-        .sheet(isPresented: $showReportSheet) {
-            VStack(spacing: 20) {
-                Text("Report User")
-                    .font(.headline)
-                
-                TextField("Enter your report reason", text: $reportContent)
-                    .textFieldStyle(RoundedBorderTextFieldStyle())
+                Text(chatUser.username)
+                    .font(.title)
                     .padding()
                 
-                HStack {
-                    Button(action: {
-                        // 关闭报告视图
-                        showReportSheet = false
-                    }) {
-                        Text("Cancel")
-                            .padding()
-                            .background(Color.gray.opacity(0.3))
-                            .cornerRadius(8)
+                if isCurrentUser, let info = basicInfo {
+                    Text("Username: \(info.username)")
+                        .font(.title)
+                    // 当前用户的基本信息
+                    VStack(alignment: .leading, spacing: 5) {
+                        Text("Age: \(info.age)")
+                        Text("Gender: \(info.gender)")
+                        Text("Location: \(info.location)")
+                        Text("Email: \(info.email)")
+                        Text("Bio: \(info.bio)")
                     }
+                    .padding()
+                } else if let otherInfo = otherUserInfo {
+                    Text("Username: \(otherInfo.username)")
+                        .font(.title)
+                    // 其他用户的基本信息
+                    VStack(alignment: .leading, spacing: 5) {
+                        Text("Age: \(otherInfo.age)")
+                            .font(.headline)
+                            .foregroundColor(.blue)
+                        Text("Gender: \(otherInfo.gender)")
+                            .font(.headline)
+                            .foregroundColor(.blue)
+                        Text("Location: \(otherInfo.location)")
+                            .font(.headline)
+                            .foregroundColor(.blue)
+                        Text("Bio: \(otherInfo.bio)")
+                            .font(.headline)
+                            .foregroundColor(.blue)
+                    }
+                    .padding()
+                    .background(Color.blue.opacity(0.1))
+                    .cornerRadius(10)
+                }
+                
+                if isCurrentUser {
+                    // 编辑按钮
+                    NavigationLink(destination: EditProfileView(currentUser: currentUser, chatUser: chatUser, chatLogViewModel: chatLogViewModel)) {
+                        Image(systemName: "pencil")
+                            .font(.title2)
+                    }
+                    .position(x: UIScreen.main.bounds.width - 140, y: -100)
+                    .padding()
                     
+                    // Gear Button - Shows Sign-Out Options
                     Button(action: {
-                        // 提交报告
-                        reportFriend()
-                        showReportSheet = false
+                        shouldShowLogOutOptions.toggle()
                     }) {
-                        Text("Submit")
-                            .padding()
-                            .background(Color.blue)
-                            .foregroundColor(.white)
-                            .cornerRadius(8)
+                        Image(systemName: "gear")
+                            .font(.system(size: 24, weight: .bold))
+                            .foregroundColor(Color(.label))
+                    }
+                    .actionSheet(isPresented: $shouldShowLogOutOptions) {
+                        ActionSheet(
+                            title: Text("Settings"),
+                            message: Text("What do you want to do?"),
+                            buttons: [
+                                .destructive(Text("Sign Out"), action: {
+                                    handleSignOut()
+                                }),
+                                .cancel()
+                            ]
+                        )
+                    }
+                    .fullScreenCover(isPresented: $isUserCurrentlyLoggedOut) {
+                        LoginView()
+                    }
+                } else {
+                    if isFriend {
+                        friendOptions
+                    } else {
+                        strangerOptions
+                    }
+                }
+                
+                Spacer()
+            }
+            .padding()
+            .onAppear {
+                checkIfFriend()
+                if isCurrentUser {
+                    fetchBasicInfo(for: currentUser.uid) { info in
+                        self.basicInfo = info
+                    }
+                } else {
+                    fetchBasicInfo(for: chatUser.uid) { info in
+                        self.otherUserInfo = info
                     }
                 }
             }
-            .padding()
-        }
-        .sheet(isPresented: $showImagePicker) {
-            ImagePicker(image: $selectedImage)
-                .onDisappear {
-                    if let selectedImage = selectedImage {
-                        updateProfilePhoto()
-                        print("Image selected successfully!")
-                        showConfirmationDialog = true
-                    } else {
-                        print("No image selected.")
+            .onDisappear{
+                self.showTemporaryImage = false
+            }
+            .sheet(isPresented: $showReportSheet) {
+                VStack(spacing: 20) {
+                    Text("Report User")
+                        .font(.headline)
+                    
+                    TextField("Enter your report reason", text: $reportContent)
+                        .textFieldStyle(RoundedBorderTextFieldStyle())
+                        .padding()
+                    
+                    HStack {
+                        Button(action: {
+                            // 关闭报告视图
+                            showReportSheet = false
+                        }) {
+                            Text("Cancel")
+                                .padding()
+                                .background(Color.gray.opacity(0.3))
+                                .cornerRadius(8)
+                        }
+                        
+                        Button(action: {
+                            // 提交报告
+                            reportFriend()
+                            showReportSheet = false
+                        }) {
+                            Text("Submit")
+                                .padding()
+                                .background(Color.blue)
+                                .foregroundColor(.white)
+                                .cornerRadius(8)
+                        }
                     }
                 }
+                .padding()
+            }
+            .sheet(isPresented: $showImagePicker) {
+                ImagePicker(image: $selectedImage)
+                    .onDisappear {
+                        if let selectedImage = selectedImage {
+                            updateProfilePhoto()
+                            print("Image selected successfully!")
+                            showConfirmationDialog = true
+                        } else {
+                            print("No image selected.")
+                        }
+                    }
+            }
+            .alert(isPresented: $showConfirmationDialog) {
+                Alert(
+                    title: Text("Confirm Photo"),
+                    message: Text("Are you sure you want to use this photo?"),
+                    primaryButton: .default(Text("Yes"), action: updateProfilePhoto),
+                    secondaryButton: .cancel()
+                )
+            }
+            .alert(isPresented: $showDeleteConfirmation) {
+                Alert(
+                    title: Text("Confirm Deletion"),
+                    message: Text("Are you sure you want to delete this friend?"),
+                    primaryButton: .destructive(Text("Delete")) {
+                        deleteFriend()
+                    },
+                    secondaryButton: .cancel()
+                )
+            }
+            
+            .navigationBarBackButtonHidden(true)
         }
-        .alert(isPresented: $showConfirmationDialog) {
-                    Alert(
-                        title: Text("Confirm Photo"),
-                        message: Text("Are you sure you want to use this photo?"),
-                        primaryButton: .default(Text("Yes"), action: updateProfilePhoto),
-                        secondaryButton: .cancel()
-                    )
-                }
-        .navigationDestination(isPresented: $navigateToMainMessagesView) {
-            MainMessagesView()
-        }
-        .alert(isPresented: $showDeleteConfirmation) {
-            Alert(
-                title: Text("Confirm Deletion"),
-                message: Text("Are you sure you want to delete this friend?"),
-                primaryButton: .destructive(Text("Delete")) {
-                    deleteFriend()
-                },
-                secondaryButton: .cancel()
-            )
-        }
-
-        .navigationBarBackButtonHidden(true)
     }
     
     private func updateProfilePhoto() {
@@ -568,7 +560,8 @@ struct ProfileView: View {
                 } else {
                     print("Friend deleted successfully")
                     // 删除成功后，跳转到 MainMessagesView
-                    presentationMode.wrappedValue.dismiss()                }
+                    self.navigateToMainMessagesView = true
+                }
             }
         FirebaseManager.shared.firestore
             .collection("friends")
@@ -603,13 +596,4 @@ struct ProfileView: View {
                 }
             }
     }
-}
-
-struct BasicInfo {
-    var age: String
-    var gender: String
-    var email: String
-    var bio: String
-    var location: String
-    var username: String
 }

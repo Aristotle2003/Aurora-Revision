@@ -49,64 +49,63 @@ class MainMessagesViewModel: ObservableObject {
         fetchCurrentUser()
         setupFriendListListener()
         setupFriendRequestListener()  // 设置好友申请监听器
-        setupFriendGroupListener() // 合并朋友圈和点赞监听器
     }
 
-    func setupFriendGroupListener() {
-        guard let currentUserUid = FirebaseManager.shared.auth.currentUser?.uid else {
-            self.errorMessage = "Could not find firebase uid"
-            return
-        }
-
-        // 如果已有监听器，先移除
-        friendGroupListener?.remove()
-        friendGroupListener = nil
-
-        // double to int64
-        let lastCheckedTimestampInt64 = Int64(lastCheckedTimestamp)
-
-        friendGroupListener = FirebaseManager.shared.firestore
-            .collection("response_to_prompt")
-            .whereField("timestamp", isGreaterThan: Timestamp(seconds: lastCheckedTimestampInt64, nanoseconds: 0))
-            .addSnapshotListener { [weak self] snapshot, error in
-                if let error = error {
-                    print("Failed to listen for friend group messages and likes: \(error)")
-                    return
-                }
-                
-                guard let documents = snapshot?.documents else { return }
-                var hasNewLikes = false
-                var hasNewFriendGroupUpdates = false
-
-                // Fetch friend list
-                self?.fetchFriendList { friendUIDs in
-                    for document in documents {
-                        let data = document.data()
-                        let authorUid = data["uid"] as? String ?? ""
-                        let documentId = document.documentID
-                        let likes = data["likes"] as? Int ?? 0
-
-                        // 检查朋友圈更新
-                        if friendUIDs.contains(authorUid) && authorUid != currentUserUid {
-                            hasNewFriendGroupUpdates = true
-                        }
-
-                        // 检查点赞更新
-                        if authorUid == currentUserUid {
-                            if likes > self?.lastLikesCount ?? 0 {
-                                hasNewLikes = true
-                                self?.lastLikesCount = likes
-                            }
-                            self?.lastLikesCount = likes
-                        }
-                    }
-
-                    DispatchQueue.main.async {
-                        self?.hasNewFriendGroup = (hasNewFriendGroupUpdates || hasNewLikes)
-                    }
-                }
-            }
-    }
+//    func setupFriendGroupListener() {
+//        guard let currentUserUid = FirebaseManager.shared.auth.currentUser?.uid else {
+//            self.errorMessage = "Could not find firebase uid"
+//            return
+//        }
+//
+//        // 如果已有监听器，先移除
+//        friendGroupListener?.remove()
+//        friendGroupListener = nil
+//
+//        // double to int64
+//        let lastCheckedTimestampInt64 = Int64(lastCheckedTimestamp)
+//
+//        friendGroupListener = FirebaseManager.shared.firestore
+//            .collection("response_to_prompt")
+//            .whereField("timestamp", isGreaterThan: Timestamp(seconds: lastCheckedTimestampInt64, nanoseconds: 0))
+//            .addSnapshotListener { [weak self] snapshot, error in
+//                if let error = error {
+//                    print("Failed to listen for friend group messages and likes: \(error)")
+//                    return
+//                }
+//                
+//                guard let documents = snapshot?.documents else { return }
+//                var hasNewLikes = false
+//                var hasNewFriendGroupUpdates = false
+//
+//                // Fetch friend list
+//                self?.fetchFriendList { friendUIDs in
+//                    for document in documents {
+//                        let data = document.data()
+//                        let authorUid = data["uid"] as? String ?? ""
+//                        let documentId = document.documentID
+//                        let likes = data["likes"] as? Int ?? 0
+//
+//                        // 检查朋友圈更新
+//                        if friendUIDs.contains(authorUid) && authorUid != currentUserUid {
+//                            hasNewFriendGroupUpdates = true
+//                        }
+//
+//                        // 检查点赞更新
+//                        if authorUid == currentUserUid {
+//                            if likes > self?.lastLikesCount ?? 0 {
+//                                hasNewLikes = true
+//                                self?.lastLikesCount = likes
+//                            }
+//                            self?.lastLikesCount = likes
+//                        }
+//                    }
+//
+//                    DispatchQueue.main.async {
+//                        self?.hasNewFriendGroup = (hasNewFriendGroupUpdates || hasNewLikes)
+//                    }
+//                }
+//            }
+//    }
 
     func fetchAndStoreFCMToken() {
         guard let userID = FirebaseManager.shared.auth.currentUser?.uid else {
@@ -248,8 +247,6 @@ class MainMessagesViewModel: ObservableObject {
         messageListener = nil
         friendRequestListener?.remove()
         friendRequestListener = nil
-        friendGroupListener?.remove()
-        friendGroupListener = nil
     }
 
     private func fetchCurrentUser() {
@@ -496,98 +493,93 @@ struct MainMessagesView: View {
                                 .frame(maxWidth: .infinity)
                                 .ignoresSafeArea(edges: .bottom) // Touch bottom edge
                         }*/
-                        VStack {
-                            Spacer()
-
-                            // Navigation Bar with Buttons
-                            ZStack {
-                                // Navigation Bar Image
-                                Image("navigationbar")
-                                    .resizable()
-                                    .scaledToFit()
-                                    .frame(maxWidth: .infinity)
-                                    .ignoresSafeArea(edges: .bottom) // Touch bottom edge
-
-                                // Buttons on Navigation Bar
-                                HStack(spacing: 60) { // Adjust spacing as needed
-                                    Button(action: {
-                                        if let chatUser = vm.chatUser {
-                                            self.selectedUser = chatUser
-                                            shouldShowFriendGroupView.toggle()
-                                            // 重置朋友圈更新状态
-                                            vm.hasNewFriendGroup = false
-                                            
-                                            // 更新 lastCheckedTimestamp
-                                            let currentDate = Date()
-                                            vm.lastCheckedTimestamp = currentDate.timeIntervalSince1970
-                                            // vm.friendGroupListener?.remove()
-                                            // vm.friendGroupListener = nil
-                                            // vm.setupFriendGroupListener()
-
-                                        }
-                                    }) {
-                                        Image("dailyaurorabutton")
-                                            .resizable()
-                                            .scaledToFit()
-                                            .frame(width: 36, height: 36) // Set button size
-
-                                        if vm.hasNewFriendGroup {
-                                            Circle()
-                                                .fill(Color.red)
-                                                .frame(width: 12, height: 12)
-                                                .offset(x: 30, y: -10)
-                                        }
-                                    }
-
-                                    Button(action: {
-                                        print("Button 2 tapped")
-                                    }) {
-                                        Image("messagesbutton")
-                                            .resizable()
-                                            .scaledToFit()
-                                            .frame(width: 36, height: 36)
-                                    }
-
-                                    Button(action: {
-                                        shouldNavigateToAddFriendView.toggle()
-                                    }) {
-                                        Image("contactsbutton")
-                                            .resizable()
-                                            .scaledToFit()
-                                            .frame(width: 36, height: 36)
-                                    }
-
-                                    Button(action: {
-                                        if let chatUser = vm.chatUser {
-                                            self.selectedUser = chatUser
-                                            self.chatUser = chatUser
-                                            self.isCurrentUser = true
-                                            shouldShowProfileView.toggle()
-                                        }
-                                    }) {
-                                        Image("profilebutton")
-                                            .resizable()
-                                            .scaledToFit()
-                                            .frame(width: 36, height: 36)
-                                    }
-                                }
-                                .padding(.bottom, 20) // Adjust to align buttons vertically over the navigation bar
-                            }
-                        }
+//                        VStack {
+//                            Spacer()
+//
+//                            // Navigation Bar with Buttons
+//                            ZStack {
+//                                // Navigation Bar Image
+//                                Image("navigationbar")
+//                                    .resizable()
+//                                    .scaledToFit()
+//                                    .frame(maxWidth: .infinity)
+//                                    .ignoresSafeArea(edges: .bottom) // Touch bottom edge
+//
+//                                // Buttons on Navigation Bar
+//                                HStack(spacing: 60) { // Adjust spacing as needed
+//                                    Button(action: {
+//                                        if let chatUser = vm.chatUser {
+//                                            self.selectedUser = chatUser
+//                                            shouldShowFriendGroupView.toggle()
+//                                            // 重置朋友圈更新状态
+//                                            vm.hasNewFriendGroup = false
+//                                            
+//                                            // 更新 lastCheckedTimestamp
+//                                            let currentDate = Date()
+//                                            vm.lastCheckedTimestamp = currentDate.timeIntervalSince1970
+//                                            // vm.friendGroupListener?.remove()
+//                                            // vm.friendGroupListener = nil
+//                                            // vm.setupFriendGroupListener()
+//
+//                                        }
+//                                    }) {
+//                                        Image("dailyaurorabutton")
+//                                            .resizable()
+//                                            .scaledToFit()
+//                                            .frame(width: 36, height: 36) // Set button size
+//
+//                                        if vm.hasNewFriendGroup {
+//                                            Circle()
+//                                                .fill(Color.red)
+//                                                .frame(width: 12, height: 12)
+//                                                .offset(x: 30, y: -10)
+//                                        }
+//                                    }
+//
+//                                    Button(action: {
+//                                        print("Button 2 tapped")
+//                                    }) {
+//                                        Image("messagesbutton")
+//                                            .resizable()
+//                                            .scaledToFit()
+//                                            .frame(width: 36, height: 36)
+//                                    }
+//
+//                                    Button(action: {
+//                                        shouldNavigateToAddFriendView.toggle()
+//                                    }) {
+//                                        Image("contactsbutton")
+//                                            .resizable()
+//                                            .scaledToFit()
+//                                            .frame(width: 36, height: 36)
+//                                    }
+//
+//                                    Button(action: {
+//                                        if let chatUser = vm.chatUser {
+//                                            self.selectedUser = chatUser
+//                                            self.chatUser = chatUser
+//                                            self.isCurrentUser = true
+//                                            shouldShowProfileView.toggle()
+//                                        }
+//                                    }) {
+//                                        Image("profilebutton")
+//                                            .resizable()
+//                                            .scaledToFit()
+//                                            .frame(width: 36, height: 36)
+//                                    }
+//                                }
+//                                .padding(.bottom, 20) // Adjust to align buttons vertically over the navigation bar
+//                            }
+//                        }
 
                     }
                 }
             }
             .ignoresSafeArea(edges: .bottom)
-            .fullScreenCover(isPresented: $shouldNavigateToAddFriendView) {
-                CreateNewMessageView { user in
-                    self.chatUser = user
-                    self.isCurrentUser = false
-                    self.selectedUser = vm.chatUser
-                    shouldShowProfileView.toggle()
-                }
+            .navigationDestination(isPresented: $shouldNavigateToAddFriendView) {
+                CreateNewMessageView()
             }
-            .navigationDestination(isPresented: $shouldShowFriendRequests) {
+            .fullScreenCover(isPresented: $shouldShowFriendRequests) {
                 if let user = self.selectedUser {
                     FriendRequestsView(currentUser: user)
                 }
@@ -605,7 +597,7 @@ struct MainMessagesView: View {
                 }
             }
             
-            .navigationDestination(isPresented: $shouldNavigateToChatLogView) {
+            .fullScreenCover(isPresented: $shouldNavigateToChatLogView) {
                 ChatLogView(vm: chatLogViewModel)
                     .onAppear {
                         chatLogViewModel.chatUser = self.chatUser
@@ -621,7 +613,6 @@ struct MainMessagesView: View {
         .onAppear{
             vm.setupFriendListListener()
             vm.setupFriendRequestListener()
-            vm.setupFriendGroupListener()
             vm.fetchAndStoreFCMToken()
         }
         .onDisappear{
@@ -768,32 +759,27 @@ struct MainMessagesView: View {
         }
     }
     
-    private var newMessageButton: some View {
-        Button {
-            shouldNavigateToAddFriendView.toggle()
-        } label: {
-            HStack {
-                Spacer()
-                Text("Contacts")
-                    .font(.system(size: 16, weight: .bold))
-                Spacer()
-            }
-            .foregroundColor(.white)
-            .padding(.vertical)
-            .background(Color.blue)
-            .cornerRadius(32)
-            .padding(.horizontal)
-            .shadow(radius: 15)
-        }
-        .fullScreenCover(isPresented: $shouldNavigateToAddFriendView) {
-            CreateNewMessageView { user in
-                self.chatUser = user
-                self.isCurrentUser = false
-                self.selectedUser = vm.chatUser
-                shouldShowProfileView.toggle()
-            }
-        }
-    }
+//    private var newMessageButton: some View {
+//        Button {
+//            shouldNavigateToAddFriendView.toggle()
+//        } label: {
+//            HStack {
+//                Spacer()
+//                Text("Contacts")
+//                    .font(.system(size: 16, weight: .bold))
+//                Spacer()
+//            }
+//            .foregroundColor(.white)
+//            .padding(.vertical)
+//            .background(Color.blue)
+//            .cornerRadius(32)
+//            .padding(.horizontal)
+//            .shadow(radius: 15)
+//        }
+//        .fullScreenCover(isPresented: $shouldNavigateToAddFriendView) {
+//            CreateNewMessageView()
+//        }
+//    }
 
     func formatTimestamp(_ timestamp: Timestamp) -> String {
         let date = timestamp.dateValue()
@@ -824,8 +810,4 @@ struct MainMessagesView: View {
             return formatter.string(from: date)
         }
     }
-}
-
-#Preview{
-    LoginView()
 }

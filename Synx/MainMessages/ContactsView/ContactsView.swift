@@ -5,6 +5,7 @@ import SDWebImageSwiftUI
 class CreateNewMessageViewModel: ObservableObject {
     
     @Published var users = [ChatUser]()          // Stores all fetched friends
+    @Published var currentUser: ChatUser?
     @Published var filteredUsers = [ChatUser]()  // Stores search results
     @Published var errorMessage = ""             // Stores error messages
     @Published var searchText = "" {             // Stores current search query
@@ -15,9 +16,10 @@ class CreateNewMessageViewModel: ObservableObject {
     
     init() {
         fetchAllFriends()
+        fetchCurrentUser()
     }
     
-    private func fetchAllFriends() {
+    func fetchAllFriends() {
         guard let uid = FirebaseManager.shared.auth.currentUser?.uid else {
             self.errorMessage = "Could not find firebase uid"
             return
@@ -63,14 +65,6 @@ class CreateNewMessageViewModel: ObservableObject {
         fetchAllFriends()
     }
     
-    //     // Group users by the first letter of their email
-    //     func groupedUsers() -> [String: [ChatUser]] {
-    //         Dictionary(grouping: filteredUsers) { user in
-    //             String(user.email.prefix(1)).uppercased()
-    //         }
-    //     }
-    // }
-    
     // Group users by the first letter of their email
     func groupedUsers() -> [String: [ChatUser]] {
         Dictionary(grouping: filteredUsers) { user in
@@ -84,195 +78,210 @@ class CreateNewMessageViewModel: ObservableObject {
             }
         }
     }
+    
+    func fetchCurrentUser() {
+        guard let uid = FirebaseManager.shared.auth.currentUser?.uid else {
+            self.errorMessage = "Could not find firebase uid"
+            return
+        }
+
+        FirebaseManager.shared.firestore.collection("users").document(uid).getDocument { snapshot, error in
+            if let error = error {
+                self.errorMessage = "Failed to fetch current user: \(error)"
+                print("Failed to fetch current user:", error)
+                return
+            }
+            
+            guard let data = snapshot?.data() else {
+                self.errorMessage = "No data found"
+                return
+            }
+            
+            DispatchQueue.main.async {
+                self.currentUser = ChatUser(data: data)
+            }
+        }
+    }
 }
 
-// MARK: - CreateNewMessageView (Main Contacts View)
 struct CreateNewMessageView: View {
-    
-    let didSelectNewUser: (ChatUser) -> ()  // Closure that will handle the selected user
-    
-    @Environment(\.presentationMode) var presentationMode
-    @StateObject var vm = CreateNewMessageViewModel()
-    @State private var isShowingAddFriendView = false  // State for navigating to AddFriendView
-    @State private var selectedUserFromAddFriendView: ChatUser? = nil  // Track user passed from AddFriendView
-    @State private var hasSelectedUserFromAddFriendView = false  // A flag to track if a user has been selected
-    
+    @StateObject private var vm = CreateNewMessageViewModel()
+    @State private var isShowingAddFriendView = false
+    @State private var navigateToProfile = false
+    @State private var chatUser: ChatUser? = nil
+    @State private var currentUser: ChatUser? = nil
+    @StateObject private var chatLogViewModel = ChatLogViewModel(chatUser: nil)
+
     var body: some View {
-        NavigationView {
-            ZStack{
-                Color(red: 0.976, green: 0.980, blue: 1.0)
-                    .ignoresSafeArea()
-                VStack{
-                    ZStack{
-                        Image("liuhaier")
-                            .resizable()
-                            .scaledToFit()
-                            .frame(maxWidth: .infinity)
-                            .ignoresSafeArea()
-                        HStack {
-                            Image("spacerformainmessageviewtopleft")
-                                .resizable()
-                                .frame(width: 36, height: 36)
-                                .padding(.leading, 28)
-                            Spacer()
-                            Image("auroratext")
-                                .resizable()
-                                .scaledToFill()
-                                .frame(width: UIScreen.main.bounds.width * 0.1832,
-                                       height: UIScreen.main.bounds.height * 0.0198)
-                            Spacer()
-                            
-                            Button(action: {
-                                isShowingAddFriendView = true
-                            }) {
-                                Image("addfriendbutton")
-                                    .resizable()
-                                    .frame(width: 24, height: 24)
-                                    .padding(.trailing, 28)
-                            }
-                        }
-                    }
-                    .frame(height: UIScreen.main.bounds.height * 0.07)
-                    
+        NavigationStack {
+            ZStack {
+                Color(red: 0.976, green: 0.980, blue: 1.0).ignoresSafeArea()
+
+                VStack {
+                    topBar
                     SearchBar(text: $vm.searchText) {
                         vm.filterUsers()
                     }
                     .padding(.vertical, 4)
-                    
-                    ScrollView {
-                        if !vm.errorMessage.isEmpty {
-                            Text(vm.errorMessage)
-                                .foregroundColor(.red)
-                                .padding()
-                        }
-                        
-                        LazyVStack(spacing: 8) {
-                            ForEach(vm.groupedUsers().keys.sorted(), id: \.self) { key in
-                                Section(header:
-                                            HStack {
-                                    Text(key)
-                                        .font(.headline.bold()) // Bold font
-                                        .foregroundColor(Color.gray) // Grey color
-                                        .padding(.leading, 20) // Align to the left with padding
-                                    Spacer()
-                                }
-                                    .padding(.vertical, 4) // Vertical padding for spacing
-                                    .background(Color(.clear))
-                                ){
-                                    ForEach(vm.groupedUsers()[key]!) { user in
-                                        Button {
-                                            presentationMode.wrappedValue.dismiss()
-                                            didSelectNewUser(user)  // Direct selection from CreateNewMessageView
-                                        } label: {
-                                            ZStack {
-                                                // Background bubble image
-                                                Image("contactsbubble")
-                                                    .resizable()
-                                                    .scaledToFit()
-                                                    .cornerRadius(16)
-                                                
-                                                // User content
-                                                HStack(spacing: 16) {
-                                                    WebImage(url: URL(string: user.profileImageUrl))
-                                                        .resizable()
-                                                        .scaledToFill()
-                                                        .frame(width: 45, height: 45)
-                                                        .clipShape(Circle())
-                                                    VStack(alignment: .leading, spacing: 4) {
-                                                        
-                                                        Text(user.username)
-                                                            .font(.system(size: 16, weight: .bold))
-                                                            .foregroundColor(Color(red: 0.49, green: 0.52, blue: 0.75))
-                                                        
-                                                        if let timestamp = user.latestMessageTimestamp {
-                                                            Text(formatTimestamp(timestamp))
-                                                                .font(.system(size: 14))
-                                                                .foregroundColor(Color.gray)
-                                                        } else {
-                                                            Text("")
-                                                                .font(.system(size: 14))
-                                                                .foregroundColor(Color.gray)
-                                                        }
-                                                    }
-                                                    
-                                                    Spacer()
-                                                }
-                                                .padding(.leading, 16)
-                                            }
-                                            .padding(.horizontal, 20)
-                                            .padding(.bottom, 0)
-                                        }
-                                    }
-                                }
-                            }
-                        }
-                        .padding(.top, 8)
-                    }
-                    // Dismiss button at the bottom
-                    Button(action: {
-                        presentationMode.wrappedValue.dismiss()
-                    }) {
-                        Text("Dismiss")
-                            .font(.system(size: 18, weight: .semibold))
-                            .foregroundColor(.white)
-                            .frame(maxWidth: .infinity, maxHeight: 44)
-                            .background(Color.blue)
-                            .cornerRadius(10)
-                            .padding(.horizontal, 16)
-                            .padding(.bottom, 20)
-                    }
+
+                    content
                 }
+                .navigationBarHidden(true)
+                
             }
-            
-            .onChange(of: hasSelectedUserFromAddFriendView) { oldValue, newValue in
-                if newValue, let user = selectedUserFromAddFriendView {
-                    didSelectNewUser(user)  // Handle the user passed from AddFriendView
-                    selectedUserFromAddFriendView = nil  // Reset after handling
-                    hasSelectedUserFromAddFriendView = false  // Reset the flag
-                }
-            }
-            .sheet(isPresented: $isShowingAddFriendView) {
-                // When AddFriendView selects a user, pass it to CreateNewMessageView
+            .fullScreenCover(isPresented: $isShowingAddFriendView) {
                 AddFriendView { newFriend in
-                    presentationMode.wrappedValue.dismiss()
-                    selectedUserFromAddFriendView = newFriend
-                    hasSelectedUserFromAddFriendView = true  // Trigger the change flag
-                    isShowingAddFriendView = false  // Dismiss AddFriendView
+                    vm.refreshUsers()
+                    isShowingAddFriendView = false
+                }
+            }
+            .navigationDestination(isPresented: $navigateToProfile) {
+                if let chatUser = self.chatUser, let currentUser = self.currentUser {
+                    ProfileView(
+                        chatUser: chatUser,
+                        currentUser: currentUser,
+                        isCurrentUser: false,
+                        chatLogViewModel: chatLogViewModel
+                    )
+                } else {
+                    Text("Loading Profile...") // Fallback if navigation occurs prematurely
+                }
+            }
+            .onAppear {
+                vm.fetchCurrentUser()
+            }
+            .navigationBarHidden(true)
+        }
+        .navigationBarHidden(true)
+    }
+
+    // MARK: - Top Bar
+    private var topBar: some View {
+        ZStack {
+            Image("liuhaier")
+                .resizable()
+                .scaledToFit()
+                .frame(maxWidth: .infinity)
+                .ignoresSafeArea()
+            HStack {
+                Image("spacerformainmessageviewtopleft")
+                    .resizable()
+                    .frame(width: 36, height: 36)
+                    .padding(.leading, 28)
+                Spacer()
+                Image("auroratext")
+                    .resizable()
+                    .scaledToFill()
+                    .frame(width: UIScreen.main.bounds.width * 0.1832, height: UIScreen.main.bounds.height * 0.0198)
+                Spacer()
+                Button(action: { isShowingAddFriendView = true }) {
+                    Image("addfriendbutton")
+                        .resizable()
+                        .frame(width: 24, height: 24)
+                        .padding(.trailing, 28)
                 }
             }
         }
+        .frame(height: UIScreen.main.bounds.height * 0.07)
     }
-    
-    func formatTimestamp(_ timestamp: Timestamp) -> String {
+
+    // MARK: - Content
+    private var content: some View {
+        ScrollView {
+            if !vm.errorMessage.isEmpty {
+                Text(vm.errorMessage)
+                    .foregroundColor(.red)
+                    .padding()
+            } else if vm.filteredUsers.isEmpty {
+                Text("No friends found.")
+                    .foregroundColor(.gray)
+                    .padding()
+            } else {
+                LazyVStack(spacing: 8) {
+                    ForEach(vm.groupedUsers().keys.sorted(), id: \.self) { key in
+                        Section(header: sectionHeader(key)) {
+                            ForEach(vm.groupedUsers()[key]!) { user in
+                                userRow(user)
+                            }
+                        }
+                    }
+                }
+                .padding(.top, 8)
+            }
+        }
+    }
+
+    // MARK: - Section Header
+    private func sectionHeader(_ key: String) -> some View {
+        HStack {
+            Text(key)
+                .font(.headline.bold())
+                .foregroundColor(.gray)
+                .padding(.leading, 20)
+            Spacer()
+        }
+        .padding(.vertical, 4)
+    }
+
+    // MARK: - User Row
+    private func userRow(_ user: ChatUser) -> some View {
+        Button {
+            self.chatUser = user
+            self.currentUser = vm.currentUser
+            navigateToProfile = true
+        } label: {
+            ZStack {
+                Image("contactsbubble")
+                    .resizable()
+                    .scaledToFit()
+                    .cornerRadius(16)
+                HStack(spacing: 16) {
+                    WebImage(url: URL(string: user.profileImageUrl))
+                        .resizable()
+                        .scaledToFill()
+                        .frame(width: 45, height: 45)
+                        .clipShape(Circle())
+                    VStack(alignment: .leading, spacing: 4) {
+                        Text(user.username)
+                            .font(.system(size: 16, weight: .bold))
+                            .foregroundColor(Color(red: 0.49, green: 0.52, blue: 0.75))
+                        if let timestamp = user.latestMessageTimestamp {
+                            Text(formatTimestamp(timestamp))
+                                .font(.system(size: 14))
+                                .foregroundColor(.gray)
+                        }
+                    }
+                    Spacer()
+                }
+                .padding(.leading, 16)
+            }
+            .padding(.horizontal, 20)
+            .padding(.bottom, 0)
+        }
+    }
+
+    // MARK: - Format Timestamp
+    private func formatTimestamp(_ timestamp: Timestamp) -> String {
         let date = timestamp.dateValue()
         let formatter = DateFormatter()
         let calendar = Calendar.current
-        
+
         if calendar.isDateInToday(date) {
-            // 如果是今天，显示时间，例如 "14:23"
             formatter.dateFormat = "HH:mm"
             return formatter.string(from: date)
         } else if calendar.isDateInYesterday(date) {
-            // 如果是昨天，显示 "昨天"
             return "Yesterday"
         } else if calendar.isDate(date, equalTo: Date(), toGranularity: .weekOfYear) {
-            // 如果在本周内，显示星期几
-            let weekdaySymbols = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"]
-            let weekday = calendar.component(.weekday, from: date)
-            print(weekday)
-            if weekday == 1 {
-                formatter.dateFormat = "yyyy/MM/dd"
-                return formatter.string(from: date)
-            } else {
-                return weekdaySymbols[(weekday + 5) % 7]
-            }// 注意：周日对应索引 0
+            let weekdaySymbols = Calendar.current.weekdaySymbols
+            let weekdayIndex = calendar.component(.weekday, from: date) - 1
+            return weekdaySymbols[weekdayIndex]
         } else {
-            // 否则，显示日期，例如 "2023/10/07"
             formatter.dateFormat = "yyyy/MM/dd"
             return formatter.string(from: date)
         }
     }
 }
+
 
 struct SearchBar: View {
     @Binding var text: String
@@ -316,6 +325,4 @@ struct SearchBar: View {
     }
 }
 
-#Preview {
-    MainMessagesView()
-}
+

@@ -8,6 +8,7 @@ struct FriendRequestsView: View {
     @State private var friendRequests = [FriendRequest]()
     @State private var errorMessage = ""
     @State private var navigateToMainMessage = false
+    @Environment(\.presentationMode) var presentationMode
     
     var body: some View {
         NavigationStack{
@@ -15,7 +16,7 @@ struct FriendRequestsView: View {
                 // Custom back button to navigate back to MainMessageView
                 HStack {
                     Button(action: {
-                        navigateToMainMessage = true
+                        presentationMode.wrappedValue.dismiss()
                     }) {
                         HStack {
                             Image(systemName: "chevron.left")

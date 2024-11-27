@@ -31,7 +31,7 @@ struct LoginView: View {
     
     var body: some View {
         if isLogin && hasSeenTutorial{
-            MainMessagesView()
+            CustomTabNavigationView()
         }
         else if isLogin && !hasSeenTutorial{
             TutorialView()

@@ -346,8 +346,8 @@ struct FriendGroupView: View {
                 }
             }
         )
-        .navigationDestination(isPresented: $navigateToMainMessage){
-            MainMessagesView()
-        }
+//        .navigationDestination(isPresented: $navigateToMainMessage){
+//            MainMessagesView()
+//        }
     }
 }

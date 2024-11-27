@@ -9,6 +9,8 @@
 /* Begin PBXBuildFile section */
 		FB0F8AFB2CF52ABE00A37CED /* TutorialView.swift in Sources */ = {isa = PBXBuildFile; fileRef = FB0F8AFA2CF52ABE00A37CED /* TutorialView.swift */; };
 		FB0F8AFD2CF56EC200A37CED /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = FB0F8AFC2CF56EC200A37CED /* Assets.xcassets */; };
+		FB0F8AFF2CF653E200A37CED /* CustomTabNavigationView.swift in Sources */ = {isa = PBXBuildFile; fileRef = FB0F8AFE2CF653E200A37CED /* CustomTabNavigationView.swift */; };
+		FB23D5592CF6B20D003C245A /* SelfProfileView.swift in Sources */ = {isa = PBXBuildFile; fileRef = FB23D5582CF6B20D003C245A /* SelfProfileView.swift */; };
 		FB3C61182CE0F497001A0922 /* CalendarView.swift in Sources */ = {isa = PBXBuildFile; fileRef = FB3C61172CE0F497001A0922 /* CalendarView.swift */; };
 		FB42CB802CD5B5A000283244 /* FriendGroupView.swift in Sources */ = {isa = PBXBuildFile; fileRef = FB42CB7F2CD5B5A000283244 /* FriendGroupView.swift */; };
 		FB42CB832CD66D9E00283244 /* EditProfileView.swift in Sources */ = {isa = PBXBuildFile; fileRef = FB42CB822CD66D9E00283244 /* EditProfileView.swift */; };
@@ -64,6 +66,8 @@
 /* Begin PBXFileReference section */
 		FB0F8AFA2CF52ABE00A37CED /* TutorialView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TutorialView.swift; sourceTree = "<group>"; };
 		FB0F8AFC2CF56EC200A37CED /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
+		FB0F8AFE2CF653E200A37CED /* CustomTabNavigationView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CustomTabNavigationView.swift; sourceTree = "<group>"; };
+		FB23D5582CF6B20D003C245A /* SelfProfileView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SelfProfileView.swift; sourceTree = "<group>"; };
 		FB3C61172CE0F497001A0922 /* CalendarView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CalendarView.swift; sourceTree = "<group>"; };
 		FB42CB7F2CD5B5A000283244 /* FriendGroupView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FriendGroupView.swift; sourceTree = "<group>"; };
 		FB42CB822CD66D9E00283244 /* EditProfileView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EditProfileView.swift; sourceTree = "<group>"; };
@@ -181,6 +185,7 @@
 				FB83BD952CD859BE00A7BE4E /* Synx.entitlements */,
 				FB83BD902CD81ECC00A7BE4E /* Info.plist */,
 				FB0F8AFA2CF52ABE00A37CED /* TutorialView.swift */,
+				FB0F8AFE2CF653E200A37CED /* CustomTabNavigationView.swift */,
 				FBB505022CCEA62D00FF1C87 /* Login Process */,
 				FB7E20BF2CC165D500209582 /* Model */,
 				FB7E20B62CC0112C00209582 /* Utils */,
@@ -189,6 +194,7 @@
 				FB83BD982CD85E6600A7BE4E /* GoogleService-Info.plist */,
 				FB0F8AFC2CF56EC200A37CED /* Assets.xcassets */,
 				FB7E207E2CBCC6EA00209582 /* Preview Content */,
+				FB23D5582CF6B20D003C245A /* SelfProfileView.swift */,
 			);
 			path = Synx;
 			sourceTree = "<group>";
@@ -458,6 +464,7 @@
 				FB7E20C12CC165E400209582 /* ChatUser.swift in Sources */,
 				FBA6BD1D2CCD696F0019A5E1 /* ProfileView.swift in Sources */,
 				FB7E20C52CC565EA00209582 /* ChatLogView.swift in Sources */,
+				FB23D5592CF6B20D003C245A /* SelfProfileView.swift in Sources */,
 				FB7E20AE2CBEAFC900209582 /* ImagePicker.swift in Sources */,
 				FB7E20B52CBF23CC00209582 /* MainMessagesView.swift in Sources */,
 				FB7E20B82CC0114600209582 /* FirebaseManager.swift in Sources */,
@@ -465,6 +472,7 @@
 				FB83BDA42CDACB7500A7BE4E /* ProfileSetupView.swift in Sources */,
 				FB83BD942CD839A900A7BE4E /* SetUpView.swift in Sources */,
 				FB83BDA02CD87CE200A7BE4E /* AddFriendView.swift in Sources */,
+				FB0F8AFF2CF653E200A37CED /* CustomTabNavigationView.swift in Sources */,
 				FB7E20BE2CC15CAB00209582 /* ContactsView.swift in Sources */,
 				FB42CB832CD66D9E00283244 /* EditProfileView.swift in Sources */,
 				FB7E207B2CBCC6E900209582 /* LoginView.swift in Sources */,

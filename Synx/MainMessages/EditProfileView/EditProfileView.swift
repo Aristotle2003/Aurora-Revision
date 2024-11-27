@@ -13,6 +13,7 @@ struct EditProfileView: View {
     @Environment(\.dismiss) var dismiss
     @State private var backToProfileView = false
     @ObservedObject var chatLogViewModel: ChatLogViewModel
+    @Environment(\.presentationMode) var presentationMode
     
     var body: some View {
         Form {
@@ -27,7 +28,7 @@ struct EditProfileView: View {
             
             Button("Submit") {
                 saveProfileInfo()
-                backToProfileView = true
+                presentationMode.wrappedValue.dismiss()
             }
             .frame(maxWidth: .infinity, alignment: .center)
             .padding()
@@ -91,7 +92,7 @@ struct EditProfileView: View {
     private func updateUsername(){
         guard let uid = FirebaseManager.shared.auth.currentUser?.uid else { return }
         
-        var updatedData: [String: Any] = ["username": username]
+        let updatedData: [String: Any] = ["username": username]
         
         saveUsernameToCentralDb(uid: uid, data: updatedData)
     }

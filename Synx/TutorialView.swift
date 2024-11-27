@@ -250,7 +250,7 @@ struct TutorialView: View {
             }
             .navigationBarBackButtonHidden(true) // Hide the default back button
             .navigationDestination(isPresented: $navigateToMainMessageView) {
-                MainMessagesView()
+                CustomTabNavigationView()
             }
             .onAppear {
                 animateText()

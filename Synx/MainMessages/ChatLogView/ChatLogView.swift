@@ -390,6 +390,7 @@ struct ChatLogView: View {
     @State private var navigateToMainMessageView = false
     @FocusState private var isInputFocused: Bool
     @State private var isAppInBackground = false
+    @Environment(\.presentationMode) var presentationMode
 
     var body: some View {
         NavigationStack {
@@ -401,7 +402,8 @@ struct ChatLogView: View {
                     let topbarheight = UIScreen.main.bounds.height * 0.07
                     HStack{
                         Button(action: {
-                            navigateToMainMessageView = true
+                            presentationMode.wrappedValue.dismiss()
+                            vm.stopAutoSend()
                         }) {
                             Image("chatlogviewbackbutton")
                                 .resizable()
