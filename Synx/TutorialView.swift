@@ -40,7 +40,6 @@ struct TutorialView: View {
                     let topbarheight = UIScreen.main.bounds.height * 0.07
                     HStack{
                         Button(action: {
-                            navigateToMainMessageView = true
                             saveTutorialSeenStatus()
                             navigateToMainMessageView = true
                         }) {
@@ -249,7 +248,7 @@ struct TutorialView: View {
                 .frame(maxHeight: .infinity)
             }
             .navigationBarBackButtonHidden(true) // Hide the default back button
-            .navigationDestination(isPresented: $navigateToMainMessageView) {
+            .fullScreenCover(isPresented: $navigateToMainMessageView) {
                 CustomTabNavigationView()
             }
             .onAppear {
@@ -353,6 +352,45 @@ struct TutorialView: View {
         showNextSentence()
     }
     
+}
+
+struct SlideInModifier: ViewModifier {
+    var edge: Edge
+    @State private var offsetValue: CGFloat = UIScreen.main.bounds.width
+
+    func body(content: Content) -> some View {
+        content
+            .offset(x: edge == .leading ? -offsetValue : offsetValue)
+            .onAppear {
+                withAnimation(.easeInOut) {
+                    offsetValue = 0
+                }
+            }
+            .onDisappear {
+                withAnimation(.easeInOut) {
+                    offsetValue = edge == .leading ? -UIScreen.main.bounds.width : UIScreen.main.bounds.width
+                }
+            }
+    }
+}
+
+struct SlideInFromLeftModifier: ViewModifier {
+    @State private var offsetValue: CGFloat = -UIScreen.main.bounds.width // Start off-screen (left)
+
+    func body(content: Content) -> some View {
+        content
+            .offset(x: offsetValue) // Apply initial offset
+            .onAppear {
+                withAnimation(.easeInOut) {
+                    offsetValue = 0 // Animate to the center of the screen
+                }
+            }
+            .onDisappear {
+                withAnimation(.easeInOut) {
+                    offsetValue = UIScreen.main.bounds.width // Slide out to the right
+                }
+            }
+    }
 }
 
 #Preview{

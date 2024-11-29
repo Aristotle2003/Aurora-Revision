@@ -11,8 +11,9 @@ import FirebaseCore
 
 struct SelfProfileView: View {
     let chatUser: ChatUser
-    let currentUser: ChatUser
+    @State var currentUser: ChatUser
     let isCurrentUser: Bool
+    let showTemporaryImg: Bool
     @State var errorMessage = ""
     @State var isFriend: Bool = false
     @State var friendRequestSent: Bool = false
@@ -33,6 +34,30 @@ struct SelfProfileView: View {
     @ObservedObject var chatLogViewModel: ChatLogViewModel
     @StateObject private var messagesViewModel = MessagesViewModel()
     @Environment(\.presentationMode) var presentationMode
+    
+    private func fetchCurrentUser() {
+        guard let uid = FirebaseManager.shared.auth.currentUser?.uid else {
+            self.errorMessage = "Could not find firebase uid"
+            return
+        }
+
+        FirebaseManager.shared.firestore.collection("users").document(uid).getDocument { snapshot, error in
+            if let error = error {
+                self.errorMessage = "Failed to fetch current user: \(error)"
+                print("Failed to fetch current user:", error)
+                return
+            }
+            
+            guard let data = snapshot?.data() else {
+                self.errorMessage = "No data found"
+                return
+            }
+            
+            DispatchQueue.main.async {
+                self.currentUser = ChatUser(data: data)
+            }
+        }
+    }
     
     private func handleSignOut() {
         guard let currentUserID = FirebaseManager.shared.auth.currentUser?.uid else { return }
@@ -57,7 +82,7 @@ struct SelfProfileView: View {
         NavigationStack{
             VStack {
                 if !showTemporaryImage{
-                    WebImage(url: URL(string: chatUser.profileImageUrl))
+                    WebImage(url: URL(string: self.currentUser.profileImageUrl))
                         .resizable()
                         .scaledToFill()
                         .frame(width: 150, height: 150)
@@ -83,7 +108,7 @@ struct SelfProfileView: View {
                         }
                 }
                 
-                Text(chatUser.username)
+                Text(self.currentUser.username)
                     .font(.title)
                     .padding()
                 
@@ -129,7 +154,6 @@ struct SelfProfileView: View {
                             .font(.title2)
                     }
                     .position(x: UIScreen.main.bounds.width - 140, y: -100)
-                    .padding()
                     
                     // Gear Button - Shows Sign-Out Options
                     Button(action: {
@@ -166,6 +190,7 @@ struct SelfProfileView: View {
             }
             .padding()
             .onAppear {
+                fetchCurrentUser()
                 checkIfFriend()
                 if isCurrentUser {
                     fetchBasicInfo(for: currentUser.uid) { info in
@@ -218,7 +243,7 @@ struct SelfProfileView: View {
             .sheet(isPresented: $showImagePicker) {
                 ImagePicker(image: $selectedImage)
                     .onDisappear {
-                        if let selectedImage = selectedImage {
+                        if selectedImage != nil {
                             updateProfilePhoto()
                             print("Image selected successfully!")
                             showConfirmationDialog = true
@@ -245,8 +270,14 @@ struct SelfProfileView: View {
                     secondaryButton: .cancel()
                 )
             }
+            .onDisappear{
+                self.showTemporaryImage = false
+            }
             
             .navigationBarBackButtonHidden(true)
+        }
+        .onDisappear{
+            self.showTemporaryImage = false
         }
     }
     

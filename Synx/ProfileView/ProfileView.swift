@@ -224,7 +224,7 @@ struct ProfileView: View {
         .sheet(isPresented: $showImagePicker) {
             ImagePicker(image: $selectedImage)
                 .onDisappear {
-                    if let selectedImage = selectedImage {
+                    if selectedImage != nil {
                         updateProfilePhoto()
                         print("Image selected successfully!")
                         showConfirmationDialog = true

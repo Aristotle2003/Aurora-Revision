@@ -14,6 +14,33 @@ class CustomTabNavigationViewModel: ObservableObject{
         setupFriendGroupListener() // 合并朋友圈和点赞监听器
     }
     
+    func fetchAndStoreFCMToken() {
+        guard let userID = FirebaseManager.shared.auth.currentUser?.uid else {
+                print("User not signed in.")
+                return
+            }
+            
+            Messaging.messaging().token { token, error in
+                if let token = token {
+                    self.storeFCMTokenToFirestore(token, userID: userID)
+                    print("Fetched and stored FCM Token: \(token)")
+                } else if let error = error {
+                    print("Error fetching FCM token: \(error)")
+                }
+            }
+        }
+        
+    private func storeFCMTokenToFirestore(_ token: String, userID: String) {
+        let userRef = Firestore.firestore().collection("users").document(userID)
+        userRef.setData(["fcmToken": token], merge: true) { error in
+            if let error = error {
+                print("Error updating FCM token in Firestore: \(error)")
+            } else {
+                print("FCM token updated successfully in Firestore.")
+            }
+        }
+    }
+    
     private func fetchCurrentUser() {
         
         guard let uid = FirebaseManager.shared.auth.currentUser?.uid else {
@@ -70,7 +97,7 @@ class CustomTabNavigationViewModel: ObservableObject{
                     for document in documents {
                         let data = document.data()
                         let authorUid = data["uid"] as? String ?? ""
-                        let documentId = document.documentID
+                        _ = document.documentID
                         let likes = data["likes"] as? Int ?? 0
 
                         // 检查朋友圈更新
@@ -141,6 +168,7 @@ struct CustomTabNavigationView: View {
                             chatUser: user,
                             currentUser: user,
                             isCurrentUser: true,
+                            showTemporaryImg: false,
                             chatLogViewModel: chatLogViewModel
                         )
                     }
@@ -160,6 +188,10 @@ struct CustomTabNavigationView: View {
             }
         }
         .ignoresSafeArea(edges: .bottom)
+        .onAppear{
+            vm.fetchAndStoreFCMToken()
+        }
+        
     }
     
     
@@ -234,47 +266,6 @@ struct CustomNavBar: View {
                 .foregroundColor(currentView == "Settings" ? .blue : .gray)
             }
             .padding(.bottom, 20)
-        }
-    }
-}
-
-// 示例视图
-struct ViewOne: View {
-    var body: some View {
-        VStack {
-            Text("Home View")
-                .frame(maxWidth: .infinity, maxHeight: .infinity)
-                .background(Color.green.opacity(0.2))
-        }
-    }
-}
-
-struct ViewTwo: View {
-    var body: some View {
-        VStack {
-            Text("Profile View")
-                .frame(maxWidth: .infinity, maxHeight: .infinity)
-                .background(Color.blue.opacity(0.2))
-        }
-    }
-}
-
-struct ViewThree: View {
-    var body: some View {
-        VStack {
-            Text("Messages View")
-                .frame(maxWidth: .infinity, maxHeight: .infinity)
-                .background(Color.yellow.opacity(0.2))
-        }
-    }
-}
-
-struct ViewFour: View {
-    var body: some View {
-        VStack {
-            Text("Settings View")
-                .frame(maxWidth: .infinity, maxHeight: .infinity)
-                .background(Color.gray.opacity(0.2))
         }
     }
 }

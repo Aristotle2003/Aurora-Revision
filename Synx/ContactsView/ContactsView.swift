@@ -130,10 +130,7 @@ struct CreateNewMessageView: View {
                 
             }
             .fullScreenCover(isPresented: $isShowingAddFriendView) {
-                AddFriendView { newFriend in
-                    vm.refreshUsers()
-                    isShowingAddFriendView = false
-                }
+                AddFriendView()
             }
             .navigationDestination(isPresented: $navigateToProfile) {
                 if let chatUser = self.chatUser, let currentUser = self.currentUser {
@@ -166,10 +163,10 @@ struct CreateNewMessageView: View {
             HStack {
                 Image("spacerformainmessageviewtopleft")
                     .resizable()
-                    .frame(width: 36, height: 36)
+                    .frame(width: 24, height: 24)
                     .padding(.leading, 28)
                 Spacer()
-                Image("auroratext")
+                Image("contactsheadlinetext")
                     .resizable()
                     .scaledToFill()
                     .frame(width: UIScreen.main.bounds.width * 0.1832, height: UIScreen.main.bounds.height * 0.0198)

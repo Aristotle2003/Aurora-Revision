@@ -4,25 +4,6 @@ import Firebase
 import FirebaseMessaging
 import FirebaseAuth
 
-struct RecentMessage: Identifiable{
-    var id: String{documentId}
-    let text, fromId, toId: String
-    let timestamp: Timestamp
-    let documentId: String
-    let email, profileImageUrl: String
-    
-    init(documentId: String, data:[String: Any]){
-        
-        self.documentId = documentId
-        self.text = data["text"] as? String ?? ""
-        self.timestamp = data["timestamp"] as? Timestamp ?? Timestamp(date: Date())
-        self.fromId = data["fromId"] as? String ?? ""
-        self.toId = data["toId"] as? String ?? ""
-        self.profileImageUrl = data["profileImageUrl"] as? String ?? ""
-        self.email = data["email"] as? String ?? ""
-    }
-}
-
 class MainMessagesViewModel: ObservableObject {
     
     @Published var errorMessage = ""
@@ -32,11 +13,8 @@ class MainMessagesViewModel: ObservableObject {
 
     var messageListener: ListenerRegistration?
     var friendRequestListener: ListenerRegistration? // 新增好友申请监听器变量
-    var friendGroupListener: ListenerRegistration?
-
-    @Published var recentMessages = [RecentMessage]()
+    
     @Published var hasNewFriendRequest = false // 用于跟踪是否有新的好友申请
-    @Published var hasNewFriendGroup = false // 用于跟踪是否有新的朋友圈消息
     @AppStorage("lastCheckedTimestamp") var lastCheckedTimestamp: Double = 0
     @AppStorage("lastLikesCount") var lastLikesCount: Int = 0
 
@@ -49,89 +27,6 @@ class MainMessagesViewModel: ObservableObject {
         fetchCurrentUser()
         setupFriendListListener()
         setupFriendRequestListener()  // 设置好友申请监听器
-    }
-
-//    func setupFriendGroupListener() {
-//        guard let currentUserUid = FirebaseManager.shared.auth.currentUser?.uid else {
-//            self.errorMessage = "Could not find firebase uid"
-//            return
-//        }
-//
-//        // 如果已有监听器，先移除
-//        friendGroupListener?.remove()
-//        friendGroupListener = nil
-//
-//        // double to int64
-//        let lastCheckedTimestampInt64 = Int64(lastCheckedTimestamp)
-//
-//        friendGroupListener = FirebaseManager.shared.firestore
-//            .collection("response_to_prompt")
-//            .whereField("timestamp", isGreaterThan: Timestamp(seconds: lastCheckedTimestampInt64, nanoseconds: 0))
-//            .addSnapshotListener { [weak self] snapshot, error in
-//                if let error = error {
-//                    print("Failed to listen for friend group messages and likes: \(error)")
-//                    return
-//                }
-//                
-//                guard let documents = snapshot?.documents else { return }
-//                var hasNewLikes = false
-//                var hasNewFriendGroupUpdates = false
-//
-//                // Fetch friend list
-//                self?.fetchFriendList { friendUIDs in
-//                    for document in documents {
-//                        let data = document.data()
-//                        let authorUid = data["uid"] as? String ?? ""
-//                        let documentId = document.documentID
-//                        let likes = data["likes"] as? Int ?? 0
-//
-//                        // 检查朋友圈更新
-//                        if friendUIDs.contains(authorUid) && authorUid != currentUserUid {
-//                            hasNewFriendGroupUpdates = true
-//                        }
-//
-//                        // 检查点赞更新
-//                        if authorUid == currentUserUid {
-//                            if likes > self?.lastLikesCount ?? 0 {
-//                                hasNewLikes = true
-//                                self?.lastLikesCount = likes
-//                            }
-//                            self?.lastLikesCount = likes
-//                        }
-//                    }
-//
-//                    DispatchQueue.main.async {
-//                        self?.hasNewFriendGroup = (hasNewFriendGroupUpdates || hasNewLikes)
-//                    }
-//                }
-//            }
-//    }
-
-    func fetchAndStoreFCMToken() {
-        guard let userID = FirebaseManager.shared.auth.currentUser?.uid else {
-                print("User not signed in.")
-                return
-            }
-            
-            Messaging.messaging().token { token, error in
-                if let token = token {
-                    self.storeFCMTokenToFirestore(token, userID: userID)
-                    print("Fetched and stored FCM Token: \(token)")
-                } else if let error = error {
-                    print("Error fetching FCM token: \(error)")
-                }
-            }
-        }
-        
-    private func storeFCMTokenToFirestore(_ token: String, userID: String) {
-        let userRef = Firestore.firestore().collection("users").document(userID)
-        userRef.setData(["fcmToken": token], merge: true) { error in
-            if let error = error {
-                print("Error updating FCM token in Firestore: \(error)")
-            } else {
-                print("FCM token updated successfully in Firestore.")
-            }
-        }
     }
 
     func setupFriendListListener() {
@@ -214,33 +109,7 @@ class MainMessagesViewModel: ObservableObject {
                 }
             }
     }
-
-    func fetchFriendList(completion: @escaping ([String]) -> Void) {
-        guard let uid = FirebaseManager.shared.auth.currentUser?.uid else {
-            self.errorMessage = "Could not find firebase uid"
-            return
-        }
-
-        FirebaseManager.shared.firestore
-            .collection("friends")
-            .document(uid)
-            .collection("friend_list")
-            .getDocuments { snapshot, error in
-                if let error = error {
-                    print("Failed to fetch friend list: \(error)")
-                    return
-                }
-
-                guard let documents = snapshot?.documents else {
-                    print("No friend list documents found")
-                    return
-                }
-
-                let friendUIDs = documents.map { $0.documentID }
-                completion(friendUIDs)
-            }
-    }
-
+    
     func stopListening() {
         
         messageListener?.remove()
@@ -483,137 +352,27 @@ struct MainMessagesView: View {
                             }
                             .padding(.top, 8)
                         }
-
-                        /*VStack{
-                            Spacer()
-                         
-                            Image("navigationbar")
-                                .resizable()
-                                .scaledToFill()
-                                .frame(maxWidth: .infinity)
-                                .ignoresSafeArea(edges: .bottom) // Touch bottom edge
-                        }*/
-//                        VStack {
-//                            Spacer()
-//
-//                            // Navigation Bar with Buttons
-//                            ZStack {
-//                                // Navigation Bar Image
-//                                Image("navigationbar")
-//                                    .resizable()
-//                                    .scaledToFit()
-//                                    .frame(maxWidth: .infinity)
-//                                    .ignoresSafeArea(edges: .bottom) // Touch bottom edge
-//
-//                                // Buttons on Navigation Bar
-//                                HStack(spacing: 60) { // Adjust spacing as needed
-//                                    Button(action: {
-//                                        if let chatUser = vm.chatUser {
-//                                            self.selectedUser = chatUser
-//                                            shouldShowFriendGroupView.toggle()
-//                                            // 重置朋友圈更新状态
-//                                            vm.hasNewFriendGroup = false
-//                                            
-//                                            // 更新 lastCheckedTimestamp
-//                                            let currentDate = Date()
-//                                            vm.lastCheckedTimestamp = currentDate.timeIntervalSince1970
-//                                            // vm.friendGroupListener?.remove()
-//                                            // vm.friendGroupListener = nil
-//                                            // vm.setupFriendGroupListener()
-//
-//                                        }
-//                                    }) {
-//                                        Image("dailyaurorabutton")
-//                                            .resizable()
-//                                            .scaledToFit()
-//                                            .frame(width: 36, height: 36) // Set button size
-//
-//                                        if vm.hasNewFriendGroup {
-//                                            Circle()
-//                                                .fill(Color.red)
-//                                                .frame(width: 12, height: 12)
-//                                                .offset(x: 30, y: -10)
-//                                        }
-//                                    }
-//
-//                                    Button(action: {
-//                                        print("Button 2 tapped")
-//                                    }) {
-//                                        Image("messagesbutton")
-//                                            .resizable()
-//                                            .scaledToFit()
-//                                            .frame(width: 36, height: 36)
-//                                    }
-//
-//                                    Button(action: {
-//                                        shouldNavigateToAddFriendView.toggle()
-//                                    }) {
-//                                        Image("contactsbutton")
-//                                            .resizable()
-//                                            .scaledToFit()
-//                                            .frame(width: 36, height: 36)
-//                                    }
-//
-//                                    Button(action: {
-//                                        if let chatUser = vm.chatUser {
-//                                            self.selectedUser = chatUser
-//                                            self.chatUser = chatUser
-//                                            self.isCurrentUser = true
-//                                            shouldShowProfileView.toggle()
-//                                        }
-//                                    }) {
-//                                        Image("profilebutton")
-//                                            .resizable()
-//                                            .scaledToFit()
-//                                            .frame(width: 36, height: 36)
-//                                    }
-//                                }
-//                                .padding(.bottom, 20) // Adjust to align buttons vertically over the navigation bar
-//                            }
-//                        }
-
                     }
                 }
             }
             .ignoresSafeArea(edges: .bottom)
-            .navigationDestination(isPresented: $shouldNavigateToAddFriendView) {
-                CreateNewMessageView()
-            }
-            .fullScreenCover(isPresented: $shouldShowFriendRequests) {
-                if let user = self.selectedUser {
-                    FriendRequestsView(currentUser: user)
-                }
-            }
-            //.overlay(newMessageButton, alignment: .bottom)
             .navigationBarHidden(true)
-            .navigationDestination(isPresented: $shouldShowProfileView) {
-                if let chatUser = self.chatUser, let selectedUser = self.selectedUser {
-                    ProfileView(
-                        chatUser: chatUser,
-                        currentUser: selectedUser,
-                        isCurrentUser: self.isCurrentUser,
-                        chatLogViewModel: chatLogViewModel
-                    )
-                }
-            }
-            
-            .fullScreenCover(isPresented: $shouldNavigateToChatLogView) {
+            .navigationDestination(isPresented: $shouldNavigateToChatLogView) {
                 ChatLogView(vm: chatLogViewModel)
                     .onAppear {
                         chatLogViewModel.chatUser = self.chatUser
                         chatLogViewModel.initializeMessages()
                     }
             }
-            .navigationDestination(isPresented: $shouldShowFriendGroupView) {
+            .navigationDestination(isPresented: $shouldShowFriendRequests) {
                 if let user = self.selectedUser {
-                    FriendGroupView(selectedUser: user)
+                    FriendRequestsView(currentUser: user)
                 }
             }
         }
         .onAppear{
             vm.setupFriendListListener()
             vm.setupFriendRequestListener()
-            vm.fetchAndStoreFCMToken()
         }
         .onDisappear{
             vm.stopListening()
@@ -622,7 +381,6 @@ struct MainMessagesView: View {
     
     private var customNavBar: some View {
         HStack(spacing: 16) {
-            // Profile Image Button - Navigates to ProfileView with chatUser and selectedUser
             Button(action: {
                 if let chatUser = vm.chatUser {
                     self.selectedUser = chatUser

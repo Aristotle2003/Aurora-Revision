@@ -8,9 +8,14 @@
 
 /* Begin PBXBuildFile section */
 		FB0F8AFB2CF52ABE00A37CED /* TutorialView.swift in Sources */ = {isa = PBXBuildFile; fileRef = FB0F8AFA2CF52ABE00A37CED /* TutorialView.swift */; };
-		FB0F8AFD2CF56EC200A37CED /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = FB0F8AFC2CF56EC200A37CED /* Assets.xcassets */; };
 		FB0F8AFF2CF653E200A37CED /* CustomTabNavigationView.swift in Sources */ = {isa = PBXBuildFile; fileRef = FB0F8AFE2CF653E200A37CED /* CustomTabNavigationView.swift */; };
 		FB23D5592CF6B20D003C245A /* SelfProfileView.swift in Sources */ = {isa = PBXBuildFile; fileRef = FB23D5582CF6B20D003C245A /* SelfProfileView.swift */; };
+		FB23D55D2CF7C589003C245A /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = FB23D55C2CF7C589003C245A /* Assets.xcassets */; };
+		FB23D5602CF8F7C6003C245A /* libPhoneNumber in Frameworks */ = {isa = PBXBuildFile; productRef = FB23D55F2CF8F7C6003C245A /* libPhoneNumber */; };
+		FB23D5622CF8F843003C245A /* Formatter.swift in Sources */ = {isa = PBXBuildFile; fileRef = FB23D5612CF8F843003C245A /* Formatter.swift */; };
+		FB23D5652CFA0ED5003C245A /* CropViewController in Frameworks */ = {isa = PBXBuildFile; productRef = FB23D5642CFA0ED5003C245A /* CropViewController */; };
+		FB23D5672CFA0ED5003C245A /* TOCropViewController in Frameworks */ = {isa = PBXBuildFile; productRef = FB23D5662CFA0ED5003C245A /* TOCropViewController */; };
+		FB23D56A2CFA16B3003C245A /* Mantis in Frameworks */ = {isa = PBXBuildFile; productRef = FB23D5692CFA16B3003C245A /* Mantis */; };
 		FB3C61182CE0F497001A0922 /* CalendarView.swift in Sources */ = {isa = PBXBuildFile; fileRef = FB3C61172CE0F497001A0922 /* CalendarView.swift */; };
 		FB42CB802CD5B5A000283244 /* FriendGroupView.swift in Sources */ = {isa = PBXBuildFile; fileRef = FB42CB7F2CD5B5A000283244 /* FriendGroupView.swift */; };
 		FB42CB832CD66D9E00283244 /* EditProfileView.swift in Sources */ = {isa = PBXBuildFile; fileRef = FB42CB822CD66D9E00283244 /* EditProfileView.swift */; };
@@ -65,9 +70,10 @@
 
 /* Begin PBXFileReference section */
 		FB0F8AFA2CF52ABE00A37CED /* TutorialView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TutorialView.swift; sourceTree = "<group>"; };
-		FB0F8AFC2CF56EC200A37CED /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		FB0F8AFE2CF653E200A37CED /* CustomTabNavigationView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CustomTabNavigationView.swift; sourceTree = "<group>"; };
 		FB23D5582CF6B20D003C245A /* SelfProfileView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SelfProfileView.swift; sourceTree = "<group>"; };
+		FB23D55C2CF7C589003C245A /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
+		FB23D5612CF8F843003C245A /* Formatter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Formatter.swift; sourceTree = "<group>"; };
 		FB3C61172CE0F497001A0922 /* CalendarView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CalendarView.swift; sourceTree = "<group>"; };
 		FB42CB7F2CD5B5A000283244 /* FriendGroupView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FriendGroupView.swift; sourceTree = "<group>"; };
 		FB42CB822CD66D9E00283244 /* EditProfileView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EditProfileView.swift; sourceTree = "<group>"; };
@@ -104,14 +110,18 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				FB23D56A2CFA16B3003C245A /* Mantis in Frameworks */,
 				FB83BD9D2CD8656D00A7BE4E /* FirebaseMessaging in Frameworks */,
 				FB7E20BB2CC017BC00209582 /* SDWebImageSwiftUI in Frameworks */,
 				FB6764232CEE856400FCE17E /* Lottie in Frameworks */,
 				FB7E20A42CBE262300209582 /* FirebaseAuth in Frameworks */,
+				FB23D5602CF8F7C6003C245A /* libPhoneNumber in Frameworks */,
 				FB42CB8A2CD81DA000283244 /* GoogleSignInSwift in Frameworks */,
+				FB23D5652CFA0ED5003C245A /* CropViewController in Frameworks */,
 				FB7E20A62CBE262300209582 /* FirebaseStorage in Frameworks */,
 				FB7E20B22CBEE70C00209582 /* FirebaseDatabase in Frameworks */,
 				FB7E20B02CBEE28D00209582 /* FirebaseFirestore in Frameworks */,
+				FB23D5672CFA0ED5003C245A /* TOCropViewController in Frameworks */,
 				FB42CB882CD81DA000283244 /* GoogleSignIn in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -133,6 +143,23 @@
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
+		FB23D55A2CF76BC9003C245A /* SelfProfileView */ = {
+			isa = PBXGroup;
+			children = (
+				FB42CB812CD66D8500283244 /* EditProfileView */,
+				FB23D5582CF6B20D003C245A /* SelfProfileView.swift */,
+			);
+			path = SelfProfileView;
+			sourceTree = "<group>";
+		};
+		FB23D55B2CF76C00003C245A /* CustomTabView */ = {
+			isa = PBXGroup;
+			children = (
+				FB0F8AFE2CF653E200A37CED /* CustomTabNavigationView.swift */,
+			);
+			path = CustomTabView;
+			sourceTree = "<group>";
+		};
 		FB3C61162CE0F479001A0922 /* CalenarView */ = {
 			isa = PBXGroup;
 			children = (
@@ -180,21 +207,24 @@
 		FB7E20772CBCC6E900209582 /* Synx */ = {
 			isa = PBXGroup;
 			children = (
+				FB7E20782CBCC6E900209582 /* SynxApp.swift */,
 				FB6764282CEEE82D00FCE17E /* Clear Button.json */,
 				FB67642A2CEEE83E00FCE17E /* Save Button.json */,
 				FB83BD952CD859BE00A7BE4E /* Synx.entitlements */,
 				FB83BD902CD81ECC00A7BE4E /* Info.plist */,
 				FB0F8AFA2CF52ABE00A37CED /* TutorialView.swift */,
-				FB0F8AFE2CF653E200A37CED /* CustomTabNavigationView.swift */,
 				FBB505022CCEA62D00FF1C87 /* Login Process */,
+				FB23D55B2CF76C00003C245A /* CustomTabView */,
+				FB7E20B32CBF23B200209582 /* MainMessages */,
+				FB23D55A2CF76BC9003C245A /* SelfProfileView */,
+				FB42CB7E2CD5B53300283244 /* FriendGroupView */,
+				FB7E20C22CC565AF00209582 /* ContactsView */,
+				FBB505002CCEA5DF00FF1C87 /* ProfileView */,
 				FB7E20BF2CC165D500209582 /* Model */,
 				FB7E20B62CC0112C00209582 /* Utils */,
-				FB7E20B32CBF23B200209582 /* MainMessages */,
-				FB7E20782CBCC6E900209582 /* SynxApp.swift */,
 				FB83BD982CD85E6600A7BE4E /* GoogleService-Info.plist */,
-				FB0F8AFC2CF56EC200A37CED /* Assets.xcassets */,
+				FB23D55C2CF7C589003C245A /* Assets.xcassets */,
 				FB7E207E2CBCC6EA00209582 /* Preview Content */,
-				FB23D5582CF6B20D003C245A /* SelfProfileView.swift */,
 			);
 			path = Synx;
 			sourceTree = "<group>";
@@ -227,14 +257,8 @@
 		FB7E20B32CBF23B200209582 /* MainMessages */ = {
 			isa = PBXGroup;
 			children = (
-				FB7E20B42CBF23CB00209582 /* MainMessagesView.swift */,
-				FB83BD9E2CD87CBB00A7BE4E /* AddFriendView */,
-				FB42CB812CD66D8500283244 /* EditProfileView */,
-				FB42CB7E2CD5B53300283244 /* FriendGroupView */,
-				FBB505012CCEA5FA00FF1C87 /* FriendRequestsView */,
-				FBB505002CCEA5DF00FF1C87 /* ProfileView */,
-				FB7E20C22CC565AF00209582 /* ContactsView */,
 				FB7E20C32CC565BF00209582 /* ChatLogView */,
+				FB7E20B42CBF23CB00209582 /* MainMessagesView.swift */,
 			);
 			path = MainMessages;
 			sourceTree = "<group>";
@@ -244,6 +268,7 @@
 			children = (
 				FB7E20AD2CBEAFC900209582 /* ImagePicker.swift */,
 				FB7E20B72CC0114600209582 /* FirebaseManager.swift */,
+				FB23D5612CF8F843003C245A /* Formatter.swift */,
 			);
 			path = Utils;
 			sourceTree = "<group>";
@@ -259,6 +284,7 @@
 		FB7E20C22CC565AF00209582 /* ContactsView */ = {
 			isa = PBXGroup;
 			children = (
+				FB83BD9E2CD87CBB00A7BE4E /* AddFriendView */,
 				FB7E20BD2CC15CAB00209582 /* ContactsView.swift */,
 			);
 			path = ContactsView;
@@ -275,6 +301,7 @@
 		FB83BD9E2CD87CBB00A7BE4E /* AddFriendView */ = {
 			isa = PBXGroup;
 			children = (
+				FBB505012CCEA5FA00FF1C87 /* FriendRequestsView */,
 				FB83BD9F2CD87CE200A7BE4E /* AddFriendView.swift */,
 			);
 			path = AddFriendView;
@@ -334,6 +361,10 @@
 				FB42CB892CD81DA000283244 /* GoogleSignInSwift */,
 				FB83BD9C2CD8656D00A7BE4E /* FirebaseMessaging */,
 				FB6764222CEE856400FCE17E /* Lottie */,
+				FB23D55F2CF8F7C6003C245A /* libPhoneNumber */,
+				FB23D5642CFA0ED5003C245A /* CropViewController */,
+				FB23D5662CFA0ED5003C245A /* TOCropViewController */,
+				FB23D5692CFA16B3003C245A /* Mantis */,
 			);
 			productName = Synx;
 			productReference = FB7E20752CBCC6E900209582 /* Synx.app */;
@@ -412,6 +443,9 @@
 				FB7E20B92CC017BC00209582 /* XCRemoteSwiftPackageReference "SDWebImageSwiftUI" */,
 				FB42CB862CD81DA000283244 /* XCRemoteSwiftPackageReference "GoogleSignIn-iOS" */,
 				FB6764212CEE856300FCE17E /* XCRemoteSwiftPackageReference "lottie-ios" */,
+				FB23D55E2CF8F7C6003C245A /* XCRemoteSwiftPackageReference "libPhoneNumber-iOS" */,
+				FB23D5632CFA0ED5003C245A /* XCRemoteSwiftPackageReference "TOCropViewController" */,
+				FB23D5682CFA16B3003C245A /* XCRemoteSwiftPackageReference "Mantis" */,
 			);
 			productRefGroup = FB7E20762CBCC6E900209582 /* Products */;
 			projectDirPath = "";
@@ -429,11 +463,11 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				FB23D55D2CF7C589003C245A /* Assets.xcassets in Resources */,
 				FB67642B2CEEE83E00FCE17E /* Save Button.json in Resources */,
 				FB7E20802CBCC6EA00209582 /* Preview Assets.xcassets in Resources */,
 				FB6764292CEEE82D00FCE17E /* Clear Button.json in Resources */,
 				FB83BD992CD85E6600A7BE4E /* GoogleService-Info.plist in Resources */,
-				FB0F8AFD2CF56EC200A37CED /* Assets.xcassets in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -461,6 +495,7 @@
 				FB42CB802CD5B5A000283244 /* FriendGroupView.swift in Sources */,
 				FB3C61182CE0F497001A0922 /* CalendarView.swift in Sources */,
 				FB0F8AFB2CF52ABE00A37CED /* TutorialView.swift in Sources */,
+				FB23D5622CF8F843003C245A /* Formatter.swift in Sources */,
 				FB7E20C12CC165E400209582 /* ChatUser.swift in Sources */,
 				FBA6BD1D2CCD696F0019A5E1 /* ProfileView.swift in Sources */,
 				FB7E20C52CC565EA00209582 /* ChatLogView.swift in Sources */,
@@ -813,6 +848,30 @@
 /* End XCConfigurationList section */
 
 /* Begin XCRemoteSwiftPackageReference section */
+		FB23D55E2CF8F7C6003C245A /* XCRemoteSwiftPackageReference "libPhoneNumber-iOS" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/iziz/libPhoneNumber-iOS";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 1.2.0;
+			};
+		};
+		FB23D5632CFA0ED5003C245A /* XCRemoteSwiftPackageReference "TOCropViewController" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/TimOliver/TOCropViewController";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 2.7.4;
+			};
+		};
+		FB23D5682CFA16B3003C245A /* XCRemoteSwiftPackageReference "Mantis" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/guoyingtao/Mantis";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 1.7.5;
+			};
+		};
 		FB42CB862CD81DA000283244 /* XCRemoteSwiftPackageReference "GoogleSignIn-iOS" */ = {
 			isa = XCRemoteSwiftPackageReference;
 			repositoryURL = "https://github.com/google/GoogleSignIn-iOS";
@@ -848,6 +907,26 @@
 /* End XCRemoteSwiftPackageReference section */
 
 /* Begin XCSwiftPackageProductDependency section */
+		FB23D55F2CF8F7C6003C245A /* libPhoneNumber */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = FB23D55E2CF8F7C6003C245A /* XCRemoteSwiftPackageReference "libPhoneNumber-iOS" */;
+			productName = libPhoneNumber;
+		};
+		FB23D5642CFA0ED5003C245A /* CropViewController */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = FB23D5632CFA0ED5003C245A /* XCRemoteSwiftPackageReference "TOCropViewController" */;
+			productName = CropViewController;
+		};
+		FB23D5662CFA0ED5003C245A /* TOCropViewController */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = FB23D5632CFA0ED5003C245A /* XCRemoteSwiftPackageReference "TOCropViewController" */;
+			productName = TOCropViewController;
+		};
+		FB23D5692CFA16B3003C245A /* Mantis */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = FB23D5682CFA16B3003C245A /* XCRemoteSwiftPackageReference "Mantis" */;
+			productName = Mantis;
+		};
 		FB42CB872CD81DA000283244 /* GoogleSignIn */ = {
 			isa = XCSwiftPackageProductDependency;
 			package = FB42CB862CD81DA000283244 /* XCRemoteSwiftPackageReference "GoogleSignIn-iOS" */;

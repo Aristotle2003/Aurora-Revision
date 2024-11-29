@@ -1,3 +1,12 @@
+//
+//  CreateNewMessageView.swift
+//  Synx
+//
+//  Created by Francis on 10/30/24.
+//
+
+
+
 import SwiftUI
 import Firebase
 import FirebaseAuth
@@ -5,10 +14,11 @@ import GoogleSignIn
 import AuthenticationServices
 import CryptoKit
 
+
+
+
 struct LoginView: View {
     @Environment(\.window) var window
-    
-    
     @State var isLogin = false
     
     @State private var isPostEmailVerification = false
@@ -16,17 +26,18 @@ struct LoginView: View {
     
     @State private var uid = ""
     @State private var email = ""
-    @State private var phoneNumber = "" {
-        didSet {
-            phoneNumber = phoneNumber.trimmingCharacters(in: .whitespaces)
-        }
-    }
     
-    @State private var loginStatusMessage = ""
-    @State private var hasSeenTutorial = false
-    
+    @State private var countryCode: String = "1"
+    @State private var phoneNumber = ""
     // Apple nonce
     @State private var nonce: String?
+    
+    @State private var loginStatusMessage = ""
+    @State var hasSeenTutorial = false
+    
+    private var countryCodes: [(numericCode: String, isoCode: String, name: String)] {
+        Formatter.getAllCountryCodes()
+    }
     
     
     var body: some View {
@@ -50,22 +61,7 @@ struct LoginView: View {
                                 .foregroundColor(.secondary)
                                 .padding(.bottom, 4)
                             
-                            HStack(spacing: 8) {
-                                Text("+1")
-                                    .foregroundColor(.secondary)
-                                    .padding(.leading, 12)
-                                
-                                TextField("(123) 456-7890", text: $phoneNumber)
-                                    .keyboardType(.phonePad)
-                                    .textContentType(.telephoneNumber)
-                            }
-                            .padding(.vertical, 12)
-                            .background(Color.white)
-                            .cornerRadius(8)
-                            .overlay(
-                                RoundedRectangle(cornerRadius: 8)
-                                    .stroke(Color.blue.opacity(0.3), lineWidth: 1)
-                            )
+                            phoneInputView
                         }
                         .padding(.bottom, 10)
                         
@@ -157,6 +153,7 @@ struct LoginView: View {
             .fullScreenCover(isPresented: $isPreEmailVerification) {
                 PhoneVerificationView(
                     isLogin: $isLogin,
+                    hasSeenTutorial: $hasSeenTutorial,
                     isPreEmailVerification: true,
                     oldPhone: phoneNumber,
                     email: ""
@@ -167,6 +164,7 @@ struct LoginView: View {
                 if let user = FirebaseManager.shared.auth.currentUser {
                     PhoneVerificationView(
                         isLogin: $isLogin,
+                        hasSeenTutorial: $hasSeenTutorial,
                         isPreEmailVerification: false,
                         oldPhone: "",
                         email: user.email
@@ -174,15 +172,72 @@ struct LoginView: View {
                 }
             }
         }
-        
+    }
+    
+    
+    private var phoneInputView: some View {
+        // Input field for entering a new phone number
+        HStack(spacing: 4) {
+            // Country Code Dropdown
+            Menu {
+                ForEach(countryCodes, id: \.numericCode) { code in
+                    Button(action: { countryCode = code.numericCode }) {
+                        Text("+\(code.numericCode) (\(code.name))") // Show country code and name in the menu
+                    }
+                }
+            } label: {
+                HStack {
+                    Text("+\(countryCode)") // Only show the number in the button
+                        .foregroundColor(.primary)
+                    Image(systemName: "chevron.down") // Add a dropdown arrow icon
+                        .foregroundColor(.gray)
+                }
+                .padding(12)
+                .background(Color.gray.opacity(0.1))
+                .cornerRadius(8)
+            }
+            .frame(width: 100)
+            .padding(.leading, -6)
+            
+            
+            // Phone Number Input Field
+            TextField("Phone Number", text: $phoneNumber)
+                .keyboardType(.phonePad)
+                .textContentType(.telephoneNumber)
+                .padding(12)
+                .background(Color.white)
+                .cornerRadius(8)
+                .overlay(
+                    RoundedRectangle(cornerRadius: 8)
+                        .stroke(Color.gray.opacity(0.5), lineWidth: 1)
+                )
+        }
+        .padding(8)
+        .background(Color.white)
+        .cornerRadius(8)
+        .overlay(
+            RoundedRectangle(cornerRadius: 8)
+                .stroke(Color.blue.opacity(0.3), lineWidth: 1)
+        )
     }
     
     
     
+    
+    
+    
+    // MARK: Functions Start Here
     // Verify using phone number
     private func verifyPhoneNumber() {
-        let cleanedPhone = phoneNumber.components(separatedBy: CharacterSet.decimalDigits.inverted).joined()
-        if cleanedPhone.count == 10 || (cleanedPhone.count == 11 && cleanedPhone.hasPrefix("1")) {
+        // Format and validate the phone number using the Formatter class
+        guard let formattedPhone = Formatter.formatPhoneNumber(phoneNumber, numericCode: countryCode) else {
+            loginStatusMessage = "Please enter a valid phone number"
+            return
+        }
+        
+        self.phoneNumber = formattedPhone // Update the formatted phone number
+        
+        if Formatter.isValidPhoneNumber(phoneNumber, numericCode: countryCode) {
             isPreEmailVerification = true
         } else {
             loginStatusMessage = "Please enter a valid phone number"
@@ -253,7 +308,7 @@ struct LoginView: View {
                         }
                         
                         // User exists
-                        if let data = snapshot?.data() {
+                        if (snapshot?.data()) != nil {
                             checkTutorialStatus()
                             self.isLogin = true
                         // New user set up profile
@@ -264,6 +319,8 @@ struct LoginView: View {
             }
         }
     }
+    
+    
     
     
     
@@ -309,7 +366,7 @@ struct LoginView: View {
                         }
                         
                         // User exists
-                        if let data = snapshot?.data() {
+                        if (snapshot?.data()) != nil {
                             checkTutorialStatus()
                             self.isLogin = true
                         // New user set up profile
@@ -320,6 +377,7 @@ struct LoginView: View {
             }
         }
     }
+    
     private func checkTutorialStatus() {
             guard let uid = FirebaseManager.shared.auth.currentUser?.uid else { return }
 

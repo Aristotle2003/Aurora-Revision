@@ -1,5 +1,5 @@
 {
-  "originHash" : "a9df8f8234e5f9513ce370c9fff0af0e706d422e962bf624f6af9238edc4e332",
+  "originHash" : "353b8dd98fc3b5c3b9d40c923dde5ac0df55550ac96cff5b5cf7ab18fcb533d8",
   "pins" : [
     {
       "identity" : "abseil-cpp-binary",
@@ -119,12 +119,30 @@
       }
     },
     {
+      "identity" : "libphonenumber-ios",
+      "kind" : "remoteSourceControl",
+      "location" : "https://github.com/iziz/libPhoneNumber-iOS",
+      "state" : {
+        "revision" : "3220b4027117c41f076f1bcc7f3c492ab8957348",
+        "version" : "1.2.0"
+      }
+    },
+    {
       "identity" : "lottie-ios",
       "kind" : "remoteSourceControl",
       "location" : "https://github.com/airbnb/lottie-ios",
       "state" : {
         "revision" : "fe4c6fe3a0aa66cdeb51d549623c82ca9704b9a5",
         "version" : "4.5.0"
+      }
+    },
+    {
+      "identity" : "mantis",
+      "kind" : "remoteSourceControl",
+      "location" : "https://github.com/guoyingtao/Mantis",
+      "state" : {
+        "revision" : "d6880eb97267248f89e6cef2dd52785d50627639",
+        "version" : "1.9.0"
       }
     },
     {
@@ -170,6 +188,15 @@
       "state" : {
         "revision" : "ebc7251dd5b37f627c93698e4374084d98409633",
         "version" : "1.28.2"
+      }
+    },
+    {
+      "identity" : "tocropviewcontroller",
+      "kind" : "remoteSourceControl",
+      "location" : "https://github.com/TimOliver/TOCropViewController",
+      "state" : {
+        "revision" : "a634cb7cdfd580006e79a6e74e64417fe9e9783b",
+        "version" : "2.7.4"
       }
     }
   ],
