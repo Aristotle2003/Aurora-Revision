@@ -14,6 +14,8 @@ import FirebaseAuth
 
 struct PhoneVerificationView: View {
     @Environment(\.dismiss) var dismiss
+    @AppStorage("isLoggedIn") private var isLoggedIn: Bool = false
+    @AppStorage("SeenTutorial") private var SeenTutorial: Bool = false
     @Binding var isLogin: Bool
     @Binding var hasSeenTutorial: Bool
     let isPreEmailVerification: Bool
@@ -280,12 +282,13 @@ struct PhoneVerificationView: View {
         
         // Google or Apple already logged in, connect to Phone
         if !isPreEmailVerification, let currentUser = FirebaseManager.shared.auth.currentUser {
-            // Store the current user
-            previousUser = currentUser
-            print("[Log]: Attempting to link credential to user \(currentUser.uid)")
-            
-            // Link current google or apple to the phone login
-            self.linkAccounts(currentUser: currentUser, credential: credential)
+            Linker.linkAccounts(currentUser: currentUser, credential: credential) { success, error in
+                if success {
+                    dismiss()
+                } else {
+                    errorMessage = error ?? "Unknown error occurred."
+                }
+            }
         } else {
             // Regular phone sign-in flow
             regularPhoneSignIn(credential: credential)
@@ -450,6 +453,7 @@ struct PhoneVerificationView: View {
                 if snapshot?.exists == true {
                     checkTutorialStatus()
                     isLogin = true
+                    self.isLoggedIn = true
                     self.dismiss()
                 } else {
                     // User doesn't exist, choose profile
@@ -468,10 +472,13 @@ struct PhoneVerificationView: View {
                     if let error = error {
                         print("Failed to fetch tutorial status: \(error)")
                         hasSeenTutorial = false
+                        SeenTutorial = false
                     } else if let data = snapshot?.data(), let seen = data["seen_tutorial"] as? Bool {
                         hasSeenTutorial = seen
+                        SeenTutorial = seen
                     } else {
                         hasSeenTutorial = false
+                        SeenTutorial = false
                     }
                 }
         }

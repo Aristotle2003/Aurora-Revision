@@ -151,14 +151,21 @@ struct CreateNewMessageView: View {
         }
         .navigationBarHidden(true)
     }
+    
+    var safeAreaTopInset: CGFloat {
+        UIApplication.shared.connectedScenes
+            .compactMap { ($0 as? UIWindowScene)?.keyWindow }
+            .first?
+            .safeAreaInsets.top ?? 0
+    }
 
     // MARK: - Top Bar
     private var topBar: some View {
         ZStack {
             Image("liuhaier")
                 .resizable()
-                .scaledToFit()
-                .frame(maxWidth: .infinity)
+                .frame(width: UIScreen.main.bounds.width, height: UIScreen.main.bounds.height * 0.07 + safeAreaTopInset)
+                .aspectRatio(nil, contentMode: .fill)
                 .ignoresSafeArea()
             HStack {
                 Image("spacerformainmessageviewtopleft")

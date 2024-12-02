@@ -3,7 +3,7 @@ import Firebase
 import SDWebImageSwiftUI
 import FirebaseAuth
 
-class FriendGroupViewModel: ObservableObject {
+class FriendGroupScratchViewModel: ObservableObject {
     @Published var promptText = ""
     @Published var responseText = ""
     @Published var responses = [FriendResponse]()
@@ -209,27 +209,19 @@ class FriendGroupViewModel: ObservableObject {
     }
 }
 
-struct FriendResponse: Identifiable {
-    let id = UUID()
-    let uid: String
-    let email: String
-    let profileImageUrl: String
-    let latestMessage: String
-    let timestamp: Date
-    var likes: Int
-    var likedByCurrentUser: Bool
-    let documentId: String // 新增，以便在数据库操作中使用
-}
 
-struct FriendGroupView: View {
-    @ObservedObject var vm: FriendGroupViewModel
+struct FriendScratcgGroupView: View {
+    @ObservedObject var vm: FriendGroupScratchViewModel
     @Environment(\.presentationMode) var presentationMode
     @State var navigateToMainMessage = false
+    @State private var topCardIndex = 0
+    @State private var offset = CGSize.zero
+    @State private var isSwiping = false
     let selectedUser: ChatUser
     
     init(selectedUser: ChatUser) {
         self.selectedUser = selectedUser
-        _vm = ObservedObject(wrappedValue: FriendGroupViewModel(selectedUser: selectedUser))
+        _vm = ObservedObject(wrappedValue: FriendGroupScratchViewModel(selectedUser: selectedUser))
     }
     
     var body: some View {
@@ -263,7 +255,7 @@ struct FriendGroupView: View {
             
             // Scroll view for responses
             ScrollView {
-                VStack(alignment: .leading, spacing: 16) {
+                ZStack {
                     if vm.currentUserHasPosted {
                         // 在 ForEach 循环中，修改显示每个响应的视图
                         ForEach(vm.responses) { response in

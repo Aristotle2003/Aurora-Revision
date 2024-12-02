@@ -208,151 +208,133 @@ struct MainMessagesView: View {
     @StateObject private var chatLogViewModel = ChatLogViewModel(chatUser: nil)
     @State private var showFriendRequestsView = false
     
+    var safeAreaTopInset: CGFloat {
+        UIApplication.shared.connectedScenes
+            .compactMap { ($0 as? UIWindowScene)?.keyWindow }
+            .first?
+            .safeAreaInsets.top ?? 0
+    }
+    
     var body: some View {
         NavigationStack {
             ZStack {
+                // Background Color
                 Color(red: 0.976, green: 0.980, blue: 1.0)
                     .ignoresSafeArea()
-
-                VStack(spacing: 0) {
-                    // Header Section
-                    ZStack {
-                        // Header Background Image
-                        Image("liuhaier")
-                            .resizable()
-                            .scaledToFit()
-                            .frame(maxWidth: .infinity)
-                            .ignoresSafeArea()
-
-                        // Header Title
-                        
-                           
-                            HStack {
-                                Image("spacerformainmessageviewtopleft")
-                                    .resizable()
-                                    .frame(width: 36, height: 36)
-                                    .padding(.leading, 28)
-                                Spacer()
-                                Image("auroratext")
-                                    .resizable()
-                                    .scaledToFill()
-                                    .frame(width: UIScreen.main.bounds.width * 0.1832,
-                                           height: UIScreen.main.bounds.height * 0.0198)
-                                Spacer()
-                                
-                                HStack{
-                                    Button(action: {
-                                        if let chatUser = vm.chatUser{
-                                            self.selectedUser = chatUser
-                                            shouldShowFriendRequests.toggle()
-                                        }
-                                    }) {
+                
+                // ScrollView with users
+                ScrollView {
+                    LazyVStack(spacing: 8) {
+                        ForEach(vm.users) { user in
+                            Button {
+                                if let chatUser = vm.chatUser {
+                                    self.selectedUser = chatUser
+                                    self.chatUser = user
+                                    self.shouldNavigateToChatLogView.toggle()
+                                    vm.markMessageAsSeen(for: user.uid)
+                                }
+                            } label: {
+                                ZStack {
+                                    if user.isPinned {
+                                        Image("pinnedperson")
+                                            .resizable()
+                                            .scaledToFit()
+                                            .cornerRadius(16)
+                                    } else {
+                                        Image("notpinnedperson")
+                                            .resizable()
+                                            .scaledToFit()
+                                            .cornerRadius(16)
+                                    }
+                                    
+                                    // Overlay Content
+                                    HStack(spacing: 16) {
                                         ZStack{
-                                            Image("notificationbutton")
+                                            WebImage(url: URL(string: user.profileImageUrl))
                                                 .resizable()
-                                                .frame(width: 36, height: 36)
-                                                .padding(.trailing, 28)
-                                            if vm.hasNewFriendRequest {
-                                                Circle()
-                                                    .fill(Color.red)
+                                                .scaledToFill()
+                                                .frame(width: 45, height: 45)
+                                                .clipShape(Circle())
+                                            if user.hasUnseenLatestMessage {
+                                                Image("reddot")
+                                                    .resizable()
+                                                    .scaledToFit()
                                                     .frame(width: 12, height: 12)
-                                                    .offset(x: 10, y: -10)
+                                                    .offset(x: 16, y: -16)
                                             }
-                                            //.padding(8)
                                         }
-                                    }
-                                }
-                            }
-                            
-                        
-                    }
-                    .frame(height: UIScreen.main.bounds.height * 0.07) // Set header height
+                                        
+                                        VStack(alignment: .leading, spacing: 4) {
+                                            Text(user.username)
+                                                .font(.system(size: 16, weight: .bold))
+                                                .foregroundColor(Color(red: 0.49, green: 0.52, blue: 0.75))
+                                            
+                                            if let timestamp = user.latestMessageTimestamp {
+                                                Text(formatTimestamp(timestamp))
+                                                    .font(.system(size: 14))
+                                                    .foregroundColor(Color.gray)
+                                            }
+                                        }
+                                        
+                                        Spacer()
                     
-                    ZStack{
-                        
-                        /*ScrollView {
-                            LazyVStack(spacing: 8) {
-                                ForEach(0..<50, id: \.self) { index in
-                                    Image("pinnedperson")
-                                        .resizable()
-                                        .scaledToFit()
-                                        .padding(.top, index == 0 ? 8 : 0)
-                                }
-                            }
-                            .padding(.horizontal, 20) // Add horizontal padding for nicer layout
-                            .padding(.bottom, 0) // Ensure no extra padding at the bottom
-                        }*/
-                        ScrollView {
-                            LazyVStack(spacing: 8) {
-                                ForEach(vm.users) { user in
-                                    Button {
-                                        if let chatUser = vm.chatUser {
-                                            self.selectedUser = chatUser
-                                            self.chatUser = user
-                                            self.shouldNavigateToChatLogView.toggle()
-                                            vm.markMessageAsSeen(for: user.uid)
-                                        }
-                                    } label: {
-                                        ZStack {
-                                            if user.isPinned {
-                                                Image("pinnedperson")
-                                                    .resizable()
-                                                    .scaledToFit()
-                                                    .cornerRadius(16)
-                                            }
-                                            else {
-                                                Image("notpinnedperson")
-                                                    .resizable()
-                                                    .scaledToFit()
-                                                    .cornerRadius(16)
-                                            }
-
-                                            // Overlay Content
-                                            HStack(spacing: 16) {
-                                                // User Profile Image
-                                                WebImage(url: URL(string: user.profileImageUrl))
-                                                    .resizable()
-                                                    .scaledToFill()
-                                                    .frame(width: 45, height: 45)
-                                                    .clipShape(Circle())
-
-                                                VStack(alignment: .leading, spacing: 4) {
-                                                    // User Name
-                                                    Text(user.username)
-                                                        .font(.system(size: 16, weight: .bold))
-                                                        .foregroundColor(Color(red: 0.49, green: 0.52, blue: 0.75))
-
-                                                    // Latest Message Timestamp or Placeholder
-                                                    if let timestamp = user.latestMessageTimestamp {
-                                                        Text(formatTimestamp(timestamp))
-                                                            .font(.system(size: 14))
-                                                            .foregroundColor(Color.gray)
-                                                    } else {
-                                                        Text("")
-                                                            .font(.system(size: 14))
-                                                            .foregroundColor(Color.gray)
-                                                    }
-                                                }
-
-                                                Spacer()
-
-                                                // Unseen Message Indicator
-                                                if user.hasUnseenLatestMessage {
-                                                    Circle()
-                                                        .fill(Color.red)
-                                                        .frame(width: 12, height: 12)
-                                                }
-                                            }
-                                            .padding(.leading, 16)
-                                        }
-                                        .padding(.horizontal, 20)
-                                        .padding(.bottom, 0)
                                     }
+                                    .padding(.leading, 16)
                                 }
+                                .padding(.horizontal, 20)
                             }
-                            .padding(.top, 8)
                         }
                     }
+                    .padding(.top, UIScreen.main.bounds.height * 0.07 + 8) // Start 8 points below the header
+                }
+                
+                // Header (on top)
+                VStack {
+                    ZStack {
+                        Image("liuhaier")
+                            .resizable()
+                            .frame(width: UIScreen.main.bounds.width, height: UIScreen.main.bounds.height * 0.07 + safeAreaTopInset)
+                            .aspectRatio(nil, contentMode: .fill)
+                            .ignoresSafeArea()
+                        
+                        HStack {
+                            Image("spacerformainmessageviewtopleft")
+                                .resizable()
+                                .frame(width: 36, height: 36)
+                                .padding(.leading, 28)
+                            Spacer()
+                            Image("auroratext")
+                                .resizable()
+                                .scaledToFill()
+                                .frame(width: UIScreen.main.bounds.width * 0.1832,
+                                       height: UIScreen.main.bounds.height * 0.0198)
+                            Spacer()
+                            
+                            Button(action: {
+                                if let chatUser = vm.chatUser {
+                                    self.selectedUser = chatUser
+                                    shouldShowFriendRequests.toggle()
+                                }
+                            }) {
+                                ZStack {
+                                    Image("notificationbutton")
+                                        .resizable()
+                                        .frame(width: 36, height: 36)
+                                        .padding(.trailing, 28)
+                                    if vm.hasNewFriendRequest {
+                                        Image("reddot")
+                                            .resizable()
+                                            .scaledToFit()
+                                            .frame(width: 12, height: 12)
+                                            .offset(x: 1, y: -12)
+                                    }
+                                }
+                            }
+                        }
+                    }
+                    .frame(maxHeight: UIScreen.main.bounds.height * 0.07)
+                    
+                    Spacer()
                 }
             }
             .ignoresSafeArea(edges: .bottom)
@@ -370,14 +352,15 @@ struct MainMessagesView: View {
                 }
             }
         }
-        .onAppear{
+        .onAppear {
             vm.setupFriendListListener()
             vm.setupFriendRequestListener()
         }
-        .onDisappear{
+        .onDisappear {
             vm.stopListening()
         }
     }
+
     
     private var customNavBar: some View {
         HStack(spacing: 16) {
@@ -475,14 +458,22 @@ struct MainMessagesView: View {
                         }
                     } label: {
                         HStack(spacing: 16) {
-                            WebImage(url: URL(string: user.profileImageUrl))
-                                .resizable()
-                                .scaledToFill()
-                                .frame(width: 64, height: 64)
-                                .cornerRadius(64)
-                                .overlay(RoundedRectangle(cornerRadius: 64).stroke(Color.black, lineWidth: 1))
-                                .shadow(radius: 5)
-                            
+                            ZStack{
+                                WebImage(url: URL(string: user.profileImageUrl))
+                                    .resizable()
+                                    .scaledToFill()
+                                    .frame(width: 64, height: 64)
+                                    .cornerRadius(64)
+                                    .overlay(RoundedRectangle(cornerRadius: 64).stroke(Color.black, lineWidth: 1))
+                                    .shadow(radius: 5)
+                                if user.hasUnseenLatestMessage {
+                                    Image("reddot")
+                                        .resizable()
+                                        .scaledToFit()
+                                        .frame(width: 12, height: 12)
+                                        .offset(x: 2, y: -12)
+                                }
+                            }
                             VStack(alignment: .leading, spacing: 4) {
                                 Text(user.username)
                                     .font(.system(size: 16, weight: .bold))
@@ -500,11 +491,7 @@ struct MainMessagesView: View {
                                 }
                             }
                             Spacer()
-                            if user.hasUnseenLatestMessage {
-                                Circle()
-                                    .fill(Color.red)
-                                    .frame(width: 12, height: 12)
-                            }
+                            
                         }
                         .padding()
                         .background(user.isPinned ? Color.gray.opacity(0.2) : Color.clear)

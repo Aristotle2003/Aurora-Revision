@@ -24,6 +24,7 @@ class TutorialManager: ObservableObject {
 }
 
 struct TutorialView: View {
+    @AppStorage("SeenTutorial") private var SeenTutorial: Bool = false
     @State private var navigateToMainMessageView = false
     @State private var tutorialtext = ""
     @State private var bottext = ""
@@ -41,6 +42,7 @@ struct TutorialView: View {
                     HStack{
                         Button(action: {
                             saveTutorialSeenStatus()
+                            SeenTutorial = true
                             navigateToMainMessageView = true
                         }) {
                             Image("chatlogviewbackbutton")

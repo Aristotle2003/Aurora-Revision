@@ -16,20 +16,20 @@ class CustomTabNavigationViewModel: ObservableObject{
     
     func fetchAndStoreFCMToken() {
         guard let userID = FirebaseManager.shared.auth.currentUser?.uid else {
-                print("User not signed in.")
-                return
-            }
-            
-            Messaging.messaging().token { token, error in
-                if let token = token {
-                    self.storeFCMTokenToFirestore(token, userID: userID)
-                    print("Fetched and stored FCM Token: \(token)")
-                } else if let error = error {
-                    print("Error fetching FCM token: \(error)")
-                }
-            }
+            print("User not signed in.")
+            return
         }
         
+        Messaging.messaging().token { token, error in
+            if let token = token {
+                self.storeFCMTokenToFirestore(token, userID: userID)
+                print("Fetched and stored FCM Token: \(token)")
+            } else if let error = error {
+                print("Error fetching FCM token: \(error)")
+            }
+        }
+    }
+    
     private func storeFCMTokenToFirestore(_ token: String, userID: String) {
         let userRef = Firestore.firestore().collection("users").document(userID)
         userRef.setData(["fcmToken": token], merge: true) { error in
@@ -47,7 +47,7 @@ class CustomTabNavigationViewModel: ObservableObject{
             self.errorMessage = "Could not find firebase uid"
             return
         }
-
+        
         FirebaseManager.shared.firestore.collection("users").document(uid).getDocument { snapshot, error in
             if let error = error {
                 self.errorMessage = "Failed to fetch current user: \(error)"
@@ -71,14 +71,14 @@ class CustomTabNavigationViewModel: ObservableObject{
             self.errorMessage = "Could not find firebase uid"
             return
         }
-
+        
         // 如果已有监听器，先移除
         friendGroupListener?.remove()
         friendGroupListener = nil
-
+        
         // double to int64
         let lastCheckedTimestampInt64 = Int64(lastCheckedTimestamp)
-
+        
         friendGroupListener = FirebaseManager.shared.firestore
             .collection("response_to_prompt")
             .whereField("timestamp", isGreaterThan: Timestamp(seconds: lastCheckedTimestampInt64, nanoseconds: 0))
@@ -91,7 +91,7 @@ class CustomTabNavigationViewModel: ObservableObject{
                 guard let documents = snapshot?.documents else { return }
                 var hasNewLikes = false
                 var hasNewFriendGroupUpdates = false
-
+                
                 // Fetch friend list
                 self?.fetchFriendList { friendUIDs in
                     for document in documents {
@@ -99,12 +99,12 @@ class CustomTabNavigationViewModel: ObservableObject{
                         let authorUid = data["uid"] as? String ?? ""
                         _ = document.documentID
                         let likes = data["likes"] as? Int ?? 0
-
+                        
                         // 检查朋友圈更新
                         if friendUIDs.contains(authorUid) && authorUid != currentUserUid {
                             hasNewFriendGroupUpdates = true
                         }
-
+                        
                         // 检查点赞更新
                         if authorUid == currentUserUid {
                             if likes > self?.lastLikesCount ?? 0 {
@@ -114,7 +114,7 @@ class CustomTabNavigationViewModel: ObservableObject{
                             self?.lastLikesCount = likes
                         }
                     }
-
+                    
                     DispatchQueue.main.async {
                         self?.hasNewFriendGroup = (hasNewFriendGroupUpdates || hasNewLikes)
                     }
@@ -126,7 +126,7 @@ class CustomTabNavigationViewModel: ObservableObject{
             self.errorMessage = "Could not find firebase uid"
             return
         }
-
+        
         FirebaseManager.shared.firestore
             .collection("friends")
             .document(uid)
@@ -136,12 +136,12 @@ class CustomTabNavigationViewModel: ObservableObject{
                     print("Failed to fetch friend list: \(error)")
                     return
                 }
-
+                
                 guard let documents = snapshot?.documents else {
                     print("No friend list documents found")
                     return
                 }
-
+                
                 let friendUIDs = documents.map { $0.documentID }
                 completion(friendUIDs)
             }
@@ -150,12 +150,12 @@ class CustomTabNavigationViewModel: ObservableObject{
 
 
 struct CustomTabNavigationView: View {
-    @State private var currentView: String = "Home" 
+    @State private var currentView: String = "Home"
     
     @ObservedObject private var vm = CustomTabNavigationViewModel()
     @StateObject private var chatLogViewModel = ChatLogViewModel(chatUser: nil)
     @State private var currentUser: ChatUser? = nil
-
+    
     var body: some View {
         ZStack{
             VStack {
@@ -201,7 +201,7 @@ struct CustomNavBar: View {
     @Binding var currentView: String
     @ObservedObject private var vm = CustomTabNavigationViewModel()
     
-
+    
     var body: some View {
         ZStack{
             Image("navigationbar")
@@ -217,18 +217,21 @@ struct CustomNavBar: View {
                     let currentDate = Date()
                     vm.lastCheckedTimestamp = currentDate.timeIntervalSince1970
                 }) {
-                    VStack {
+                    
+                    ZStack{
                         Image("dailyaurorabutton")
                             .resizable()
                             .scaledToFit()
                             .frame(width: 36, height: 36)
                         if vm.hasNewFriendGroup {
-                            Circle()
-                                .fill(Color.red)
+                            Image("reddot")
+                                .resizable()
+                                .scaledToFit()
                                 .frame(width: 12, height: 12)
-                                .offset(x: 30, y: -10)
+                                .offset(x: 14, y: -12)
                         }
                     }
+                    .frame(width: 36, height: 36)
                 }
                 
                 Button(action: {

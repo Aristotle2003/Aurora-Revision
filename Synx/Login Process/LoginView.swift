@@ -19,6 +19,8 @@ import CryptoKit
 
 struct LoginView: View {
     @Environment(\.window) var window
+    @AppStorage("isLoggedIn") private var isLoggedIn: Bool = false
+    @AppStorage("SeenTutorial") private var SeenTutorial: Bool = false
     @State var isLogin = false
     
     @State private var isPostEmailVerification = false
@@ -41,10 +43,10 @@ struct LoginView: View {
     
     
     var body: some View {
-        if isLogin && hasSeenTutorial{
+        if isLoggedIn && SeenTutorial{
             CustomTabNavigationView()
         }
-        else if isLogin && !hasSeenTutorial{
+        else if isLoggedIn && !SeenTutorial{
             TutorialView()
         }
         else{
@@ -311,6 +313,7 @@ struct LoginView: View {
                         if (snapshot?.data()) != nil {
                             checkTutorialStatus()
                             self.isLogin = true
+                            self.isLoggedIn = true
                         // New user set up profile
                         } else {
                             self.isPostEmailVerification = true
@@ -369,6 +372,7 @@ struct LoginView: View {
                         if (snapshot?.data()) != nil {
                             checkTutorialStatus()
                             self.isLogin = true
+                            self.isLoggedIn = true
                         // New user set up profile
                         } else {
                             self.isPostEmailVerification = true
@@ -388,10 +392,13 @@ struct LoginView: View {
                     if let error = error {
                         print("Failed to fetch tutorial status: \(error)")
                         hasSeenTutorial = false
+                        SeenTutorial = false
                     } else if let data = snapshot?.data(), let seen = data["seen_tutorial"] as? Bool {
                         hasSeenTutorial = seen
+                        SeenTutorial = seen
                     } else {
                         hasSeenTutorial = false
+                        SeenTutorial = false
                     }
                 }
         }
