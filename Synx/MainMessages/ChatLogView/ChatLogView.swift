@@ -123,7 +123,7 @@ class ChatLogViewModel: ObservableObject {
     func startAutoSend() {
         timer?.invalidate()
         timer = nil
-        timer = Timer.scheduledTimer(withTimeInterval: 0.3, repeats: true) { _ in
+        timer = Timer.scheduledTimer(withTimeInterval: 3, repeats: true) { _ in
             print(self.chatText)
             self.handleSend()
         }
@@ -482,6 +482,9 @@ struct ChatLogView: View {
                                                     .font(.subheadline)
                                                     .foregroundColor(.secondary)
                                             }
+                                            Text("Active now")
+                                                .font(.system(size: 12))
+                                                .foregroundColor(Color.gray)
                                         }
                                         .padding(.leading, 7)
                                         Spacer()
@@ -491,43 +494,51 @@ struct ChatLogView: View {
                                     
                                     // Scrollable Text Section
                                     GeometryReader { geometry in
-                                        VStack {
-                                            Spacer(minLength: 0) // Top Spacer
-                                            
-                                            if let recipientMessage = vm.latestRecipientMessage {
-                                                ScrollView {
-                                                    VStack {
-                                                        // Calculate dynamic spacing based on the number of lines
-                                                        Spacer(minLength: {
-                                                            let maxWidth = geometry.size.width - 40
-                                                            let fontHeight = UIFont.systemFont(ofSize: 18).lineHeight
-                                                            let lineCount = recipientMessage.text.boundingRect(
-                                                                with: CGSize(width: maxWidth, height: .infinity),
-                                                                options: [.usesLineFragmentOrigin, .usesFontLeading],
-                                                                attributes: [.font: UIFont.systemFont(ofSize: 18)],
-                                                                context: nil
-                                                            ).height / fontHeight
+                                        ScrollViewReader{ scrollProxy in
+                                            VStack {
+                                                Spacer(minLength: 0) // Top Spacer
+                                                
+                                                if let recipientMessage = vm.latestRecipientMessage {
+                                                    ScrollView {
+                                                        VStack {
+                                                            // Calculate dynamic spacing based on the number of lines
+                                                            Spacer(minLength: {
+                                                                let maxWidth = geometry.size.width - 40
+                                                                let fontHeight = UIFont.systemFont(ofSize: 18).lineHeight
+                                                                let lineCount = recipientMessage.text.boundingRect(
+                                                                    with: CGSize(width: maxWidth, height: .infinity),
+                                                                    options: [.usesLineFragmentOrigin, .usesFontLeading],
+                                                                    attributes: [.font: UIFont.systemFont(ofSize: 18)],
+                                                                    context: nil
+                                                                ).height / fontHeight
+                                                                
+                                                                if lineCount <= 1 {
+                                                                    return max((geometry.size.height - 20) / 2, 0)
+                                                                } else if lineCount == 2 {
+                                                                    return max((geometry.size.height - 45) / 1.7, 0)
+                                                                } else {
+                                                                    return 0 // For 3+ lines, no additional spacer
+                                                                }
+                                                            }())
                                                             
-                                                            if lineCount <= 1 {
-                                                                return max((geometry.size.height - 20) / 2, 0)
-                                                            } else if lineCount == 2 {
-                                                                return max((geometry.size.height - 45) / 1.7, 0)
-                                                            } else {
-                                                                return 0 // For 3+ lines, no additional spacer
-                                                            }
-                                                        }())
-                                                        
-                                                        Text(recipientMessage.text)
-                                                            .font(Font.system(size: 18))
-                                                            .multilineTextAlignment(.center)
-                                                            .foregroundColor(Color(red: 0.553, green: 0.525, blue: 0.525))
-                                                            .frame(maxWidth: geometry.size.width - 40)
-                                                            .padding(.horizontal, 20)
+                                                            Text(recipientMessage.text)
+                                                                .font(Font.system(size: 18))
+                                                                .multilineTextAlignment(.center)
+                                                                .foregroundColor(Color(red: 0.553, green: 0.525, blue: 0.525))
+                                                                .frame(maxWidth: geometry.size.width - 40)
+                                                                .padding(.horizontal, 20)
+                                                        }
+                                                    }
+                                                    .onChange(of: recipientMessage.text) { _ in
+                                                        // Scroll to the latest message when the text changes
+                                                        withAnimation {
+                                                            scrollProxy.scrollTo("recipientMessage", anchor: .bottom)
+                                                        }
                                                     }
                                                 }
+                                                
+                                                Spacer(minLength: 0) // Bottom Spacer
                                             }
-                                            
-                                            Spacer(minLength: 0) // Bottom Spacer
                                         }
                                     }
                                     
@@ -592,22 +603,79 @@ struct ChatLogView: View {
                                 VStack {
                                     Spacer() // Push TextEditor down
                                     
-                                    ScrollView {
-                                        TextEditor(text: $vm.chatText)
+                                    ZStack(alignment: .center) {
+                                        GeometryReader { geometry in
+                                            ScrollViewReader { scrollProxy in
+                                                ScrollView {
+                                                    VStack {
+                                                        // Dynamic vertical spacer
+                                                        Spacer(minLength: {
+                                                            let maxWidth = geometry.size.width - 40
+                                                            let fontHeight = UIFont.systemFont(ofSize: 18).lineHeight
+                                                            let lineCount = vm.chatText.boundingRect(
+                                                                with: CGSize(width: maxWidth, height: .infinity),
+                                                                options: [.usesLineFragmentOrigin, .usesFontLeading],
+                                                                attributes: [.font: UIFont.systemFont(ofSize: 18)],
+                                                                context: nil
+                                                            ).height / fontHeight
+                                                            
+                                                            if lineCount <= 1 {
+                                                                return max((geometry.size.height - 20) / 2, 0)
+                                                            } else if lineCount == 2 {
+                                                                return max((geometry.size.height - 45) / 1.7, 0)
+                                                            } else {
+                                                                return 0 // No additional spacer for 3+ lines
+                                                            }
+                                                        }())
+                                                        
+                                                        // Centered TextEditor
+                                                        TextEditor(text: $vm.chatText)
+                                                            .font(Font.system(size: 18))
+                                                            .foregroundColor(Color(red: 0.553, green: 0.525, blue: 0.525))
+                                                            .focused($isInputFocused)
+                                                            .multilineTextAlignment(.center)
+                                                            .background(Color.clear)
+                                                            .scrollContentBackground(.hidden)
+                                                            .frame(maxWidth: .infinity, minHeight: 50)
+                                                            .padding(.horizontal, 20)
+                                                            .tint(Color.gray)
+                                                            .id("TextEditor") // Assign an ID for scrolling
+                                                    }
+                                                    .onChange(of: vm.chatText) { _ in
+                                                        // Automatically scroll to the cursor
+                                                        withAnimation {
+                                                            scrollProxy.scrollTo("TextEditor", anchor: .bottom)
+                                                        }
+                                                    }
+                                                }
+                                                .onTapGesture {
+                                                    isInputFocused = false // Dismiss keyboard when tapping outside
+                                                }
+                                            }
+                                        }
+                                        // Placeholder Text
+                                        if vm.chatText.isEmpty {
+                                            Text("Type a message...")
+                                                .foregroundColor(Color.gray.opacity(0.5))
+                                                .font(Font.system(size: 18))
+                                                .padding(.horizontal, 4)
+                                        }
+                                        
+                                        /*TextEditor(text: $vm.chatText)
                                             .font(Font.system(size: 18))
                                             .foregroundColor(Color(red: 0.553, green: 0.525, blue: 0.525))
                                             .focused($isInputFocused)
-                                            .multilineTextAlignment(.center) // Center-align text inside TextEditor
-                                            .background(Color.clear) // Transparent background
-                                            .scrollContentBackground(.hidden) // Ensures scrollable area is transparent
-                                            .frame(maxWidth: .infinity, minHeight: 50) // Flexible width and minimum height
-                                            .padding(.horizontal, 20) // Add spacing from sides
+                                            .multilineTextAlignment(.center)
+                                            .background(Color.clear)
+                                            .scrollContentBackground(.hidden)
+                                            .frame(maxWidth: .infinity, minHeight: 50)
+                                            .padding(.horizontal, 20)*/
                                     }
-                                    .frame(height: 60) // Set the height of the ScrollView
+                                    .frame(height: 60)
                                     .padding(.top, 5)
                                     .padding(.horizontal, 20)
                                     
-                                    Spacer() // Push TextEditor
+                                    Spacer()
                                 }
                                 .onAppear {
                                     isInputFocused = true // Auto-focus the TextEditor

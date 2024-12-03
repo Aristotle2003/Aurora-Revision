@@ -173,7 +173,7 @@ struct PhoneVerificationView: View {
                 .stroke(Color.blue.opacity(0.3), lineWidth: 1)
         )
     }
-
+    
     
     private var sendCodeButton: some View {
         // Button for sending code
@@ -234,8 +234,7 @@ struct PhoneVerificationView: View {
         if !isPreEmailVerification {
             checkIfPhoneNumberExists(phoneNumber: newPhone) { exists in
                 if exists {
-                    self.errorMessage = "This phone number is already in use."
-                    print("[Error]: \(self.errorMessage)")
+                    self.errorMessage = "This phone number is already in use. Log in or choose another one"
                 } else {
                     self.sendVerificationCode(to: newPhone)
                 }
@@ -265,8 +264,6 @@ struct PhoneVerificationView: View {
         }
     }
     
-    
-    
     private func verifyCode() {
         errorMessage = ""
         
@@ -282,13 +279,11 @@ struct PhoneVerificationView: View {
         
         // Google or Apple already logged in, connect to Phone
         if !isPreEmailVerification, let currentUser = FirebaseManager.shared.auth.currentUser {
-            Linker.linkAccounts(currentUser: currentUser, credential: credential) { success, error in
-                if success {
-                    dismiss()
-                } else {
-                    errorMessage = error ?? "Unknown error occurred."
-                }
-            }
+            previousUser = currentUser
+            print("[Log]: Attempting to link credential to user \(currentUser.uid)")
+            
+            // Link current google or apple to the phone login
+            self.linkAccounts(currentUser: currentUser, credential: credential)
         } else {
             // Regular phone sign-in flow
             regularPhoneSignIn(credential: credential)
@@ -322,7 +317,7 @@ struct PhoneVerificationView: View {
             completion(true) // Phone number already exists
         }
     }
-
+    
     
     
     // Regular Phone verify
@@ -463,25 +458,25 @@ struct PhoneVerificationView: View {
     }
     
     private func checkTutorialStatus() {
-            guard let uid = FirebaseManager.shared.auth.currentUser?.uid else { return }
-
-            FirebaseManager.shared.firestore
-                .collection("users")
-                .document(uid)
-                .getDocument { snapshot, error in
-                    if let error = error {
-                        print("Failed to fetch tutorial status: \(error)")
-                        hasSeenTutorial = false
-                        SeenTutorial = false
-                    } else if let data = snapshot?.data(), let seen = data["seen_tutorial"] as? Bool {
-                        hasSeenTutorial = seen
-                        SeenTutorial = seen
-                    } else {
-                        hasSeenTutorial = false
-                        SeenTutorial = false
-                    }
+        guard let uid = FirebaseManager.shared.auth.currentUser?.uid else { return }
+        
+        FirebaseManager.shared.firestore
+            .collection("users")
+            .document(uid)
+            .getDocument { snapshot, error in
+                if let error = error {
+                    print("Failed to fetch tutorial status: \(error)")
+                    hasSeenTutorial = false
+                    SeenTutorial = false
+                } else if let data = snapshot?.data(), let seen = data["seen_tutorial"] as? Bool {
+                    hasSeenTutorial = seen
+                    SeenTutorial = seen
+                } else {
+                    hasSeenTutorial = false
+                    SeenTutorial = false
                 }
-        }
+            }
+    }
     
     
     

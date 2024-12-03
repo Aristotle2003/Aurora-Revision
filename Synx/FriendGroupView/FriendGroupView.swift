@@ -8,15 +8,21 @@ class FriendGroupViewModel: ObservableObject {
     @Published var responseText = ""
     @Published var responses = [FriendResponse]()
     @Published var showResponseInput = false
-    @Published var currentUserHasPosted = true  // 新增属性
+    @Published var currentUserHasPosted = true
     
     private var selectedUser: ChatUser
+    private var listener: ListenerRegistration?
     
     init(selectedUser: ChatUser) {
         self.selectedUser = selectedUser
-        fetchCurrentUserHasPostedStatus()
         fetchPrompt()
         fetchLatestResponses(for: selectedUser.uid)
+        setupCurrentUserHasPostedListener()
+    }
+    
+    deinit {
+        // 移除监听器以防止内存泄漏
+        listener?.remove()
     }
     
     func fetchPrompt() {
@@ -48,11 +54,10 @@ class FriendGroupViewModel: ObservableObject {
                 DispatchQueue.main.async {
                     self.responseText = ""
                     self.showResponseInput = false
-                    self.currentUserHasPosted = true
                 }
                 print("Response submitted successfully")
-                self.updateHasPostedStatus(for: userId)  // 更新 hasPosted 状态
-                self.fetchLatestResponses(for: userId)  // Refresh responses after submission
+                // 更新 hasPosted 状态
+                self.updateHasPostedStatus(for: userId)
             } else {
                 print("Failed to submit response: \(error?.localizedDescription ?? "Unknown error")")
             }
@@ -63,7 +68,6 @@ class FriendGroupViewModel: ObservableObject {
         var allResponses: [FriendResponse] = []
         let group = DispatchGroup()
         
-        // 获取当前用户的响应
         group.enter()
         fetchLatestResponse(for: userId, email: self.selectedUser.email, profileImageUrl: self.selectedUser.profileImageUrl) { response in
             if let response = response {
@@ -72,7 +76,6 @@ class FriendGroupViewModel: ObservableObject {
             group.leave()
         }
         
-        // 获取好友的响应
         FirebaseManager.shared.firestore.collection("friends")
             .document(userId)
             .collection("friend_list")
@@ -146,25 +149,24 @@ class FriendGroupViewModel: ObservableObject {
             }
     }
     
-    func fetchCurrentUserHasPostedStatus() {
+    func setupCurrentUserHasPostedListener() {
         guard let uid = FirebaseManager.shared.auth.currentUser?.uid else { return }
         
-        FirebaseManager.shared.firestore.collection("users").document(uid).getDocument { snapshot, error in
-            if let error = error {
-                print("Failed to fetch current user: \(error.localizedDescription)")
-                return
-            }
-            
-            DispatchQueue.main.async {
-                if let data = snapshot?.data() {
-                    // If `hasPosted` is present, use its value; otherwise, default to false
-                    self.currentUserHasPosted = data["hasPosted"] as? Bool ?? false
-                } else {
-                    // Explicitly set to false if document does not exist or has no data
-                    self.currentUserHasPosted = false
+        listener = FirebaseManager.shared.firestore.collection("users").document(uid)
+            .addSnapshotListener { snapshot, error in
+                if let error = error {
+                    print("Failed to listen to current user's post status: \(error.localizedDescription)")
+                    return
+                }
+                
+                DispatchQueue.main.async {
+                    if let data = snapshot?.data() {
+                        self.currentUserHasPosted = data["hasPosted"] as? Bool ?? false
+                    } else {
+                        self.currentUserHasPosted = false
+                    }
                 }
             }
-        }
     }
 
     func updateHasPostedStatus(for userId: String) {
@@ -176,14 +178,11 @@ class FriendGroupViewModel: ObservableObject {
                 return
             }
             print("User's hasPosted status updated successfully.")
-            
-            self.fetchCurrentUserHasPostedStatus()
         }
     }
     
-    // 点赞或取消点赞
     func toggleLike(for response: FriendResponse) {
-        guard let currentUserId = FirebaseManager.shared.auth.currentUser?.uid else {return}
+        guard let currentUserId = FirebaseManager.shared.auth.currentUser?.uid else { return }
         
         let responseRef = FirebaseManager.shared.firestore
             .collection("response_to_prompt")
@@ -218,23 +217,24 @@ struct FriendResponse: Identifiable {
     let timestamp: Date
     var likes: Int
     var likedByCurrentUser: Bool
-    let documentId: String // 新增，以便在数据库操作中使用
+    let documentId: String
 }
 
 struct FriendGroupView: View {
     @ObservedObject var vm: FriendGroupViewModel
-    @Environment(\.presentationMode) var presentationMode
-    @State var navigateToMainMessage = false
+    @State private var topCardIndex = 0
+    @State private var offset = CGSize.zero
+    @State private var rotationDegrees = [Double]()
     let selectedUser: ChatUser
-    
+
     init(selectedUser: ChatUser) {
         self.selectedUser = selectedUser
         _vm = ObservedObject(wrappedValue: FriendGroupViewModel(selectedUser: selectedUser))
+        _rotationDegrees = State(initialValue: (0..<20).map { _ in Double.random(in: -15...15) })
     }
-    
+
     var body: some View {
         VStack(alignment: .leading, spacing: 16) {
-            // Prompt display
             Text(vm.promptText)
                 .font(.headline)
                 .padding()
@@ -242,115 +242,186 @@ struct FriendGroupView: View {
                 .background(RoundedRectangle(cornerRadius: 12).fill(Color.gray.opacity(0.1)))
                 .padding(.bottom, 8)
             
-            // Reply button and input
             Button("Reply") {
                 vm.showResponseInput = true
             }
             .frame(maxWidth: .infinity, alignment: .leading)
-            
-            if vm.showResponseInput {
-                VStack(alignment: .leading) {
-                    TextField("Write your response...", text: $vm.responseText)
-                        .textFieldStyle(RoundedBorderTextFieldStyle())
-                        .padding(.horizontal)
-                    Button("Submit") {
-                        vm.submitResponse(for: selectedUser.uid)
-                    }
-                    .frame(maxWidth: .infinity, alignment: .leading)
-                    .padding(.top, 4)
-                }
-            }
-            
-            // Scroll view for responses
-            ScrollView {
-                VStack(alignment: .leading, spacing: 16) {
-                    if vm.currentUserHasPosted {
-                        // 在 ForEach 循环中，修改显示每个响应的视图
-                        ForEach(vm.responses) { response in
-                            HStack(alignment: .top, spacing: 12) {
-                                // 头像
-                                WebImage(url: URL(string: response.profileImageUrl))
-                                    .resizable()
-                                    .scaledToFill()
-                                    .frame(width: 40, height: 40)
-                                    .clipShape(Circle())
-                                    .overlay(Circle().stroke(Color.gray.opacity(0.5), lineWidth: 1))
-                                
-                                VStack(alignment: .leading, spacing: 4) {
-                                    // 用户名和时间戳
-                                    HStack {
-                                        Text(response.email)
-                                            .font(.headline)
-                                        Spacer()
-                                        Text(response.timestamp, style: .time)
-                                            .font(.footnote)
-                                            .foregroundColor(.gray)
-                                    }
-                                    
-                                    // 消息文本
-                                    Text(response.latestMessage)
-                                        .font(.body)
-                                        .foregroundColor(.primary)
-                                        .fixedSize(horizontal: false, vertical: true)
-                                        .padding(.top, 2)
-                                    
-                                    // 点赞按钮和数量
-                                    HStack {
-                                        Button(action: {
-                                            vm.toggleLike(for: response)
-                                        }) {
-                                            Image(systemName: response.likedByCurrentUser ? "heart.fill" : "heart")
-                                                .foregroundColor(response.likedByCurrentUser ? .red : .gray)
-                                        }
-                                        Text("\(response.likes)")
-                                            .font(.subheadline)
+
+            ZStack {
+                ForEach(vm.responses.indices, id: \.self) { index in
+                    if index >= topCardIndex {
+                        ResponseCard(response: vm.responses[index], cardColor: getCardColor(index: index), likeAction: {
+                            vm.toggleLike(for: vm.responses[index])
+                        })
+                        .offset(x: index == topCardIndex ? offset.width : 0, y: CGFloat(index - topCardIndex) * 10)
+                        .rotationEffect(.degrees(index == topCardIndex ? Double(offset.width / 20) : rotationDegrees[index]), anchor: .center)
+                        .scaleEffect(index == topCardIndex ? 1.0 : 0.95)
+                        .animation(.spring(), value: offset)
+                        .zIndex(Double(vm.responses.count - index))
+                        .gesture(
+                            DragGesture()
+                                .onChanged { gesture in
+                                    if index == topCardIndex {
+                                        offset = gesture.translation
                                     }
                                 }
-                            }
-                            Divider()
-                                .padding(.vertical, 8)
-                        }
-                    } else {
-                        // 用户未发布，显示锁定视图
-                        VStack {
-                            Spacer() // 在顶部添加 Spacer，增加空白空间，使得居中
-                            Image(systemName: "lock.fill")
-                                .resizable()
-                                .scaledToFit()
-                                .frame(width: 100, height: 100)
-                                .foregroundColor(.gray)
-                            
-                            Text("发布一条动态以解锁好友圈")
-                                .font(.headline)
-                                .padding()
-                            
-                            Button(action: {
-                                vm.showResponseInput = true
-                            }) {
-                                Text("立即发布")
-                                    .foregroundColor(.white)
-                                    .padding()
-                                    .background(Color.blue)
-                                    .cornerRadius(8)
-                            }
-                            Spacer() // 在底部添加 Spacer，增加空白空间，使得居中
-                        }
-                        .frame(maxWidth: .infinity, maxHeight: .infinity) // 让整个 VStack 充满可用的空间
+                                .onEnded { _ in
+                                    if abs(offset.width) > 150 {
+                                        withAnimation {
+                                            offset = CGSize(width: offset.width > 0 ? 500 : -500, height: 0)
+                                            topCardIndex += 1
+                                            if topCardIndex >= vm.responses.count {
+                                                topCardIndex = 0
+                                            }
+                                            offset = .zero
+                                        }
+                                    } else {
+                                        withAnimation {
+                                            offset = .zero
+                                        }
+                                    }
+                                }
+                        )
+                        .padding(8)
                     }
                 }
-            }
-        }
-        .padding(.horizontal)
-        .navigationBarHidden(true) // Hide navigation button
-        .gesture(
-            DragGesture().onEnded { value in
-                if value.translation.width < -100 { // Detect right swipe
-                    self.navigateToMainMessage.toggle()
+
+                if !vm.currentUserHasPosted {
+                    Color.white.opacity(0.5)
+                        .frame(maxWidth: .infinity, maxHeight: .infinity)
+                        .allowsHitTesting(false)
+                    
+                    VStack {
+                        Spacer()
+                        Image(systemName: "lock.fill")
+                            .resizable()
+                            .scaledToFit()
+                            .frame(width: 100, height: 100)
+                            .foregroundColor(.gray)
+                        
+                        Text("发布一条动态以解锁好友圈")
+                            .font(.headline)
+                            .padding()
+                        
+                        Button(action: {
+                            vm.showResponseInput = true
+                        }) {
+                            Text("立即发布")
+                                .foregroundColor(.white)
+                                .padding()
+                                .background(Color.blue)
+                                .cornerRadius(8)
+                        }
+                        Spacer()
+                    }
+                    .frame(maxWidth: .infinity, maxHeight: .infinity)
+                    .opacity(0.8)
+                    .zIndex(100)
+                    .background(Color.white.opacity(0.8))
                 }
             }
-        )
-//        .navigationDestination(isPresented: $navigateToMainMessage){
-//            MainMessagesView()
-//        }
+            .frame(maxWidth: .infinity, maxHeight: 450)
+        }
+        .padding(.horizontal)
+        .navigationBarHidden(true)
+        .fullScreenCover(isPresented: $vm.showResponseInput) {
+            FullScreenResponseInputView(vm: vm, selectedUser: selectedUser)
+        }
+    }
+    
+    func getCardColor(index: Int) -> Color {
+        let colors = [Color.mint, Color.cyan, Color.pink]
+        return colors[index % colors.count]
+    }
+}
+
+struct ResponseCard: View {
+    var response: FriendResponse
+    var cardColor: Color
+    var likeAction: () -> Void
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 12) {
+            Text(response.latestMessage)
+                .font(.body)
+                .foregroundColor(.primary)
+                .fixedSize(horizontal: false, vertical: true)
+                .padding(.top, 2)
+
+            Spacer()
+
+            HStack(alignment: .center) {
+                WebImage(url: URL(string: response.profileImageUrl))
+                    .resizable()
+                    .scaledToFill()
+                    .frame(width: 40, height: 40)
+                    .clipShape(Circle())
+                    .overlay(Circle().stroke(Color.gray.opacity(0.5), lineWidth: 1))
+                
+                VStack(alignment: .leading) {
+                    Text(response.email)
+                        .font(.headline)
+                    Text(response.timestamp, style: .time)
+                        .font(.footnote)
+                        .foregroundColor(.gray)
+                }
+                Spacer()
+                
+                HStack {
+                    Button(action: {
+                        likeAction()
+                    }) {
+                        Image(systemName: response.likedByCurrentUser ? "heart.fill" : "heart")
+                            .foregroundColor(response.likedByCurrentUser ? .red : .gray)
+                            .scaleEffect(response.likedByCurrentUser ? 1.2 : 1.0)
+                            .animation(.easeIn, value: response.likedByCurrentUser)
+                    }
+                    Text("\(response.likes)")
+                        .font(.subheadline)
+                }
+            }
+            .padding(.top, 8)
+        }
+        .padding()
+        .frame(maxWidth: .infinity, minHeight: 200)
+        .background(cardColor)
+        .cornerRadius(25)
+        .shadow(color: .gray.opacity(0.4), radius: 10, x: 0, y: 5)
+    }
+}
+
+struct FullScreenResponseInputView: View {
+    @ObservedObject var vm: FriendGroupViewModel
+    let selectedUser: ChatUser
+
+    var body: some View {
+        NavigationView {
+            VStack(alignment: .leading) {
+                Text("Today's prompt:")
+                    .font(.headline)
+                    .padding(.bottom, 4)
+                Text(vm.promptText)
+                    .font(.body)
+                    .padding(.bottom, 20)
+                
+                TextField("Write your response...", text: $vm.responseText)
+                    .textFieldStyle(RoundedBorderTextFieldStyle())
+                    .padding(.horizontal)
+
+                Button("Submit") {
+                    vm.submitResponse(for: selectedUser.uid)
+                }
+                .frame(maxWidth: .infinity, alignment: .leading)
+                .padding(.top, 4)
+                .padding(.horizontal)
+
+                Spacer()
+            }
+            .padding()
+            .navigationTitle("Reply to Prompt")
+            .navigationBarItems(leading: Button("Cancel") {
+                vm.showResponseInput = false
+            })
+        }
     }
 }

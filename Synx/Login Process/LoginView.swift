@@ -43,10 +43,10 @@ struct LoginView: View {
     
     
     var body: some View {
-        if isLoggedIn && SeenTutorial{
+        if isLogin && hasSeenTutorial{
             CustomTabNavigationView()
         }
-        else if isLoggedIn && !SeenTutorial{
+        else if isLogin && !hasSeenTutorial{
             TutorialView()
         }
         else{

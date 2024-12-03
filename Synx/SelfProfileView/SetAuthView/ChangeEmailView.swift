@@ -16,12 +16,12 @@ struct ChangeEmailView: View {
     @Environment(\.dismiss) var dismiss
     
     @State private var currentUser: User? = FirebaseManager.shared.auth.currentUser
+    @State private var hasEmail: Bool = false
+    @State private var hasPhone: Bool = false
     
     @State private var nonce: String? // Apple Sign-In nonce
     
     @State private var errorMessage: String = ""
-    
-    
     
     
     var body: some View {
@@ -42,7 +42,7 @@ struct ChangeEmailView: View {
                 VStack(spacing: 20) {
                     googleSignInButton
                     appleSignInButton
-                    changePhoneNumberButton
+                    changePhoneNavigationLink
                 }
                 .padding(.horizontal)
                 
@@ -55,10 +55,16 @@ struct ChangeEmailView: View {
             }
             .padding()
             .navigationTitle("Link Accounts")
+            .navigationBarItems(leading: Button("Cancel") {
+                dismiss()
+            })
+            .onAppear {
+                checkUserProviders()
+            }
         }
     }
     
-    // MARK: Google Sign-In Button
+    // Google Sign-In Button
     private var googleSignInButton: some View {
         Button {
             handleGoogleSignIn()
@@ -78,7 +84,7 @@ struct ChangeEmailView: View {
         }
     }
     
-    // MARK: Apple Sign-In Button
+    // Apple Sign-In Button
     private var appleSignInButton: some View {
         SignInWithAppleButton(.continue) { request in
             let nonce = randomNonceString()
@@ -98,11 +104,9 @@ struct ChangeEmailView: View {
         .cornerRadius(12)
     }
     
-    // MARK: Change Phone Number Button
-    private var changePhoneNumberButton: some View {
-        Button {
-            handleChangePhoneNumber()
-        } label: {
+    // Change Phone Number Button
+    private var changePhoneNavigationLink: some View {
+        NavigationLink(destination: ChangePhoneView()) {
             HStack {
                 Image(systemName: "phone")
                     .foregroundColor(.blue)
@@ -126,59 +130,56 @@ struct ChangeEmailView: View {
     
     
     
-
     
-    // MARK: Google Sign-In Handler
+    
+    // MARK: Functions start here
+    // Google Sign-In Handler
     private func handleGoogleSignIn() {
         guard let clientID = FirebaseManager.shared.auth.app?.options.clientID else {
             errorMessage = "Error getting client ID"
             return
         }
-        
+
         // Create Google Sign-In configuration object.
         let config = GIDConfiguration(clientID: clientID)
         GIDSignIn.sharedInstance.configuration = config
-        
+
         guard let windowScene = UIApplication.shared.connectedScenes.first as? UIWindowScene,
               let rootViewController = windowScene.windows.first?.rootViewController else {
             errorMessage = "Error getting root view controller"
             return
         }
-        
+
         // Start the sign-in flow.
         GIDSignIn.sharedInstance.signIn(withPresenting: rootViewController) { result, error in
             if let error = error {
                 errorMessage = "Error signing in with Google: \(error.localizedDescription)"
                 return
             }
-            
+
             guard let user = result?.user,
                   let idToken = user.idToken?.tokenString else {
                 errorMessage = "Error getting user data"
                 return
             }
-            
+
             let credential = GoogleAuthProvider.credential(
                 withIDToken: idToken,
                 accessToken: user.accessToken.tokenString
             )
-            
-            if let currentUser = currentUser {
-                Linker.linkAccounts(currentUser: currentUser, credential: credential) { success, error in
-                    if success {
-                        dismiss()
-                    } else {
-                        errorMessage = error ?? "Unknown error occurred."
-                    }
-                }
-            } else {
-                errorMessage = "No logged-in user found for linking."
-            }
+
+            // Handle linking logic based on the current account state
+            handleLinking(with: credential, providerID: "google.com")
         }
     }
-        
+
     
-    // MARK: Apple Sign-In Handler
+
+    
+    
+    
+    
+    // Apple Sign-In Handler
     private func handleAppleSignIn(_ authorization: ASAuthorization) {
         if let appleIDCredential = authorization.credential as? ASAuthorizationAppleIDCredential {
             guard let nonce = nonce else {
@@ -192,38 +193,174 @@ struct ChangeEmailView: View {
                 errorMessage = "Unable to serialize token string from data: \(appleIDToken.debugDescription)"
                 return
             }
-            
+
             let credential = OAuthProvider.appleCredential(
                 withIDToken: idTokenString,
                 rawNonce: nonce,
                 fullName: appleIDCredential.fullName
             )
-            
-            // Immediately link accounts
-            if let currentUser = currentUser {
-                Linker.linkAccounts(currentUser: currentUser, credential: credential) { success, error in
-                    if success {
-                        dismiss()
-                    } else {
-                        errorMessage = error ?? "Unknown error occurred."
-                    }
-                }
-            } else {
-                errorMessage = "No logged-in user found for linking."
-            }
+
+            // Handle linking logic based on the current account state
+            handleLinking(with: credential, providerID: "apple.com")
         }
     }
     
     
-    // MARK: Change Phone Number Handler
-    private func handleChangePhoneNumber() {
-        print("Change Phone Number tapped")
+    
+    
+    
+    
+    // Main function to handle linking and unlinking logic
+    private func handleLinking(with credential: AuthCredential, providerID: String) {
+        guard let currentUser = FirebaseManager.shared.auth.currentUser else {
+            self.errorMessage = "No current user found"
+            return
+        }
+
+        // Check existing linked providers
+        let emailProviders = currentUser.providerData.filter { $0.providerID != PhoneAuthProviderID }
+        
+        if emailProviders.isEmpty {
+            // If signed in with only phone, link the provided credential
+            linkCredentialAndUpdateDatabase(credential: credential)
+        } else {
+            // If signed in with both phone and email, unlink all email providers first
+            unlinkAllEmailProviders { success in
+                if success {
+                    // After unlinking, link the provided credential
+                    linkCredentialAndUpdateDatabase(credential: credential)
+                } else {
+                    self.errorMessage = "Error unlinking existing email providers"
+                }
+            }
+        }
     }
+
+    
+    
+    
+    // Method to unlink all email-based providers (Google, Apple) and invoke a completion handler
+    private func unlinkAllEmailProviders(completion: @escaping (Bool) -> Void) {
+        guard let currentUser = FirebaseManager.shared.auth.currentUser else {
+            self.errorMessage = "No current user found"
+            completion(false)
+            return
+        }
+        
+        // Identify email-based providers
+        let emailProviders = currentUser.providerData.filter { $0.providerID != PhoneAuthProviderID }
+        let group = DispatchGroup()
+        var unlinkingError: Error?
+        
+        // Unlink each provider
+        for provider in emailProviders {
+            group.enter()
+            currentUser.unlink(fromProvider: provider.providerID) { _, error in
+                if let error = error {
+                    unlinkingError = error
+                    print("Error unlinking provider \(provider.providerID): \(error.localizedDescription)")
+                } else {
+                    print("Successfully unlinked provider: \(provider.providerID)")
+                }
+                group.leave()
+            }
+        }
+        
+        // Call completion handler after all unlinking is complete
+        group.notify(queue: .main) {
+            if let error = unlinkingError {
+                self.errorMessage = "Error unlinking providers: \(error.localizedDescription)"
+                completion(false)
+            } else {
+                print("All email providers unlinked successfully.")
+                completion(true)
+            }
+        }
+    }
+
+
+
+
+
+    
+    
+    
+    // Combined helper function to link credential, update Firebase email, and update database
+    private func linkCredentialAndUpdateDatabase(credential: AuthCredential) {
+        guard let currentUser = FirebaseManager.shared.auth.currentUser else {
+            self.errorMessage = "No current user found"
+            return
+        }
+        
+        // Link the provided credential
+        currentUser.link(with: credential) { authResult, error in
+            if let error = error {
+                self.errorMessage = "Error linking account: \(error.localizedDescription)"
+                return
+            }
+            
+            // Fetch the linked email
+            guard let linkedEmail = authResult?.user.providerData.first(where: { $0.providerID != PhoneAuthProviderID })?.email else {
+                self.errorMessage = "Error fetching linked email."
+                return
+            }
+            // Update the user's email in Firebase Authentication
+            currentUser.updateEmail(to: linkedEmail) { error in
+                if let error = error {
+                    self.errorMessage = "Error updating email in Firebase Auth: \(error.localizedDescription)"
+                    print("Error updating email in Firebase Auth: \(error.localizedDescription)")
+                    return
+                }
+                
+                print("Successfully updated email in Firebase Auth to \(linkedEmail)")
+                
+                // Update Firestore
+                let db = Firestore.firestore()
+                let userId = currentUser.uid
+                
+                db.collection("users").document(userId).updateData([
+                    "email": linkedEmail
+                ]) { error in
+                    if let error = error {
+                        self.errorMessage = "Error updating email in Firestore: \(error.localizedDescription)"
+                        print("Error updating email in Firestore: \(error.localizedDescription)")
+                    } else {
+                        print("Successfully updated email in Firestore to \(linkedEmail)")
+                    }
+                }
+            }
+        }
+    }
+
+    
+
+    
+
     
     
     
     
     
+    
+    
+    
+    // MARK: Helper Functions
+    // Checking if the user has phone or email or both
+    private func checkUserProviders() {
+        guard let currentUser = FirebaseManager.shared.auth.currentUser else { return }
+        
+        // Check providers
+        for userInfo in currentUser.providerData {
+            switch userInfo.providerID {
+            case "phone":
+                hasPhone = true
+            case "google.com", "apple.com", "password":
+                hasEmail = true
+            default:
+                break
+            }
+        }
+    }
     
     
     // Helper: Generate Random Nonce
@@ -243,5 +380,14 @@ struct ChangeEmailView: View {
         let hashedData = SHA256.hash(data: inputData)
         return hashedData.map { String(format: "%02x", $0) }.joined()
     }
+    
+    
+    
 }
 
+
+
+
+#Preview {
+    ChangeEmailView()
+}

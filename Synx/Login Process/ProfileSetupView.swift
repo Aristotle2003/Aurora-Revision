@@ -1,8 +1,17 @@
+//
+//  ProfileSetupView.swift
+//  Synx
+//
+//  Created by Zifan Deng on 11/5/24.
+//
+
 import SwiftUI
 import Firebase
 import FirebaseAuth
 import GoogleSignIn
 
+
+// Profile picture selection view
 struct ProfileSetupView: View {
     @Environment(\.dismiss) var dismiss
     @Binding var isLogin: Bool
@@ -169,4 +178,10 @@ struct ProfileSetupView: View {
             }
         }
     }
+}
+
+
+
+#Preview {
+    LoginView()
 }
