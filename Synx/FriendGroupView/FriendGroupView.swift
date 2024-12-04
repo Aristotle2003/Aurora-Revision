@@ -94,6 +94,7 @@ class FriendGroupViewModel: ObservableObject {
                     let friendData = friendDoc.data()
                     guard let friendId = friendData["uid"] as? String,
                           let email = friendData["email"] as? String,
+                          let username = friendData["username"] as? String,
                           let profileImageUrl = friendData["profileImageUrl"] as? String else {
                         continue
                     }
@@ -122,6 +123,7 @@ class FriendGroupViewModel: ObservableObject {
                 if let doc = snapshot?.documents.first {
                     let data = doc.data()
                     let latestMessage = data["text"] as? String ?? ""
+                    let username = data["username"] as? String ?? ""
                     let timestamp = (data["timestamp"] as? Timestamp)?.dateValue() ?? Date()
                     let likes = data["likes"] as? Int ?? 0
                     let likedBy = data["likedBy"] as? [String] ?? []
@@ -135,7 +137,8 @@ class FriendGroupViewModel: ObservableObject {
                         timestamp: timestamp,
                         likes: likes,
                         likedByCurrentUser: likedByCurrentUser,
-                        documentId: doc.documentID
+                        documentId: doc.documentID,
+                        username: username
                     )
                     DispatchQueue.main.async {
                         completion(response)
@@ -218,6 +221,7 @@ struct FriendResponse: Identifiable {
     var likes: Int
     var likedByCurrentUser: Bool
     let documentId: String
+    let username: String
 }
 
 struct FriendGroupView: View {
@@ -232,106 +236,196 @@ struct FriendGroupView: View {
         _vm = ObservedObject(wrappedValue: FriendGroupViewModel(selectedUser: selectedUser))
         _rotationDegrees = State(initialValue: (0..<20).map { _ in Double.random(in: -15...15) })
     }
+    
+    var safeAreaTopInset: CGFloat {
+        UIApplication.shared.connectedScenes
+            .compactMap { ($0 as? UIWindowScene)?.keyWindow }
+            .first?
+            .safeAreaInsets.top ?? 0
+    }
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 16) {
-            Text(vm.promptText)
-                .font(.headline)
-                .padding()
-                .frame(maxWidth: .infinity, alignment: .leading)
-                .background(RoundedRectangle(cornerRadius: 12).fill(Color.gray.opacity(0.1)))
-                .padding(.bottom, 8)
-            
-            Button("Reply") {
-                vm.showResponseInput = true
-            }
-            .frame(maxWidth: .infinity, alignment: .leading)
-
-            ZStack {
-                ForEach(vm.responses.indices, id: \.self) { index in
-                    if index >= topCardIndex {
-                        ResponseCard(response: vm.responses[index], cardColor: getCardColor(index: index), likeAction: {
-                            vm.toggleLike(for: vm.responses[index])
-                        })
-                        .offset(x: index == topCardIndex ? offset.width : 0, y: CGFloat(index - topCardIndex) * 10)
-                        .rotationEffect(.degrees(index == topCardIndex ? Double(offset.width / 20) : rotationDegrees[index]), anchor: .center)
-                        .scaleEffect(index == topCardIndex ? 1.0 : 0.95)
-                        .animation(.spring(), value: offset)
-                        .zIndex(Double(vm.responses.count - index))
-                        .gesture(
-                            DragGesture()
-                                .onChanged { gesture in
-                                    if index == topCardIndex {
-                                        offset = gesture.translation
-                                    }
-                                }
-                                .onEnded { _ in
-                                    if abs(offset.width) > 150 {
-                                        withAnimation {
-                                            offset = CGSize(width: offset.width > 0 ? 500 : -500, height: 0)
-                                            topCardIndex += 1
-                                            if topCardIndex >= vm.responses.count {
-                                                topCardIndex = 0
-                                            }
-                                            offset = .zero
-                                        }
-                                    } else {
-                                        withAnimation {
-                                            offset = .zero
-                                        }
-                                    }
-                                }
-                        )
-                        .padding(8)
+        ZStack {
+            // Background Color
+            Color(red: 0.976, green: 0.980, blue: 1.0)
+                .ignoresSafeArea()
+            VStack(alignment: .leading, spacing: 16) {
+                ZStack {
+                    Image("liuhaier")
+                        .resizable()
+                        .frame(width: UIScreen.main.bounds.width, height: UIScreen.main.bounds.height * 0.07 + safeAreaTopInset)
+                        .aspectRatio(nil, contentMode: .fill)
+                        .ignoresSafeArea()
+                    
+                    HStack {
+                        Spacer()
+                        Image("auroratext")
+                            .resizable()
+                            .scaledToFill()
+                            .frame(width: UIScreen.main.bounds.width * 0.1832,
+                                   height: UIScreen.main.bounds.height * 0.0198)
+                        Spacer()
                     }
                 }
+                .frame(maxHeight: UIScreen.main.bounds.height * 0.07)
+                
+                HStack{
+                    Text("Today's Prompt")
+                        .font(.system(size: 14, weight: .bold))
+                        .foregroundColor(Color(.gray))
+                        .padding(.leading, 16)
+                    Spacer()
+                }
+                
+                 // Add padding to match design
+                
+                // Rounded rectangle containing the prompt text
+                ZStack(alignment: .topLeading) {
+                    // Dynamic RoundedRectangle wrapping the content
+                    RoundedRectangle(cornerRadius: 24)
+                        .fill(Color(red: 0.898, green: 0.910, blue: 0.996)) // Color equivalent to #E5E8FE
 
-                if !vm.currentUserHasPosted {
-                    Color.white.opacity(0.5)
-                        .frame(maxWidth: .infinity, maxHeight: .infinity)
-                        .allowsHitTesting(false)
-                    
-                    VStack {
-                        Spacer()
-                        Image(systemName: "lock.fill")
-                            .resizable()
-                            .scaledToFit()
-                            .frame(width: 100, height: 100)
-                            .foregroundColor(.gray)
+                    HStack(spacing: 20) {
+                        // VStack for Date and Prompt
+                        VStack(alignment: .leading, spacing: 10) {
+                            // Date Text
+                            Text(Date(), style: .date)
+                                .font(.subheadline)
+                                .foregroundColor(.gray)
+                                .padding(.top, 20) // Pinned 20 from the top
+                                .padding(.leading, 20) // Pinned 20 from the left
+                            
+                            // Prompt Text
+                            Text(vm.promptText)
+                                .font(.headline)
+                                .foregroundColor(.gray)
+                                .fixedSize(horizontal: false, vertical: true) // Allows wrapping
+                                .padding(.bottom, 20) // Padding to the bottom of the rectangle
+                                .padding(.trailing, 20) // Ensure alignment
+                                .padding(.leading, 20) // Align with date
+                        }
+                        .frame(maxWidth: UIScreen.main.bounds.width * 0.75, alignment: .leading) // Take up 3/4 of the rectangle
                         
-                        Text("发布一条动态以解锁好友圈")
-                            .font(.headline)
-                            .padding()
-                        
+                        // Write Daily Aurora Button
                         Button(action: {
                             vm.showResponseInput = true
                         }) {
-                            Text("立即发布")
-                                .foregroundColor(.white)
-                                .padding()
-                                .background(Color.blue)
-                                .cornerRadius(8)
+                            Image("writedailyaurorabutton") // Icon for the reply button
+                                .resizable()
+                                .frame(width: 24, height: 24) // Icon size
                         }
-                        Spacer()
+                        .padding()
+                        .padding(.trailing, 10)
                     }
-                    .frame(maxWidth: .infinity, maxHeight: .infinity)
-                    .opacity(0.8)
-                    .zIndex(100)
-                    .background(Color.white.opacity(0.8))
                 }
+                .padding([.leading, .trailing], 20) // Padding for the rectangle
+                .fixedSize(horizontal: false, vertical: true) // Ensure ZStack tightly wraps its content
+                .frame(maxWidth: .infinity, alignment: .top) // Pin the ZStack to the top
+                
+                HStack{
+                    Text("Responses by Friends")
+                        .font(.system(size: 14, weight: .bold))
+                        .foregroundColor(Color(.gray))
+                        .padding(.leading, 16)
+                    Spacer()
+                }
+                
+                ZStack {
+                    ForEach(vm.responses.indices, id: \.self) { index in
+                        if index >= topCardIndex {
+                            ResponseCard(response: vm.responses[index], cardColor: getCardColor(index: index), likeAction: {
+                                vm.toggleLike(for: vm.responses[index])
+                            })
+                            .offset(x: index == topCardIndex ? offset.width : 0, y: CGFloat(index - topCardIndex) * 10)
+                            .rotationEffect(.degrees(index == topCardIndex ? Double(offset.width / 20) : rotationDegrees[index]), anchor: .center)
+                            .scaleEffect(index == topCardIndex ? 1.0 : 0.95)
+                            .animation(.spring(), value: offset)
+                            .zIndex(Double(vm.responses.count - index))
+                            .gesture(
+                                DragGesture()
+                                    .onChanged { gesture in
+                                        if index == topCardIndex {
+                                            offset = gesture.translation
+                                        }
+                                    }
+                                    .onEnded { _ in
+                                        if abs(offset.width) > 150 {
+                                            withAnimation {
+                                                offset = CGSize(width: offset.width > 0 ? 500 : -500, height: 0)
+                                                topCardIndex += 1
+                                                if topCardIndex >= vm.responses.count {
+                                                    topCardIndex = 0
+                                                }
+                                                offset = .zero
+                                            }
+                                        } else {
+                                            withAnimation {
+                                                offset = .zero
+                                            }
+                                        }
+                                    }
+                            )
+                            .padding(8)
+                        }
+                    }
+                    
+                    if !vm.currentUserHasPosted {
+                        Color.white.opacity(0.5)
+                            .frame(maxWidth: .infinity, maxHeight: .infinity)
+                            .allowsHitTesting(false)
+                        
+                        VStack {
+                            Spacer()
+                            Image(systemName: "lock.fill")
+                                .resizable()
+                                .scaledToFit()
+                                .frame(width: 100, height: 100)
+                                .foregroundColor(.gray)
+                            
+                            Text("发布一条动态以解锁好友圈")
+                                .font(.headline)
+                                .padding()
+                            
+                            Button(action: {
+                                vm.showResponseInput = true
+                            }) {
+                                Text("立即发布")
+                                    .foregroundColor(.white)
+                                    .padding()
+                                    .background(Color.blue)
+                                    .cornerRadius(8)
+                            }
+                            Spacer()
+                        }
+                        .frame(maxWidth: .infinity, maxHeight: .infinity)
+                        .opacity(0.8)
+                        .zIndex(100)
+                        .background(Color.white.opacity(0.8))
+                    }
+                }
+                .frame(maxWidth: .infinity, maxHeight: 450)
+                Spacer()
             }
-            .frame(maxWidth: .infinity, maxHeight: 450)
-        }
-        .padding(.horizontal)
-        .navigationBarHidden(true)
-        .fullScreenCover(isPresented: $vm.showResponseInput) {
-            FullScreenResponseInputView(vm: vm, selectedUser: selectedUser)
+            .padding(.horizontal)
+            .navigationBarHidden(true)
+            .fullScreenCover(isPresented: $vm.showResponseInput) {
+                FullScreenResponseInputView(vm: vm, selectedUser: selectedUser)
+            }
         }
     }
     
     func getCardColor(index: Int) -> Color {
         let colors = [Color.mint, Color.cyan, Color.pink]
         return colors[index % colors.count]
+    }
+    
+    func calculateHeight(for text: String) -> CGFloat {
+        let textWidth = UIScreen.main.bounds.width - 80 // Account for 20 padding on each side
+        let font = UIFont.preferredFont(forTextStyle: .headline)
+        let size = CGSize(width: textWidth, height: .greatestFiniteMagnitude)
+        let boundingBox = text.boundingRect(with: size, options: .usesLineFragmentOrigin, attributes: [.font: font], context: nil)
+
+        return boundingBox.height + 80 // Add 80 for date, spacing, and padding
     }
 }
 
@@ -341,87 +435,230 @@ struct ResponseCard: View {
     var likeAction: () -> Void
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 12) {
-            Text(response.latestMessage)
-                .font(.body)
-                .foregroundColor(.primary)
-                .fixedSize(horizontal: false, vertical: true)
-                .padding(.top, 2)
-
-            Spacer()
-
-            HStack(alignment: .center) {
-                WebImage(url: URL(string: response.profileImageUrl))
+        ZStack {
+            // Background image based on the card color
+            if cardColor == Color.mint {
+                Image("greencard")
                     .resizable()
-                    .scaledToFill()
-                    .frame(width: 40, height: 40)
-                    .clipShape(Circle())
-                    .overlay(Circle().stroke(Color.gray.opacity(0.5), lineWidth: 1))
-                
-                VStack(alignment: .leading) {
-                    Text(response.email)
-                        .font(.headline)
-                    Text(response.timestamp, style: .time)
-                        .font(.footnote)
-                        .foregroundColor(.gray)
-                }
-                Spacer()
-                
-                HStack {
-                    Button(action: {
-                        likeAction()
-                    }) {
-                        Image(systemName: response.likedByCurrentUser ? "heart.fill" : "heart")
-                            .foregroundColor(response.likedByCurrentUser ? .red : .gray)
-                            .scaleEffect(response.likedByCurrentUser ? 1.2 : 1.0)
-                            .animation(.easeIn, value: response.likedByCurrentUser)
-                    }
-                    Text("\(response.likes)")
-                        .font(.subheadline)
-                }
+                    .scaledToFit() // Ensures image maintains its aspect ratio
+                    .cornerRadius(25)
+            } else if cardColor == Color.cyan {
+                Image("bluecard")
+                    .resizable()
+                    .scaledToFit() // Ensures image maintains its aspect ratio
+                    .cornerRadius(25)
+            } else if cardColor == Color.pink {
+                Image("purplecard")
+                    .resizable()
+                    .scaledToFit() // Ensures image maintains its aspect ratio
+                    .cornerRadius(25)
             }
-            .padding(.top, 8)
+
+            // Content overlay on top of the image
+            VStack(alignment: .leading, spacing: 12) {
+                Spacer()
+                // Latest message text
+                Text(response.latestMessage)
+                    .font(.system(size: 16, weight: .bold))
+                    .foregroundColor(Color(red: 0.49, green: 0.52, blue: 0.75))
+                    .fixedSize(horizontal: false, vertical: true)
+                    .padding(30)
+
+                Spacer()
+
+                HStack(alignment: .center) {
+                    // Profile image
+                    WebImage(url: URL(string: response.profileImageUrl))
+                        .resizable()
+                        .scaledToFill()
+                        .frame(width: 45, height: 45)
+                        .clipShape(Circle())
+
+                    VStack(alignment: .leading) {
+                        // User email and timestamp
+                        Text(response.email)
+                            .font(.system(size: 12, weight: .bold))
+                            .foregroundColor(Color(red: 0.49, green: 0.52, blue: 0.75))
+                        Text(response.timestamp, style: .time)
+                            .font(.system(size: 10))
+                            .foregroundColor(Color.gray)
+                    }
+                    Spacer()
+                    
+                    // Like button and count
+                    HStack {
+                        Button(action: {
+                            likeAction()
+                        }) {
+                            // Select the appropriate like image based on card color and liked status
+                            if cardColor == Color.mint {
+                                Image(response.likedByCurrentUser ? "likegivengreen" : "likenotgivengreen")
+                                    .resizable()
+                                    .scaledToFit()
+                                    .frame(width: 32, height: 32) // Size of the like button
+                            } else if cardColor == Color.cyan {
+                                Image(response.likedByCurrentUser ? "likegivenblue" : "likenotgivenblue")
+                                    .resizable()
+                                    .scaledToFit()
+                                    .frame(width: 32, height: 32) // Size of the like button
+                            } else if cardColor == Color.pink {
+                                Image(response.likedByCurrentUser ? "likegivenpurple" : "likenotgivenpurple")
+                                    .resizable()
+                                    .scaledToFit()
+                                    .frame(width: 32, height: 32) // Size of the like button
+                            }
+                        }
+                        
+                        // Display the number of likes
+                        Text("\(response.likes)")
+                            .font(.subheadline)
+                    }
+                    .padding(.trailing, 20)
+
+                }
+                .padding([.leading, .bottom], 20)
+            }
         }
-        .padding()
-        .frame(maxWidth: .infinity, minHeight: 200)
-        .background(cardColor)
-        .cornerRadius(25)
-        .shadow(color: .gray.opacity(0.4), radius: 10, x: 0, y: 5)
+        .aspectRatio(contentMode: .fit) // Matches the image's aspect ratio
     }
 }
+
+import SwiftUI
 
 struct FullScreenResponseInputView: View {
     @ObservedObject var vm: FriendGroupViewModel
     let selectedUser: ChatUser
 
+    @State private var keyboardHeight: CGFloat = 0 // Track keyboard height
+    @FocusState private var isResponseTextFocused: Bool // For focusing the TextEditor
+
     var body: some View {
         NavigationView {
-            VStack(alignment: .leading) {
-                Text("Today's prompt:")
-                    .font(.headline)
-                    .padding(.bottom, 4)
-                Text(vm.promptText)
-                    .font(.body)
-                    .padding(.bottom, 20)
-                
-                TextField("Write your response...", text: $vm.responseText)
-                    .textFieldStyle(RoundedBorderTextFieldStyle())
-                    .padding(.horizontal)
-
-                Button("Submit") {
-                    vm.submitResponse(for: selectedUser.uid)
+            GeometryReader { geometry in
+                ZStack {
+                    Color(red: 0.976, green: 0.980, blue: 1.0)
+                        .ignoresSafeArea()
+                    
+                    VStack {
+                        let topbarheight = UIScreen.main.bounds.height * 0.055
+                        HStack {
+                            Button(action: {
+                                vm.showResponseInput = false
+                            }) {
+                                Image("chatlogviewbackbutton")
+                                    .resizable()
+                                    .frame(width: 24, height: 24)
+                                    .padding(.leading, 20)
+                            }
+                            
+                            Spacer()
+                            
+                            Image("auroratext")
+                                .resizable()
+                                .scaledToFill()
+                                .frame(width: UIScreen.main.bounds.width * 0.1832, height: UIScreen.main.bounds.height * 0.0198)
+                            
+                            Spacer()
+                            
+                            Button(action: {
+                                vm.submitResponse(for: selectedUser.uid)
+                            }) {
+                                Image("postbutton")
+                                    .resizable()
+                                    .frame(width: 24, height: 24)
+                                    .padding(.trailing, 20)
+                            }
+                        }
+                        .frame(height: topbarheight)
+                        
+                        HStack {
+                            Text("Today's Prompt:")
+                                .font(.system(size: 14, weight: .bold))
+                                .foregroundColor(Color(red: 85/255, green: 85/255, blue: 85/255))
+                                .padding(.leading, 25)
+                                .padding(.top, 20)
+                            Spacer()
+                        }
+                        
+                        HStack {
+                            Text(vm.promptText)
+                                .font(.system(size: 24, weight: .bold))
+                                .foregroundColor(Color(red: 85/255, green: 85/255, blue: 85/255))
+                                .padding(.leading, 25)
+                                .padding(.trailing, 25)
+                                .padding(.top, 10)
+                                .fixedSize(horizontal: false, vertical: true) // Allow multiline
+                            Spacer()
+                        }
+                        
+                        // Multiline TextEditor for response input
+                        ZStack(alignment: .topLeading) {
+                            TextEditor(text: $vm.responseText)
+                                .foregroundColor(Color(red: 85/255, green: 85/255, blue: 85/255)) // Color #555555
+                                .font(.system(size: 14))
+                                .padding(.horizontal, 25)
+                                .scrollContentBackground(.hidden)// Clear background
+                                .frame(height: UIScreen.main.bounds.height * 0.3) // 30% of the screen height
+                                .focused($isResponseTextFocused) // Manage focus state
+                                .tint(Color.gray)
+                                .onAppear {
+                                    // Automatically focus when view appears
+                                    DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
+                                        self.isResponseTextFocused = true
+                                    }
+                                }
+                                .onChange(of: vm.responseText) { newValue in
+                                    if newValue.count > 300 {
+                                        vm.responseText = String(newValue.prefix(300)) // Limit to 300 characters
+                                    }
+                                }
+                            if vm.responseText.isEmpty {
+                                Text("  Type your answer here...")
+                                    .foregroundColor(Color.gray.opacity(0.7)) // Placeholder text color
+                                    .font(.system(size: 14))
+                                    .padding(.horizontal, 25)
+                                    .padding(.vertical, 8)
+                            }
+                        }
+                        
+                        // HStack for character count and date
+                        HStack {
+                            // Character Count at Bottom-Left
+                            Text("\(vm.responseText.count)/300")
+                                .foregroundColor(Color.gray)
+                                .font(.system(size: 12))
+                                .padding(.leading, 25)
+                            
+                            Spacer()
+                            
+                            // Today's Date at Bottom-Right
+                            Text(Date(), style: .date)
+                                .foregroundColor(Color.gray)
+                                .font(.system(size: 12))
+                                .padding(.trailing, 25)
+                        }
+                        .padding(.bottom, 16)
+                        Spacer()
+                    }
+                    .animation(.easeOut(duration: 0.25), value: keyboardHeight)
                 }
-                .frame(maxWidth: .infinity, alignment: .leading)
-                .padding(.top, 4)
-                .padding(.horizontal)
-
-                Spacer()
+                .onAppear {
+                    // Observe keyboard events
+                    NotificationCenter.default.addObserver(forName: UIResponder.keyboardWillShowNotification, object: nil, queue: .main) { notification in
+                        if let keyboardFrame = notification.userInfo?[UIResponder.keyboardFrameEndUserInfoKey] as? CGRect {
+                            self.keyboardHeight = keyboardFrame.height
+                        }
+                    }
+                    NotificationCenter.default.addObserver(forName: UIResponder.keyboardWillHideNotification, object: nil, queue: .main) { _ in
+                        self.keyboardHeight = 0
+                    }
+                }
+                .onDisappear {
+                    NotificationCenter.default.removeObserver(self, name: UIResponder.keyboardWillShowNotification, object: nil)
+                    NotificationCenter.default.removeObserver(self, name: UIResponder.keyboardWillHideNotification, object: nil)
+                }
+                .ignoresSafeArea(.keyboard)
             }
-            .padding()
-            .navigationTitle("Reply to Prompt")
-            .navigationBarItems(leading: Button("Cancel") {
-                vm.showResponseInput = false
-            })
         }
     }
 }

@@ -10,7 +10,6 @@
 		FB0F8AFB2CF52ABE00A37CED /* TutorialView.swift in Sources */ = {isa = PBXBuildFile; fileRef = FB0F8AFA2CF52ABE00A37CED /* TutorialView.swift */; };
 		FB0F8AFF2CF653E200A37CED /* CustomTabNavigationView.swift in Sources */ = {isa = PBXBuildFile; fileRef = FB0F8AFE2CF653E200A37CED /* CustomTabNavigationView.swift */; };
 		FB23D5592CF6B20D003C245A /* SelfProfileView.swift in Sources */ = {isa = PBXBuildFile; fileRef = FB23D5582CF6B20D003C245A /* SelfProfileView.swift */; };
-		FB23D55D2CF7C589003C245A /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = FB23D55C2CF7C589003C245A /* Assets.xcassets */; };
 		FB23D5602CF8F7C6003C245A /* libPhoneNumber in Frameworks */ = {isa = PBXBuildFile; productRef = FB23D55F2CF8F7C6003C245A /* libPhoneNumber */; };
 		FB23D5622CF8F843003C245A /* Formatter.swift in Sources */ = {isa = PBXBuildFile; fileRef = FB23D5612CF8F843003C245A /* Formatter.swift */; };
 		FB23D5652CFA0ED5003C245A /* CropViewController in Frameworks */ = {isa = PBXBuildFile; productRef = FB23D5642CFA0ED5003C245A /* CropViewController */; };
@@ -19,6 +18,7 @@
 		FB23D56F2CFBB59E003C245A /* ChangeEmailView.swift in Sources */ = {isa = PBXBuildFile; fileRef = FB23D56E2CFBB59E003C245A /* ChangeEmailView.swift */; };
 		FB23D5712CFD52A8003C245A /* Scratch.swift in Sources */ = {isa = PBXBuildFile; fileRef = FB23D5702CFD52A8003C245A /* Scratch.swift */; };
 		FB23D5752CFE51C8003C245A /* ChangePhoneView.swift in Sources */ = {isa = PBXBuildFile; fileRef = FB23D5742CFE51C8003C245A /* ChangePhoneView.swift */; };
+		FB23D5772CFFAA77003C245A /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = FB23D5762CFFAA77003C245A /* Assets.xcassets */; };
 		FB3C61182CE0F497001A0922 /* CalendarView.swift in Sources */ = {isa = PBXBuildFile; fileRef = FB3C61172CE0F497001A0922 /* CalendarView.swift */; };
 		FB42CB802CD5B5A000283244 /* FriendGroupView.swift in Sources */ = {isa = PBXBuildFile; fileRef = FB42CB7F2CD5B5A000283244 /* FriendGroupView.swift */; };
 		FB42CB832CD66D9E00283244 /* EditProfileView.swift in Sources */ = {isa = PBXBuildFile; fileRef = FB42CB822CD66D9E00283244 /* EditProfileView.swift */; };
@@ -75,11 +75,11 @@
 		FB0F8AFA2CF52ABE00A37CED /* TutorialView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TutorialView.swift; sourceTree = "<group>"; };
 		FB0F8AFE2CF653E200A37CED /* CustomTabNavigationView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CustomTabNavigationView.swift; sourceTree = "<group>"; };
 		FB23D5582CF6B20D003C245A /* SelfProfileView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SelfProfileView.swift; sourceTree = "<group>"; };
-		FB23D55C2CF7C589003C245A /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		FB23D5612CF8F843003C245A /* Formatter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Formatter.swift; sourceTree = "<group>"; };
 		FB23D56E2CFBB59E003C245A /* ChangeEmailView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChangeEmailView.swift; sourceTree = "<group>"; };
 		FB23D5702CFD52A8003C245A /* Scratch.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Scratch.swift; sourceTree = "<group>"; };
 		FB23D5742CFE51C8003C245A /* ChangePhoneView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChangePhoneView.swift; sourceTree = "<group>"; };
+		FB23D5762CFFAA77003C245A /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		FB3C61172CE0F497001A0922 /* CalendarView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CalendarView.swift; sourceTree = "<group>"; };
 		FB42CB7F2CD5B5A000283244 /* FriendGroupView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FriendGroupView.swift; sourceTree = "<group>"; };
 		FB42CB822CD66D9E00283244 /* EditProfileView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EditProfileView.swift; sourceTree = "<group>"; };
@@ -227,8 +227,8 @@
 				FB7E20782CBCC6E900209582 /* SynxApp.swift */,
 				FB6764282CEEE82D00FCE17E /* Clear Button.json */,
 				FB67642A2CEEE83E00FCE17E /* Save Button.json */,
-				FB83BD952CD859BE00A7BE4E /* Synx.entitlements */,
 				FB83BD902CD81ECC00A7BE4E /* Info.plist */,
+				FB83BD952CD859BE00A7BE4E /* Synx.entitlements */,
 				FB0F8AFA2CF52ABE00A37CED /* TutorialView.swift */,
 				FBB505022CCEA62D00FF1C87 /* Login Process */,
 				FB23D55B2CF76C00003C245A /* CustomTabView */,
@@ -240,7 +240,7 @@
 				FB7E20BF2CC165D500209582 /* Model */,
 				FB7E20B62CC0112C00209582 /* Utils */,
 				FB83BD982CD85E6600A7BE4E /* GoogleService-Info.plist */,
-				FB23D55C2CF7C589003C245A /* Assets.xcassets */,
+				FB23D5762CFFAA77003C245A /* Assets.xcassets */,
 				FB7E207E2CBCC6EA00209582 /* Preview Content */,
 			);
 			path = Synx;
@@ -480,7 +480,7 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				FB23D55D2CF7C589003C245A /* Assets.xcassets in Resources */,
+				FB23D5772CFFAA77003C245A /* Assets.xcassets in Resources */,
 				FB67642B2CEEE83E00FCE17E /* Save Button.json in Resources */,
 				FB7E20802CBCC6EA00209582 /* Preview Assets.xcassets in Resources */,
 				FB6764292CEEE82D00FCE17E /* Clear Button.json in Resources */,
