@@ -1,25 +1,28 @@
 import SwiftUI
 import Firebase
 
-class CustomTabNavigationViewModel: ObservableObject{
+class CustomTabNavigationViewModel: ObservableObject {
     @Published var errorMessage = ""
     @Published var currentUser: ChatUser?
-    var friendGroupListener: ListenerRegistration?
+    var newPostListener: ListenerRegistration?
+    var likesListener: ListenerRegistration?
     @AppStorage("lastCheckedTimestamp") var lastCheckedTimestamp: Double = 0
     @AppStorage("lastLikesCount") var lastLikesCount: Int = 0
-    @Published var hasNewFriendGroup = false // 用于跟踪是否有新的朋友圈消息
-    
-    init(){
+    @Published var hasNewPost = false
+    @Published var hasNewLike = false
+
+    init() {
         fetchCurrentUser()
-        setupFriendGroupListener() // 合并朋友圈和点赞监听器
+        setupNewPostListener() // 设置新帖监听器
+        setupLikesListener() // 设置点赞监听器
     }
-    
+
     func fetchAndStoreFCMToken() {
         guard let userID = FirebaseManager.shared.auth.currentUser?.uid else {
             print("User not signed in.")
             return
         }
-        
+
         Messaging.messaging().token { token, error in
             if let token = token {
                 self.storeFCMTokenToFirestore(token, userID: userID)
@@ -29,7 +32,7 @@ class CustomTabNavigationViewModel: ObservableObject{
             }
         }
     }
-    
+
     private func storeFCMTokenToFirestore(_ token: String, userID: String) {
         let userRef = Firestore.firestore().collection("users").document(userID)
         userRef.setData(["fcmToken": token], merge: true) { error in
@@ -40,93 +43,127 @@ class CustomTabNavigationViewModel: ObservableObject{
             }
         }
     }
-    
+
     private func fetchCurrentUser() {
-        
         guard let uid = FirebaseManager.shared.auth.currentUser?.uid else {
             self.errorMessage = "Could not find firebase uid"
             return
         }
-        
+
         FirebaseManager.shared.firestore.collection("users").document(uid).getDocument { snapshot, error in
             if let error = error {
                 self.errorMessage = "Failed to fetch current user: \(error)"
                 print("Failed to fetch current user:", error)
                 return
             }
-            
+
             guard let data = snapshot?.data() else {
                 self.errorMessage = "No data found"
                 return
             }
-            
+
             DispatchQueue.main.async {
                 self.currentUser = ChatUser(data: data)
             }
         }
     }
-    
-    func setupFriendGroupListener() {
+
+    // 新帖监听器：监听好友的新帖子
+    func setupNewPostListener() {
         guard let currentUserUid = FirebaseManager.shared.auth.currentUser?.uid else {
             self.errorMessage = "Could not find firebase uid"
             return
         }
-        
+
         // 如果已有监听器，先移除
-        friendGroupListener?.remove()
-        friendGroupListener = nil
-        
+        newPostListener?.remove()
+        newPostListener = nil
+
         // double to int64
         let lastCheckedTimestampInt64 = Int64(lastCheckedTimestamp)
-        
-        friendGroupListener = FirebaseManager.shared.firestore
+
+        newPostListener = FirebaseManager.shared.firestore
             .collection("response_to_prompt")
             .whereField("timestamp", isGreaterThan: Timestamp(seconds: lastCheckedTimestampInt64, nanoseconds: 0))
             .addSnapshotListener { [weak self] snapshot, error in
                 if let error = error {
-                    print("Failed to listen for friend group messages and likes: \(error)")
+                    print("Failed to listen for new friend group messages: \(error)")
                     return
                 }
-                
+
                 guard let documents = snapshot?.documents else { return }
-                var hasNewLikes = false
                 var hasNewFriendGroupUpdates = false
-                
+
                 // Fetch friend list
                 self?.fetchFriendList { friendUIDs in
                     for document in documents {
                         let data = document.data()
                         let authorUid = data["uid"] as? String ?? ""
-                        _ = document.documentID
-                        let likes = data["likes"] as? Int ?? 0
-                        
-                        // 检查朋友圈更新
+
+                        // 检查是否有好友的新帖子
                         if friendUIDs.contains(authorUid) && authorUid != currentUserUid {
                             hasNewFriendGroupUpdates = true
-                        }
-                        
-                        // 检查点赞更新
-                        if authorUid == currentUserUid {
-                            if likes > self?.lastLikesCount ?? 0 {
-                                hasNewLikes = true
-                                self?.lastLikesCount = likes
-                            }
-                            self?.lastLikesCount = likes
+                            break
                         }
                     }
-                    
+
                     DispatchQueue.main.async {
-                        self?.hasNewFriendGroup = (hasNewFriendGroupUpdates || hasNewLikes)
+                        self?.hasNewPost = hasNewFriendGroupUpdates
                     }
                 }
             }
     }
+
+    // 点赞监听器：监听当前用户发布内容的点赞数变化
+    func setupLikesListener() {
+        guard let currentUserUid = FirebaseManager.shared.auth.currentUser?.uid else {
+            self.errorMessage = "Could not find firebase uid"
+            return
+        }
+        print("1")
+        // 如果已有监听器，先移除
+        likesListener?.remove()
+        likesListener = nil
+        print("2")
+        
+        // double to int64
+        let lastCheckedTimestampInt64 = Int64(lastCheckedTimestamp)
+        
+        likesListener = FirebaseManager.shared.firestore
+            .collection("response_to_prompt")
+            .whereField("latestLikeTime", isGreaterThan: Timestamp(seconds: lastCheckedTimestampInt64, nanoseconds: 0))
+            .addSnapshotListener { [weak self] snapshot, error in
+                if let error = error {
+                    print("Failed to listen for likes updates: \(error)")
+                    return
+                }
+                print("3")
+                guard let documents = snapshot?.documents else { return }
+                var hasNewLikes = false
+
+                for document in documents {
+                    let data = document.data()
+                    let authorUid = data["uid"] as? String ?? ""
+                    
+                    // 检查是自己的帖子
+                    if authorUid == currentUserUid {
+                        hasNewLikes = true
+                        break
+                    }
+                }
+
+                DispatchQueue.main.async {
+                    self?.hasNewLike = hasNewLikes
+                }
+            }
+    }
+
     func fetchFriendList(completion: @escaping ([String]) -> Void) {
         guard let uid = FirebaseManager.shared.auth.currentUser?.uid else {
             self.errorMessage = "Could not find firebase uid"
             return
         }
-        
+
         FirebaseManager.shared.firestore
             .collection("friends")
             .document(uid)
@@ -136,12 +173,12 @@ class CustomTabNavigationViewModel: ObservableObject{
                     print("Failed to fetch friend list: \(error)")
                     return
                 }
-                
+
                 guard let documents = snapshot?.documents else {
                     print("No friend list documents found")
                     return
                 }
-                
+
                 let friendUIDs = documents.map { $0.documentID }
                 completion(friendUIDs)
             }
@@ -213,7 +250,8 @@ struct CustomNavBar: View {
             HStack(spacing: 60){
                 Button(action: {
                     currentView = "DailyAurora"
-                    vm.hasNewFriendGroup = false
+                    vm.hasNewPost = false
+                    vm.hasNewLike = false
                     let currentDate = Date()
                     vm.lastCheckedTimestamp = currentDate.timeIntervalSince1970
                 }) {
@@ -223,7 +261,7 @@ struct CustomNavBar: View {
                             .resizable()
                             .scaledToFit()
                             .frame(width: 36, height: 36)
-                        if vm.hasNewFriendGroup {
+                        if (vm.hasNewPost || vm.hasNewLike) {
                             Image("reddot")
                                 .resizable()
                                 .scaledToFit()

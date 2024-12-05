@@ -109,12 +109,8 @@ struct SelfProfileView: View {
                         }
                 }
                 
-                Text(self.currentUser.username)
-                    .font(.title)
-                    .padding()
-                
                 if isCurrentUser, let info = basicInfo {
-                    Text("Username: \(info.username)")
+                    Text("\(info.username)")
                         .font(.title)
                     // 当前用户的基本信息
                     VStack(alignment: .leading, spacing: 5) {
@@ -131,7 +127,7 @@ struct SelfProfileView: View {
                 
                 // New Rectangle Buttons
                 VStack(spacing: 10) {
-                    NavigationLink(destination: EditProfileView(currentUser: currentUser, chatUser: chatUser, chatLogViewModel: chatLogViewModel)) {
+                    NavigationLink(destination: EditProfileView(currentUser: currentUser, chatLogViewModel: chatLogViewModel)) {
                         Text("Change Basic Info")
                             .font(.headline)
                             .frame(maxWidth: .infinity, minHeight: 50)
@@ -140,12 +136,22 @@ struct SelfProfileView: View {
                             .cornerRadius(8)
                             .padding(.horizontal)
                     }
-                    // Navigate to Change Email View
+                    
                     NavigationLink(destination: ChangeEmailView()) {
-                        Text("Change Email")
+                        Text("Privacy")
                             .font(.headline)
                             .frame(maxWidth: .infinity, minHeight: 50)
                             .background(Color.blue)
+                            .foregroundColor(.white)
+                            .cornerRadius(8)
+                            .padding(.horizontal)
+                    }
+                    // Navigate to Change Email View
+                    NavigationLink(destination: ChangeEmailView()) {
+                        Text("Security")
+                            .font(.headline)
+                            .frame(maxWidth: .infinity, minHeight: 50)
+                            .background(Color.orange)
                             .foregroundColor(.white)
                             .cornerRadius(8)
                             .padding(.horizontal)
@@ -329,7 +335,9 @@ struct SelfProfileView: View {
                         email: data["email"] as? String ?? "",
                         bio: data["bio"] as? String ?? "",
                         location: data["location"] as? String ?? "",
-                        username: data["username"] as? String ?? ""
+                        username: data["username"] as? String ?? "",
+                        birthdate: data["birthdate"] as? String ?? "",
+                        pronouns: data["pronouns"] as? String ?? ""
                     )
                     completion(info)
                 } else if let error = error {

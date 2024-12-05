@@ -41,6 +41,11 @@ class ChatLogViewModel: ObservableObject {
     @Published var chatUser: ChatUser?
     @Published var showSavedMessagesWindow = false
     @Published var savedMessages = [ChatMessage]()
+    @Published var isChatUserActive: Bool = false
+    @Published var chatUserLastSeen: Timestamp? = nil
+    @Published var savingTrigger: Bool = true
+    private var listener: ListenerRegistration?
+    private var listenerForSavingTrigger: ListenerRegistration?
     
     var timer: Timer?
     var seenCheckTimer: Timer?
@@ -48,6 +53,81 @@ class ChatLogViewModel: ObservableObject {
     init(chatUser: ChatUser?) {
         self.chatUser = chatUser
     }
+    
+    func startListeningForSavingTrigger() {
+        guard let currentUserId = FirebaseManager.shared.auth.currentUser?.uid else { return }
+        guard let chatUserId = chatUser?.uid else { return }
+        
+        let savingTriggerRef = FirebaseManager.shared.firestore
+            .collection("saving_trigger")
+            .document(currentUserId)
+            .collection("trigger_list")
+            .document(chatUserId)
+        
+        listenerForSavingTrigger = savingTriggerRef.addSnapshotListener { snapshot, error in
+            if let error = error {
+                print("Failed to listen for saving triggers: \(error)")
+                return
+            }
+            
+            guard let data = snapshot?.data() else { return }
+            self.savingTrigger = data["triggering"] as? Bool ?? false
+            
+        }
+    }
+
+    func stopListeningForSavingTrigger() {
+        listenerForSavingTrigger?.remove()
+        listenerForSavingTrigger = nil
+    }
+    
+    func setTriggerToFalse(){
+        guard let currentUserId = FirebaseManager.shared.auth.currentUser?.uid else { return }
+        guard let chatUserId = chatUser?.uid else { return }
+        
+        let savingTriggerRef = FirebaseManager.shared.firestore
+            .collection("saving_trigger")
+            .document(currentUserId)
+            .collection("trigger_list")
+            .document(chatUserId)
+        
+        savingTriggerRef.setData(["triggering": false], merge: true) { error in
+            if let error = error {
+                print("Failed to reset trigger")
+            } else {
+                print("Trigger to false")
+            }
+        }
+    }
+    
+    func startListeningForActiveStatus() {
+        guard let currentUserId = FirebaseManager.shared.auth.currentUser?.uid else { return }
+        guard let chatUserId = chatUser?.uid else { return }
+        
+        let activeStatusRef = FirebaseManager.shared.firestore
+            .collection("activeStatus")
+            .document(chatUserId)
+            .collection("activeList")
+            .document(currentUserId)
+        
+        listener = activeStatusRef.addSnapshotListener { snapshot, error in
+            if let error = error {
+                print("Failed to listen for active status: \(error)")
+                return
+            }
+            
+            guard let data = snapshot?.data() else { return }
+            self.isChatUserActive = data["isActive"] as? Bool ?? false
+            self.chatUserLastSeen = data["lastSeen"] as? Timestamp
+        }
+    }
+    
+    func stopListeningForActiveStatus() {
+        listener?.remove()
+        listener = nil
+    }
+    
+    
     
     // Fetch the saved messages between the current user and the chat user
     func fetchSavedMessages() {
@@ -185,7 +265,7 @@ class ChatLogViewModel: ObservableObject {
             .collection("activeList")
             .document(chatUserId)
         
-        activeStatusRef.setData(["isActive": true], merge: true) { error in
+        activeStatusRef.setData(["isActive": true, "lastSeen": Timestamp()], merge: true) { error in
             if let error = error {
                 print("Failed to set active status to true: \(error)")
             } else {
@@ -205,7 +285,7 @@ class ChatLogViewModel: ObservableObject {
             .collection("activeList")
             .document(chatUserId)
         
-        activeStatusRef.setData(["isActive": false], merge: true) { error in
+        activeStatusRef.setData(["isActive": false, "lastSeen": Timestamp()], merge: true) { error in
             if let error = error {
                 print("Failed to set active status to false: \(error)")
             } else {
@@ -391,7 +471,48 @@ class ChatLogViewModel: ObservableObject {
                 }
                 print("Message saved successfully.")
             }
+        
+        FirebaseManager.shared.firestore
+            .collection("saving_trigger")
+            .document(toId)
+            .collection("trigger_list")
+            .document(fromId)
+            .setData(["triggering": true], merge: true) { error in
+                if let error = error {
+                    print("Failed to trigger \(error)")
+                } else {
+                    print("Trigger Successfully")
+                }
+            }
+        
     }
+    
+    func saveMessageForSelf(sender: String, messageText: String, timestamp: Timestamp) {
+        guard let fromId = FirebaseManager.shared.auth.currentUser?.uid else { return }
+        guard let toId = chatUser?.uid else { return }
+        
+        let saveData: [String: Any] = [
+            FirebaseConstants.sender: sender,
+            FirebaseConstants.text: messageText,
+            "timestamp": timestamp,
+            "fromId": fromId,
+            "toId": toId
+        ]
+        
+        FirebaseManager.shared.firestore
+            .collection("saving_messages")
+            .document(fromId)
+            .collection(toId)
+            .addDocument(data: saveData) { error in
+                if let error = error {
+                    self.errorMessage = "Failed to save message: \(error)"
+                    return
+                }
+                print("Message saved successfully.")
+            }
+    }
+    
+    
 }
 
 struct ChatLogView: View {
@@ -482,9 +603,21 @@ struct ChatLogView: View {
                                                     .font(.subheadline)
                                                     .foregroundColor(.secondary)
                                             }
-                                            Text("Active now")
-                                                .font(.system(size: 12))
-                                                .foregroundColor(Color.gray)
+                                            if vm.isChatUserActive {
+                                                Text("Active now")
+                                                    .font(.system(size: 12))
+                                                    .foregroundColor(Color.gray)
+                                            } else if let lastSeen = vm.chatUserLastSeen {
+                                                let timeInterval = Date().timeIntervalSince(lastSeen.dateValue())
+                                                let lastSeenText = formatTimeInterval(timeInterval)
+                                                Text("Active \(lastSeenText) ago")
+                                                    .font(.system(size: 12))
+                                                    .foregroundColor(Color.gray)
+                                            } else {
+                                                Text("Offline")
+                                                    .font(.system(size: 12))
+                                                    .foregroundColor(Color.gray)
+                                            }
                                         }
                                         .padding(.leading, 7)
                                         Spacer()
@@ -660,16 +793,7 @@ struct ChatLogView: View {
                                                 .font(Font.system(size: 18))
                                                 .padding(.horizontal, 4)
                                         }
-                                        
-                                        /*TextEditor(text: $vm.chatText)
-                                            .font(Font.system(size: 18))
-                                            .foregroundColor(Color(red: 0.553, green: 0.525, blue: 0.525))
-                                            .focused($isInputFocused)
-                                            .multilineTextAlignment(.center)
-                                            .background(Color.clear)
-                                            .scrollContentBackground(.hidden)
-                                            .frame(maxWidth: .infinity, minHeight: 50)
-                                            .padding(.horizontal, 20)*/
+
                                     }
                                     .frame(height: 60)
                                     .padding(.top, 5)
@@ -688,7 +812,7 @@ struct ChatLogView: View {
                                         Spacer()
                                         if !vm.chatText.isEmpty {
                                             Button(action: {
-                                                vm.saveMessage(sender: "Me", messageText: vm.chatText, timestamp: Timestamp())
+                                                vm.saveMessageForSelf(sender: "Me", messageText: vm.chatText, timestamp: Timestamp())
                                             }) {
                                                 if #available(iOS 18.0, *) {
                                                     // iOS 18.0 or newer: Only show the first frame of the Lottie file
@@ -733,39 +857,18 @@ struct ChatLogView: View {
                     Spacer()
                 }
                 .frame(maxHeight: .infinity)
+                if vm.savingTrigger{
+                    Text("Saved a message by your chatuser")
+                        .onAppear{
+                            DispatchQueue.main.asyncAfter(deadline: .now() + 5.0){
+                                vm.setTriggerToFalse()
+                            }
+                        }
+                }else{
+                    Text("")
+                }
             }
-            /*HStack {
-             // Back button to navigate to MainMessagesView
-             Button(action: {
-             navigateToMainMessageView = true
-             }) {
-             HStack {
-             Image(systemName: "chevron.left")
-             Text("Back")
-             }
-             }
-             .padding()
-             
-             Spacer()
-             
-             // Button to open the saved messages window
-             Button(action: {
-             vm.fetchSavedMessages()
-             vm.showSavedMessagesWindow.toggle()
-             }) {
-             Image(systemName: "doc.text.magnifyingglass")
-             .padding()
-             }
-             }
-             
-             VStack {
-             messagesView
-             Spacer()
-             messageInputBar
-             }
-             .sheet(isPresented: $vm.showSavedMessagesWindow) {
-             SavedMessagesView(vm: vm)
-             }*/
+            
         }
         .onAppear {
             vm.initializeMessages()
@@ -773,12 +876,16 @@ struct ChatLogView: View {
             vm.setActiveStatusToTrue()
             vm.markLatestMessageAsSeen()
             addAppLifecycleObservers()
+            vm.startListeningForActiveStatus()
+            vm.startListeningForSavingTrigger()
         }
         .onDisappear {
             vm.stopAutoSend()
             vm.markMessageAsSeen(for: vm.chatUser?.uid ?? "")
             vm.setActiveStatusToFalse()
             removeAppLifecycleObservers()
+            vm.stopListeningForActiveStatus()
+            vm.stopListeningForSavingTrigger()
         }
         .navigationBarBackButtonHidden(true) // Hide the default back button
     }
@@ -831,6 +938,26 @@ struct ChatLogView: View {
             "profileImageUrl": currentUser.photoURL?.absoluteString ?? ""
         ])
     }
+    
+    private func formatTimeInterval(_ interval: TimeInterval) -> String {
+        let seconds = Int(interval)
+        let minutes = seconds / 60
+        let hours = minutes / 60
+        let days = hours / 24
+
+        if days > 0 {
+            return "\(days) day\(days > 1 ? "s" : "")"
+        } else if hours > 0 {
+            return "\(hours) hour\(hours > 1 ? "s" : "")"
+        } else if minutes > 0 {
+            return "\(minutes) minute\(minutes > 1 ? "s" : "")"
+        } else if seconds > 0 {
+            return "\(seconds) second\(seconds > 1 ? "s" : "")"
+        } else {
+            return "1s"
+        }
+    }
+
     
     
     private var messagesView: some View {

@@ -1,10 +1,3 @@
-//
-//  VerifyView.swift
-//  Synx
-//
-//  Created by Zifan Deng on 11/29/24.
-//
-
 import SwiftUI
 import Firebase
 import FirebaseAuth
@@ -23,44 +16,95 @@ struct ChangeEmailView: View {
     
     @State private var errorMessage: String = ""
     
+    @State private var phoneNumber: String = ""
+    @State private var email: String = ""
+    
     
     var body: some View {
         NavigationView {
-            VStack(spacing: 20) {
-                Text("Link your Google or Apple Account")
-                    .font(.title2)
-                    .fontWeight(.bold)
-                    .multilineTextAlignment(.center)
-                    .padding(.top)
-                
-                Text("Link accounts so you have another way to verify just in case you lose your phone number.")
-                    .font(.body)
-                    .multilineTextAlignment(.center)
-                    .foregroundColor(.gray)
-                    .padding(.horizontal)
-                
                 VStack(spacing: 20) {
-                    googleSignInButton
-                    appleSignInButton
-                    changePhoneNavigationLink
+                    // First Section: Phone Number and Email
+                    VStack(alignment: .leading, spacing: 20) {
+                        Text("Linked Information")
+                            .font(.headline)
+                            .foregroundColor(.gray)
+                        
+                        VStack(spacing: 20) {
+                            Text("Phone Number: \(phoneNumber.isEmpty ? "Not Linked" : phoneNumber)")
+                                .font(.body)
+                            Text("Email: \(email.isEmpty ? "Not Linked" : email)")
+                                .font(.body)
+                        }
+                        .padding()
+                        .background(Color(UIColor.systemGroupedBackground))
+                        .cornerRadius(10)
+                    }
+                    .padding(.horizontal)
+
+                    // Second Section: Buttons
+                    VStack(alignment: .leading, spacing: 20) {
+                        Text("Link Accounts")
+                            .font(.headline)
+                            .foregroundColor(.gray)
+
+                        VStack(spacing: 20) {
+                            googleSignInButton
+                            appleSignInButton
+                            changePhoneNavigationLink
+                        }
+                        .padding()
+                        .background(Color(UIColor.systemGroupedBackground))
+                        .cornerRadius(10)
+                    }
+                    .padding(.horizontal)
+                    
+                    VStack(alignment: .leading, spacing: 20){
+                        Text("Account actions")
+                            .font(.headline)
+                            .foregroundColor(.gray)
+                        
+                    }
+                    
+                    // Error Message
+                    if !errorMessage.isEmpty {
+                        Text(errorMessage)
+                            .font(.caption)
+                            .foregroundColor(.red)
+                            .padding(.top)
+                    }
                 }
-                .padding(.horizontal)
-                
-                if !errorMessage.isEmpty {
-                    Text(errorMessage)
-                        .font(.caption)
-                        .foregroundColor(.red)
-                        .padding(.top)
+                .padding()
+                .navigationTitle("Security")
+                .navigationBarItems(leading: Button("Cancel") {
+                    dismiss()
+                })
+                .onAppear {
+                    checkUserProviders()
+                    fetchPhoneNumberAndEmail()
                 }
+            }.navigationBarBackButtonHidden(true)
+    }
+    
+    private func fetchPhoneNumberAndEmail(){
+        guard let uid = FirebaseManager.shared.auth.currentUser?.uid else {
+            self.errorMessage = "Could not find firebase uid"
+            return
+        }
+        
+        FirebaseManager.shared.firestore.collection("users").document(uid).getDocument { snapshot, error in
+            if let error = error {
+                self.errorMessage = "Failed to fetch current user: \(error)"
+                print("Failed to fetch current user:", error)
+                return
             }
-            .padding()
-            .navigationTitle("Link Accounts")
-            .navigationBarItems(leading: Button("Cancel") {
-                dismiss()
-            })
-            .onAppear {
-                checkUserProviders()
+            
+            guard let data = snapshot?.data() else {
+                self.errorMessage = "No data found"
+                return
             }
+            self.phoneNumber = data["phoneNumber"] as? String ?? ""
+            self.email = data["email"] as? String ?? ""
+            
         }
     }
     
@@ -122,10 +166,6 @@ struct ChangeEmailView: View {
             )
         }
     }
-    
-    
-    
-    
     
     
     

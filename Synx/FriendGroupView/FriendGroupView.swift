@@ -195,7 +195,8 @@ class FriendGroupViewModel: ObservableObject {
         
         responseRef.updateData([
             "likes": hasLiked ? FieldValue.increment(Int64(-1)) : FieldValue.increment(Int64(1)),
-            "likedBy": hasLiked ? FieldValue.arrayRemove([currentUserId]) : FieldValue.arrayUnion([currentUserId])
+            "likedBy": hasLiked ? FieldValue.arrayRemove([currentUserId]) : FieldValue.arrayUnion([currentUserId]),
+            "latestLikeTime": FieldValue.serverTimestamp()
         ]) { error in
             if let error = error {
                 print("更新点赞状态失败：\(error.localizedDescription)")

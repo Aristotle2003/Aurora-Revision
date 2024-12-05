@@ -130,7 +130,7 @@ struct ProfileView: View {
             
             if isCurrentUser {
                 // 编辑按钮
-                NavigationLink(destination: EditProfileView(currentUser: currentUser, chatUser: chatUser, chatLogViewModel: chatLogViewModel)) {
+                NavigationLink(destination: EditProfileView(currentUser: currentUser, chatLogViewModel: chatLogViewModel)) {
                     Image(systemName: "pencil")
                         .font(.title2)
                 }
@@ -481,7 +481,9 @@ struct ProfileView: View {
                         email: data["email"] as? String ?? "",
                         bio: data["bio"] as? String ?? "",
                         location: data["location"] as? String ?? "",
-                        username: data["username"] as? String ?? ""
+                        username: data["username"] as? String ?? "",
+                        birthdate: data["birthdate"] as? String ?? "",
+                        pronouns: data["pronouns"] as? String ?? ""
                     )
                     completion(info)
                 } else if let error = error {
@@ -612,4 +614,6 @@ struct BasicInfo {
     var bio: String
     var location: String
     var username: String
+    var birthdate: String
+    var pronouns: String
 }

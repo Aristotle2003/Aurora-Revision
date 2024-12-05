@@ -19,6 +19,8 @@
 		FB23D5712CFD52A8003C245A /* Scratch.swift in Sources */ = {isa = PBXBuildFile; fileRef = FB23D5702CFD52A8003C245A /* Scratch.swift */; };
 		FB23D5752CFE51C8003C245A /* ChangePhoneView.swift in Sources */ = {isa = PBXBuildFile; fileRef = FB23D5742CFE51C8003C245A /* ChangePhoneView.swift */; };
 		FB23D5772CFFAA77003C245A /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = FB23D5762CFFAA77003C245A /* Assets.xcassets */; };
+		FB23D5792D0125CA003C245A /* SecurityView.swift in Sources */ = {isa = PBXBuildFile; fileRef = FB23D5782D0125CA003C245A /* SecurityView.swift */; };
+		FB23D57D2D012600003C245A /* PrivacyView.swift in Sources */ = {isa = PBXBuildFile; fileRef = FB23D57C2D012600003C245A /* PrivacyView.swift */; };
 		FB3C61182CE0F497001A0922 /* CalendarView.swift in Sources */ = {isa = PBXBuildFile; fileRef = FB3C61172CE0F497001A0922 /* CalendarView.swift */; };
 		FB42CB802CD5B5A000283244 /* FriendGroupView.swift in Sources */ = {isa = PBXBuildFile; fileRef = FB42CB7F2CD5B5A000283244 /* FriendGroupView.swift */; };
 		FB42CB832CD66D9E00283244 /* EditProfileView.swift in Sources */ = {isa = PBXBuildFile; fileRef = FB42CB822CD66D9E00283244 /* EditProfileView.swift */; };
@@ -80,6 +82,8 @@
 		FB23D5702CFD52A8003C245A /* Scratch.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Scratch.swift; sourceTree = "<group>"; };
 		FB23D5742CFE51C8003C245A /* ChangePhoneView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChangePhoneView.swift; sourceTree = "<group>"; };
 		FB23D5762CFFAA77003C245A /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
+		FB23D5782D0125CA003C245A /* SecurityView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SecurityView.swift; sourceTree = "<group>"; };
+		FB23D57C2D012600003C245A /* PrivacyView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PrivacyView.swift; sourceTree = "<group>"; };
 		FB3C61172CE0F497001A0922 /* CalendarView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CalendarView.swift; sourceTree = "<group>"; };
 		FB42CB7F2CD5B5A000283244 /* FriendGroupView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FriendGroupView.swift; sourceTree = "<group>"; };
 		FB42CB822CD66D9E00283244 /* EditProfileView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EditProfileView.swift; sourceTree = "<group>"; };
@@ -152,7 +156,8 @@
 		FB23D55A2CF76BC9003C245A /* SelfProfileView */ = {
 			isa = PBXGroup;
 			children = (
-				FB23D56D2CFBB57C003C245A /* SetAuthView */,
+				FB23D57B2D0125EF003C245A /* PrivacyView */,
+				FB23D57A2D0125D2003C245A /* SecurityView */,
 				FB42CB812CD66D8500283244 /* EditProfileView */,
 				FB23D5582CF6B20D003C245A /* SelfProfileView.swift */,
 			);
@@ -174,6 +179,23 @@
 				FB23D5742CFE51C8003C245A /* ChangePhoneView.swift */,
 			);
 			path = SetAuthView;
+			sourceTree = "<group>";
+		};
+		FB23D57A2D0125D2003C245A /* SecurityView */ = {
+			isa = PBXGroup;
+			children = (
+				FB23D5782D0125CA003C245A /* SecurityView.swift */,
+				FB23D56D2CFBB57C003C245A /* SetAuthView */,
+			);
+			path = SecurityView;
+			sourceTree = "<group>";
+		};
+		FB23D57B2D0125EF003C245A /* PrivacyView */ = {
+			isa = PBXGroup;
+			children = (
+				FB23D57C2D012600003C245A /* PrivacyView.swift */,
+			);
+			path = PrivacyView;
 			sourceTree = "<group>";
 		};
 		FB3C61162CE0F479001A0922 /* CalenarView */ = {
@@ -510,6 +532,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				FB42CB802CD5B5A000283244 /* FriendGroupView.swift in Sources */,
+				FB23D57D2D012600003C245A /* PrivacyView.swift in Sources */,
 				FB3C61182CE0F497001A0922 /* CalendarView.swift in Sources */,
 				FB0F8AFB2CF52ABE00A37CED /* TutorialView.swift in Sources */,
 				FB23D5622CF8F843003C245A /* Formatter.swift in Sources */,
@@ -522,6 +545,7 @@
 				FB7E20B82CC0114600209582 /* FirebaseManager.swift in Sources */,
 				FBA6BD1F2CCDA11E0019A5E1 /* FriendRequestView.swift in Sources */,
 				FB83BDA42CDACB7500A7BE4E /* ProfileSetupView.swift in Sources */,
+				FB23D5792D0125CA003C245A /* SecurityView.swift in Sources */,
 				FB83BD942CD839A900A7BE4E /* SetUpView.swift in Sources */,
 				FB23D56F2CFBB59E003C245A /* ChangeEmailView.swift in Sources */,
 				FB23D5712CFD52A8003C245A /* Scratch.swift in Sources */,
