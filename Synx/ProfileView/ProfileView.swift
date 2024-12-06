@@ -48,99 +48,126 @@ struct ProfileView: View {
     }
 
     var body: some View {
-        VStack {
-            // Custom Back Button
-            HStack {
-                Button(action: {
-                    presentationMode.wrappedValue.dismiss()
-                }) {
-                    HStack {
-                        Image(systemName: "chevron.left")
-                        Text("Back")
+        ZStack{
+            Color(red: 0.976, green: 0.980, blue: 1.0)
+                .ignoresSafeArea()
+            VStack {
+                let topbarheight = UIScreen.main.bounds.height * 0.055
+                HStack {
+                    Button(action: {
+                        presentationMode.wrappedValue.dismiss()
+                    }) {
+                        Image("chatlogviewbackbutton")
+                            .resizable()
+                            .frame(width: 24, height: 24)
+                            .padding(.leading, 20)
+                    }
+                    
+                    Spacer()
+                    
+                    if isFriend{
+                        NavigationLink(destination: CalendarMessagesView(messagesViewModel: messagesViewModel)
+                            .onAppear {
+                                messagesViewModel.searchSavedMessages(fromId: currentUser.uid, toId: chatUser.uid)
+                            }) {
+                                Image("searchchathistorybuttoninfriendprofile")
+                                    .resizable()
+                                    .frame(width: 24, height: 24)
+                                    .padding(.trailing, 20)
+                            }
                     }
                 }
-                .padding()
+                .frame(height: topbarheight)
+                Spacer()
+                    .frame(height: UIScreen.main.bounds.height*0.03403755868)
+                
+                // Profile Image Section
+                if !showTemporaryImage {
+                    WebImage(url: URL(string: chatUser.profileImageUrl))
+                        .resizable()
+                        .scaledToFill()
+                        .frame(width: 100, height: 100)
+                        .clipShape(Circle())
+                        .onTapGesture {
+                            if isCurrentUser {
+                                showImagePicker = true
+                            }
+                        }
+                } else {
+                    WebImage(url: URL(string: self.savingImageUrl))
+                        .resizable()
+                        .scaledToFill()
+                        .frame(width: 100, height: 100)
+                        .clipShape(Circle())
+                        .onTapGesture {
+                            if isCurrentUser {
+                                showImagePicker = true
+                            }
+                        }
+                }
+                
+                Spacer()
+                    .frame(height: 8)
+                
+                Text(chatUser.username)
+                    .font(.system(size: 16, weight: .bold))
+                    .foregroundColor(Color(red: 0.337, green: 0.337, blue: 0.337))
+
+                Text(chatUser.email)
+                    .font(.system(size: 14))
+                    .foregroundColor(Color(red: 0.490, green: 0.490, blue: 0.490))
+                
+                Spacer()
+                    .frame(height: 20)
+                
+                if let otherInfo = otherUserInfo {
+                    VStack(alignment: .leading) {
+                        Text(otherInfo.bio)
+                            .font(.system(size: 14))
+                            .foregroundColor(Color(red: 0.490, green: 0.490, blue: 0.490))
+                            .padding(.horizontal, 12)
+                            .lineLimit(nil) // Allow unlimited lines
+                            .fixedSize(horizontal: false, vertical: true) // Ensure wrapping for long text
+                        HStack {
+                            if !otherInfo.age.isEmpty{
+                                Text("\(otherInfo.age)ys old")
+                                    .font(.system(size: 12))
+                                    .foregroundColor(Color(red: 0.490, green: 0.490, blue: 0.490))
+                                    .padding(8)
+                                    .background(Color(red: 0.898, green: 0.910, blue: 0.996))
+                                    .cornerRadius(50)
+                            }
+                            if !otherInfo.pronouns.isEmpty{
+                                Text(otherInfo.pronouns)
+                                    .font(.system(size: 12))
+                                    .foregroundColor(Color(red: 0.490, green: 0.490, blue: 0.490))
+                                    .padding(8)
+                                    .background(Color(red: 0.898, green: 0.910, blue: 0.996))
+                                    .cornerRadius(50)
+                            }
+                            if !otherInfo.location.isEmpty{
+                                Text(otherInfo.location)
+                                    .font(.system(size: 12))
+                                    .foregroundColor(Color(red: 0.490, green: 0.490, blue: 0.490))
+                                    .padding(8)
+                                    .background(Color(red: 0.898, green: 0.910, blue: 0.996))
+                                    .cornerRadius(50)
+                            }
+                            Spacer()
+                        }
+                        .padding(.leading, 12)
+                        .frame(maxWidth: .infinity)
+                    }
+                    .padding(8)
+                }
+                if isFriend{
+                    friendOptions
+                } else {
+                    strangerOptions
+                }
                 Spacer()
             }
-            
-            // Profile Image Section
-            if !showTemporaryImage {
-                WebImage(url: URL(string: chatUser.profileImageUrl))
-                    .resizable()
-                    .scaledToFill()
-                    .frame(width: 100, height: 100)
-                    .clipShape(Circle())
-                    .shadow(radius: 10)
-                    .onTapGesture {
-                        if isCurrentUser {
-                            showImagePicker = true
-                        }
-                    }
-            } else {
-                WebImage(url: URL(string: self.savingImageUrl))
-                    .resizable()
-                    .scaledToFill()
-                    .frame(width: 100, height: 100)
-                    .clipShape(Circle())
-                    .shadow(radius: 10)
-                    .onTapGesture {
-                        if isCurrentUser {
-                            showImagePicker = true
-                        }
-                    }
-            }
-            
-            Text(chatUser.username)
-                .font(.title)
-            
-            Text(chatUser.email)
-                .font(.headline)
-                .foregroundColor(.gray)
-            
-            if let otherInfo = otherUserInfo {
-                VStack(alignment: .leading) {
-                    Text(otherInfo.bio)
-                        .font(.headline)
-                        .padding()
-                    HStack {
-                        if !otherInfo.age.isEmpty{
-                            Text("\(otherInfo.age)ys old")
-                                .font(.headline)
-                                .foregroundColor(.gray)
-                                .padding(.horizontal, 10)
-                                .background(Color.purple.opacity(0.2))
-                                .cornerRadius(12)
-                        }
-                        if !otherInfo.pronouns.isEmpty{
-                            Text(otherInfo.pronouns)
-                                .font(.headline)
-                                .foregroundColor(.gray)
-                                .padding(.horizontal, 10)
-                                .background(Color.purple.opacity(0.2))
-                                .cornerRadius(12)
-                        }
-                        if !otherInfo.location.isEmpty{
-                            Text(otherInfo.location)
-                                .font(.headline)
-                                .foregroundColor(.gray)
-                                .padding(.horizontal, 10)
-                                .background(Color.purple.opacity(0.2))
-                                .cornerRadius(12)
-                        }
-                        Spacer()
-                    }
-                    .frame(maxWidth: .infinity)
-                }
-                .padding()
-            }
-            if isFriend{
-                friendOptions
-            } else {
-                strangerOptions
-            }
-            Spacer()
         }
-        .padding()
         .onAppear {
             checkIfFriend()
             fetchFriendSettings()
@@ -297,18 +324,73 @@ struct ProfileView: View {
                     chatLogViewModel.initializeMessages()
                     chatLogViewModel.startAutoSend()
                 }) {
-                    Image(systemName: "paperplane.fill") // 您可以使用系统图标或自定义图像
-                    Text("Message")
-                        .padding()
+                    Image("messagebuttonforfriends")
+                        .resizable()
+                        .scaledToFit()
+                        .frame(width: UIScreen.main.bounds.width - 40)
+                        .padding(20)
                 }
-                .font(.headline)
-                .frame(maxWidth: .greatestFiniteMagnitude/2)
-                .foregroundColor(Color.purple)
-                .background(Color.purple.opacity(0.5))
-                .cornerRadius(24)
             
             // Action Sheet Options
-            VStack(spacing: 10) {
+            
+                
+                
+                VStack(spacing: 0){
+                    ZStack{
+                        Image("muteandpinbuttons")
+                        HStack{
+                            Spacer()
+                            VStack{
+                                VStack{
+                                    Toggle("", isOn: $isPinned)
+                                        .padding(.trailing, 45)
+                                        .labelsHidden() // Hides the label so only the switch is visible
+                                        .tint(Color(red: 194 / 255.0, green: 196 / 255.0, blue: 240 / 255.0)) // Apply custom purple color (#C2C4F0)
+                                        .padding(12)
+                                        .onChange(of: isPinned) { newValue in
+                                            if newValue {
+                                                pinToTop()
+                                            } else {
+                                                unpinToTop()
+                                            }
+                                        }
+                                }
+                                VStack{
+                                    Toggle("", isOn: $isMuted)
+                                        .padding(.trailing, 45)
+                                        .padding(12)
+                                        .labelsHidden() // Hide the label to display only the switch
+                                        .tint(Color(red: 194 / 255.0, green: 196 / 255.0, blue: 240 / 255.0)) // Apply custom purple color (#C2C4F0)
+                                        .onChange(of: isMuted) { newValue in
+                                            if newValue {
+                                                muteFriend()
+                                            } else {
+                                                unmuteFriend()
+                                            }
+                                        }
+                                }
+                            }
+                        }
+                    }
+                    Button(action: {
+                        showReportSheet = true
+                    }) {
+                        HStack {
+                            Image("reportbutton")
+                        }
+                    }
+                    
+                    Button(action: {
+                        showDeleteConfirmation = true
+                    }) {
+                        HStack {
+                            Image("deletefriendbutton")
+                        }
+                    }
+                }
+            
+            
+            /*VStack(spacing: 10) {
                 Toggle(isOn: $isPinned) {
                     HStack {
                         Image(systemName: "pin.fill")
@@ -363,7 +445,7 @@ struct ProfileView: View {
             }
             .background(Color.gray.opacity(0.1))
             .cornerRadius(10)
-            .padding(.horizontal)
+            .padding(.horizontal)*/
         }
     }
     

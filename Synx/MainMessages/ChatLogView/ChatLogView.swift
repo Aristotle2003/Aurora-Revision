@@ -550,15 +550,19 @@ struct ChatLogView: View {
                         //.padding(12)
                         
                         Spacer()
-                        
-                        Button(action: {
-                            print("Three dots button tapped")
-                        }) {
-                            Image("chatlogviewthreedotsbutton")
-                                .resizable()
-                                .frame(width: 24, height: 24)
-                                .padding(.trailing, 20)
-                            //.padding(8)
+                        if let chatUser=vm.chatUser{
+                            NavigationLink(destination: ProfileView(
+                                chatUser: chatUser,
+                                currentUser: getCurrentUser(),
+                                isCurrentUser: false,
+                                chatLogViewModel: vm
+                            )) {
+                                Image("chatlogviewthreedotsbutton")
+                                    .resizable()
+                                    .frame(width: 24, height: 24)
+                                    .padding(.trailing, 20)
+                                //.padding(8)
+                            }
                         }
                     }
                     //.background(Color.white)
