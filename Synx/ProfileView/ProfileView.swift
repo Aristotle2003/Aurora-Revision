@@ -14,7 +14,6 @@ struct ProfileView: View {
     @State private var showReportSheet = false
     @State private var reportContent = ""
     @State private var showDeleteConfirmation = false
-    @State private var navigateToMainMessagesView = false
     @State private var showImagePicker = false
     @State private var selectedImage: UIImage? = nil
     @State private var showConfirmationDialog = false
@@ -22,6 +21,8 @@ struct ProfileView: View {
     @State private var showTemporaryImage = false
     @State private var shouldShowLogOutOptions = false
     @State private var isUserCurrentlyLoggedOut = false
+    @State private var isPinned = false
+    @State private var isMuted = false
 
     @ObservedObject var chatLogViewModel: ChatLogViewModel
     @StateObject private var messagesViewModel = MessagesViewModel()
@@ -48,7 +49,7 @@ struct ProfileView: View {
 
     var body: some View {
         VStack {
-            // 自定义返回按钮
+            // Custom Back Button
             HStack {
                 Button(action: {
                     presentationMode.wrappedValue.dismiss()
@@ -62,11 +63,12 @@ struct ProfileView: View {
                 Spacer()
             }
             
-            if !showTemporaryImage{
+            // Profile Image Section
+            if !showTemporaryImage {
                 WebImage(url: URL(string: chatUser.profileImageUrl))
                     .resizable()
                     .scaledToFill()
-                    .frame(width: 150, height: 150)
+                    .frame(width: 100, height: 100)
                     .clipShape(Circle())
                     .shadow(radius: 10)
                     .onTapGesture {
@@ -74,12 +76,11 @@ struct ProfileView: View {
                             showImagePicker = true
                         }
                     }
-            }
-            else{
+            } else {
                 WebImage(url: URL(string: self.savingImageUrl))
                     .resizable()
                     .scaledToFill()
-                    .frame(width: 150, height: 150)
+                    .frame(width: 100, height: 100)
                     .clipShape(Circle())
                     .shadow(radius: 10)
                     .onTapGesture {
@@ -91,96 +92,60 @@ struct ProfileView: View {
             
             Text(chatUser.username)
                 .font(.title)
-                .padding()
             
-            if isCurrentUser, let info = basicInfo {
-                Text("Username: \(info.username)")
-                    .font(.title)
-                // 当前用户的基本信息
-                VStack(alignment: .leading, spacing: 5) {
-                    Text("Age: \(info.age)")
-                    Text("Gender: \(info.gender)")
-                    Text("Location: \(info.location)")
-                    Text("Email: \(info.email)")
-                    Text("Bio: \(info.bio)")
+            Text(chatUser.email)
+                .font(.headline)
+                .foregroundColor(.gray)
+            
+            if let otherInfo = otherUserInfo {
+                VStack(alignment: .leading) {
+                    Text(otherInfo.bio)
+                        .font(.headline)
+                        .padding()
+                    HStack {
+                        if !otherInfo.age.isEmpty{
+                            Text("\(otherInfo.age)ys old")
+                                .font(.headline)
+                                .foregroundColor(.gray)
+                                .padding(.horizontal, 10)
+                                .background(Color.purple.opacity(0.2))
+                                .cornerRadius(12)
+                        }
+                        if !otherInfo.pronouns.isEmpty{
+                            Text(otherInfo.pronouns)
+                                .font(.headline)
+                                .foregroundColor(.gray)
+                                .padding(.horizontal, 10)
+                                .background(Color.purple.opacity(0.2))
+                                .cornerRadius(12)
+                        }
+                        if !otherInfo.location.isEmpty{
+                            Text(otherInfo.location)
+                                .font(.headline)
+                                .foregroundColor(.gray)
+                                .padding(.horizontal, 10)
+                                .background(Color.purple.opacity(0.2))
+                                .cornerRadius(12)
+                        }
+                        Spacer()
+                    }
+                    .frame(maxWidth: .infinity)
                 }
                 .padding()
-            } else if let otherInfo = otherUserInfo {
-                Text("Username: \(otherInfo.username)")
-                    .font(.title)
-                // 其他用户的基本信息
-                VStack(alignment: .leading, spacing: 5) {
-                    Text("Age: \(otherInfo.age)")
-                        .font(.headline)
-                        .foregroundColor(.blue)
-                    Text("Gender: \(otherInfo.gender)")
-                        .font(.headline)
-                        .foregroundColor(.blue)
-                    Text("Location: \(otherInfo.location)")
-                        .font(.headline)
-                        .foregroundColor(.blue)
-                    Text("Bio: \(otherInfo.bio)")
-                        .font(.headline)
-                        .foregroundColor(.blue)
-                }
-                .padding()
-                .background(Color.blue.opacity(0.1))
-                .cornerRadius(10)
             }
-            
-            if isCurrentUser {
-                // 编辑按钮
-                NavigationLink(destination: EditProfileView(currentUser: currentUser, chatLogViewModel: chatLogViewModel)) {
-                    Image(systemName: "pencil")
-                        .font(.title2)
-                }
-                .position(x: UIScreen.main.bounds.width - 140, y: -100)
-                .padding()
-                
-                // Gear Button - Shows Sign-Out Options
-                Button(action: {
-                    shouldShowLogOutOptions.toggle()
-                }) {
-                    Image(systemName: "gear")
-                        .font(.system(size: 24, weight: .bold))
-                        .foregroundColor(Color(.label))
-                }
-                .actionSheet(isPresented: $shouldShowLogOutOptions) {
-                    ActionSheet(
-                        title: Text("Settings"),
-                        message: Text("What do you want to do?"),
-                        buttons: [
-                            .destructive(Text("Sign Out"), action: {
-                                handleSignOut()
-                            }),
-                            .cancel()
-                        ]
-                    )
-                }
-                .fullScreenCover(isPresented: $isUserCurrentlyLoggedOut) {
-                    LoginView()
-                }
+            if isFriend{
+                friendOptions
             } else {
-                if isFriend {
-                    friendOptions
-                } else {
-                    strangerOptions
-                }
+                strangerOptions
             }
-            
             Spacer()
         }
         .padding()
         .onAppear {
             checkIfFriend()
-            if isCurrentUser {
-                fetchBasicInfo(for: currentUser.uid) { info in
-                    self.basicInfo = info
-                }
-            } else {
-                fetchBasicInfo(for: chatUser.uid) { info in
-                    self.otherUserInfo = info
-                }
+            fetchFriendSettings()
+            fetchBasicInfo(for: chatUser.uid) { info in
+                self.otherUserInfo = info
             }
         }
         .onDisappear{
@@ -241,9 +206,6 @@ struct ProfileView: View {
                         secondaryButton: .cancel()
                     )
                 }
-        .navigationDestination(isPresented: $navigateToMainMessagesView) {
-            MainMessagesView()
-        }
         .alert(isPresented: $showDeleteConfirmation) {
             Alert(
                 title: Text("Confirm Deletion"),
@@ -335,75 +297,73 @@ struct ProfileView: View {
                     chatLogViewModel.initializeMessages()
                     chatLogViewModel.startAutoSend()
                 }) {
-                Text("Message")
-                    .font(.headline)
-                    .padding()
-                    .background(Color.green)
-                    .foregroundColor(.white)
-                    .cornerRadius(8)
-            }
-            .padding()
+                    Image(systemName: "paperplane.fill") // 您可以使用系统图标或自定义图像
+                    Text("Message")
+                        .padding()
+                }
+                .font(.headline)
+                .frame(maxWidth: .greatestFiniteMagnitude/2)
+                .foregroundColor(Color.purple)
+                .background(Color.purple.opacity(0.5))
+                .cornerRadius(24)
             
-            HStack(spacing: 20) {
-                Button(action: {
-                    pinToTop()
-                }) {
+            // Action Sheet Options
+            VStack(spacing: 10) {
+                Toggle(isOn: $isPinned) {
                     HStack {
                         Image(systemName: "pin.fill")
                         Text("Pin")
                     }
                 }
                 .padding()
+                .onChange(of: isPinned) { newValue in
+                    if newValue {
+                        pinToTop()
+                    } else {
+                        unpinToTop()
+                    }
+                }
                 
-                Button(action: {
-                    unpinToTop()
-                }) {
+                Toggle(isOn: $isMuted) {
                     HStack {
-                        Image(systemName: "pin.slash.fill")
-                        Text("Unpin")
+                        Image(systemName: "bell.slash.fill")
+                        Text("Mute")
                     }
                 }
                 .padding()
-                
-                NavigationLink(destination: CalendarMessagesView(messagesViewModel: messagesViewModel)
-                    .onAppear {
-                        messagesViewModel.searchSavedMessages(fromId: currentUser.uid, toId: chatUser.uid)
-                    }) {
-                    Text("Search Saved Messages")
+                .onChange(of: isMuted) { newValue in
+                    if newValue {
+                        muteFriend()
+                    } else {
+                        unmuteFriend()
+                    }
                 }
-                .padding()
-            }
-            
-            HStack(spacing: 20) {
+                
                 Button(action: {
-                    muteFriend()
+                    showReportSheet = true
                 }) {
-                    Text("Mute Friend")
+                    HStack {
+                        Image(systemName: "exclamationmark.bubble.fill")
+                        Text("Report")
+                    }
+                    .foregroundColor(.red)
                 }
                 .padding()
                 
                 Button(action: {
-                    unmuteFriend()
-                }) {
-                    Text("Unmute Friend")
-                }
-                .padding()
-                
-                Button(action: {
-                    // 显示确认删除弹窗
                     showDeleteConfirmation = true
                 }) {
-                    Text("Delete Friend")
+                    HStack {
+                        Image(systemName: "trash.fill")
+                        Text("Delete")
+                    }
+                    .foregroundColor(.red)
                 }
                 .padding()
             }
-            
-            Button(action: {
-                showReportSheet = true
-            }) {
-                Text("Report Friend")
-            }
-            .padding()
+            .background(Color.gray.opacity(0.1))
+            .cornerRadius(10)
+            .padding(.horizontal)
         }
     }
     
@@ -413,14 +373,15 @@ struct ProfileView: View {
             Button(action: {
                 sendFriendRequest()
             }) {
-                Text(friendRequestSent ? "Request Sent" : "Send Friend Request")
-                    .font(.headline)
+                Image(systemName: "person.badge.plus.fill")
+                Text(friendRequestSent ? "Friend Request Sent" : "Add Friend")
                     .padding()
-                    .background(friendRequestSent ? Color.gray : Color.blue)
-                    .foregroundColor(.white)
-                    .cornerRadius(8)
             }
-            .padding()
+            .font(.headline)
+            .frame(maxWidth: .greatestFiniteMagnitude/2)
+            .foregroundColor(.purple)
+            .background(Color.purple.opacity(0.5))
+            .cornerRadius(24)
             .disabled(friendRequestSent)
         }
     }
@@ -606,6 +567,31 @@ struct ProfileView: View {
                 }
             }
     }
+
+     // 添加获取 isPinned 和 isMuted 状态的方法
+    func fetchFriendSettings() {
+        guard let currentUserID = FirebaseManager.shared.auth.currentUser?.uid else { return }
+        let friendRef = FirebaseManager.shared.firestore
+            .collection("friends")
+            .document(currentUserID)
+            .collection("friend_list")
+            .document(chatUser.uid)
+
+        friendRef.getDocument { snapshot, error in
+            if let error = error {
+                print("Failed to fetch user settings: \(error)")
+                return
+            }
+
+            if let data = snapshot?.data() {
+                self.isPinned = data["isPinned"] as? Bool ?? false
+                self.isMuted = data["isMuted"] as? Bool ?? false
+                print(isPinned, isMuted)
+            } else {
+                print("No data found for user settings")
+            }
+        }
+    }
 }
 
 struct BasicInfo {
@@ -619,3 +605,5 @@ struct BasicInfo {
     var pronouns: String
     var name: String
 }
+
+
