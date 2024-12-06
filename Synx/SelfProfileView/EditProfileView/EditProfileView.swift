@@ -10,6 +10,7 @@ class ProfileViewModel: ObservableObject {
     @Published var username: String = ""
     @Published var birthdate: Date = Date()
     @Published var pronouns: String = ""
+    @Published var name: String = ""
     
     private let currentUser: ChatUser
     
@@ -33,6 +34,7 @@ class ProfileViewModel: ObservableObject {
                     self.location = data["location"] as? String ?? ""
                     self.username = data["username"] as? String ?? ""
                     self.pronouns = data["pronouns"] as? String ?? ""
+                    self.name = data["name"] as? String ?? ""
                     if let birthdateString = data["birthdate"] as? String,
                        let birthdate = ISO8601DateFormatter().date(from: birthdateString) {
                         self.birthdate = birthdate
@@ -54,7 +56,8 @@ class ProfileViewModel: ObservableObject {
             "location": location,
             "username": username,
             "birthdate": birthdate,
-            "pronouns": pronouns
+            "pronouns": pronouns,
+            "name": name
         ]
         
         FirebaseManager.shared.firestore
@@ -129,6 +132,16 @@ struct EditProfileView: View {
         NavigationView {
             Form {
                 Section(header: Text("Basic Information")) {
+                    
+                    NavigationLink(destination: DetailInputView(title: "Your name", value: $profileVM.name)) {
+                        HStack {
+                            Text("Name")
+                            Spacer()
+                            Text(profileVM.name.isEmpty ? "Enter name" : profileVM.name)
+                                .foregroundColor(.gray)
+                        }
+                    }
+                    
                     NavigationLink(destination: DetailInputView(title: "Username", value: $profileVM.username)) {
                         HStack {
                             Text("Username")

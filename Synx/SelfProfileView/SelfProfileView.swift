@@ -31,6 +31,7 @@ struct SelfProfileView: View {
     @State private var showTemporaryImage = false
     @State private var shouldShowLogOutOptions = false
     @State private var isUserCurrentlyLoggedOut = false
+    @State private var showPrivacyPage = false
     
     @ObservedObject var chatLogViewModel: ChatLogViewModel
     @StateObject private var messagesViewModel = MessagesViewModel()
@@ -119,6 +120,7 @@ struct SelfProfileView: View {
                         Text("Location: \(info.location)")
                         Text("Email: \(info.email)")
                         Text("Bio: \(info.bio)")
+                        
                     }
                     .padding()
                 }
@@ -137,7 +139,9 @@ struct SelfProfileView: View {
                             .padding(.horizontal)
                     }
                     
-                    NavigationLink(destination: ChangeEmailView()) {
+                    Button(action: {
+                        showPrivacyPage.toggle()
+                    }) {
                         Text("Privacy")
                             .font(.headline)
                             .frame(maxWidth: .infinity, minHeight: 50)
@@ -186,6 +190,9 @@ struct SelfProfileView: View {
                 }
                 .fullScreenCover(isPresented: $isUserCurrentlyLoggedOut) {
                     LoginView()
+                }
+                .fullScreenCover(isPresented: $showPrivacyPage){
+                    PrivacyView()
                 }
                 
                 Spacer()
@@ -337,7 +344,8 @@ struct SelfProfileView: View {
                         location: data["location"] as? String ?? "",
                         username: data["username"] as? String ?? "",
                         birthdate: data["birthdate"] as? String ?? "",
-                        pronouns: data["pronouns"] as? String ?? ""
+                        pronouns: data["pronouns"] as? String ?? "",
+                        name: data["name"] as? String ?? ""
                     )
                     completion(info)
                 } else if let error = error {

@@ -69,7 +69,7 @@ class FriendGroupViewModel: ObservableObject {
         let group = DispatchGroup()
         
         group.enter()
-        fetchLatestResponse(for: userId, email: self.selectedUser.email, profileImageUrl: self.selectedUser.profileImageUrl) { response in
+        fetchLatestResponse(for: userId, email: self.selectedUser.email, profileImageUrl: self.selectedUser.profileImageUrl, username: self.selectedUser.username) { response in
             if let response = response {
                 allResponses.append(response)
             }
@@ -100,7 +100,7 @@ class FriendGroupViewModel: ObservableObject {
                     }
                     
                     group.enter()
-                    self.fetchLatestResponse(for: friendId, email: email, profileImageUrl: profileImageUrl) { response in
+                    self.fetchLatestResponse(for: friendId, email: email, profileImageUrl: profileImageUrl, username:username) { response in
                         if let response = response {
                             allResponses.append(response)
                         }
@@ -114,7 +114,7 @@ class FriendGroupViewModel: ObservableObject {
             }
     }
     
-    private func fetchLatestResponse(for uid: String, email: String, profileImageUrl: String, completion: @escaping (FriendResponse?) -> Void) {
+    private func fetchLatestResponse(for uid: String, email: String, profileImageUrl: String, username: String, completion: @escaping (FriendResponse?) -> Void) {
         FirebaseManager.shared.firestore.collection("response_to_prompt")
             .whereField("uid", isEqualTo: uid)
             .order(by: "timestamp", descending: true)
@@ -123,7 +123,6 @@ class FriendGroupViewModel: ObservableObject {
                 if let doc = snapshot?.documents.first {
                     let data = doc.data()
                     let latestMessage = data["text"] as? String ?? ""
-                    let username = data["username"] as? String ?? ""
                     let timestamp = (data["timestamp"] as? Timestamp)?.dateValue() ?? Date()
                     let likes = data["likes"] as? Int ?? 0
                     let likedBy = data["likedBy"] as? [String] ?? []
@@ -155,6 +154,23 @@ class FriendGroupViewModel: ObservableObject {
     func setupCurrentUserHasPostedListener() {
         guard let uid = FirebaseManager.shared.auth.currentUser?.uid else { return }
         
+        FirebaseManager.shared.firestore.collection("users").document(uid).getDocument { snapshot, error in
+            if let error = error {
+                print("Failed to fetch current user: \(error.localizedDescription)")
+                return
+            }
+            
+            DispatchQueue.main.async {
+                if let data = snapshot?.data() {
+                    // If `hasPosted` is present, use its value; otherwise, default to false
+                    self.currentUserHasPosted = data["hasPosted"] as? Bool ?? false
+                } else {
+                    // Explicitly set to false if document does not exist or has no data
+                    self.currentUserHasPosted = false
+                }
+            }
+        }
+        
         listener = FirebaseManager.shared.firestore.collection("users").document(uid)
             .addSnapshotListener { snapshot, error in
                 if let error = error {
@@ -171,7 +187,7 @@ class FriendGroupViewModel: ObservableObject {
                 }
             }
     }
-
+    
     func updateHasPostedStatus(for userId: String) {
         FirebaseManager.shared.firestore.collection("users").document(userId).updateData([
             "hasPosted": true
@@ -231,7 +247,7 @@ struct FriendGroupView: View {
     @State private var offset = CGSize.zero
     @State private var rotationDegrees = [Double]()
     let selectedUser: ChatUser
-
+    
     init(selectedUser: ChatUser) {
         self.selectedUser = selectedUser
         _vm = ObservedObject(wrappedValue: FriendGroupViewModel(selectedUser: selectedUser))
@@ -244,7 +260,7 @@ struct FriendGroupView: View {
             .first?
             .safeAreaInsets.top ?? 0
     }
-
+    
     var body: some View {
         ZStack {
             // Background Color
@@ -278,14 +294,14 @@ struct FriendGroupView: View {
                     Spacer()
                 }
                 
-                 // Add padding to match design
+                // Add padding to match design
                 
                 // Rounded rectangle containing the prompt text
                 ZStack(alignment: .topLeading) {
                     // Dynamic RoundedRectangle wrapping the content
                     RoundedRectangle(cornerRadius: 24)
                         .fill(Color(red: 0.898, green: 0.910, blue: 0.996)) // Color equivalent to #E5E8FE
-
+                    
                     HStack(spacing: 20) {
                         // VStack for Date and Prompt
                         VStack(alignment: .leading, spacing: 10) {
@@ -332,76 +348,78 @@ struct FriendGroupView: View {
                 }
                 
                 ZStack {
-                    ForEach(vm.responses.indices, id: \.self) { index in
-                        if index >= topCardIndex {
-                            ResponseCard(response: vm.responses[index], cardColor: getCardColor(index: index), likeAction: {
-                                vm.toggleLike(for: vm.responses[index])
-                            })
-                            .offset(x: index == topCardIndex ? offset.width : 0, y: CGFloat(index - topCardIndex) * 10)
-                            .rotationEffect(.degrees(index == topCardIndex ? Double(offset.width / 20) : rotationDegrees[index]), anchor: .center)
-                            .scaleEffect(index == topCardIndex ? 1.0 : 0.95)
-                            .animation(.spring(), value: offset)
-                            .zIndex(Double(vm.responses.count - index))
-                            .gesture(
-                                DragGesture()
-                                    .onChanged { gesture in
-                                        if index == topCardIndex {
-                                            offset = gesture.translation
+                    if vm.currentUserHasPosted {
+                        ForEach(vm.responses.indices, id: \.self) { index in
+                            if index >= topCardIndex {
+                                ResponseCard(response: vm.responses[index], cardColor: getCardColor(index: index), likeAction: {
+                                    vm.toggleLike(for: vm.responses[index])
+                                })
+                                .offset(x: index == topCardIndex ? offset.width : 0, y: CGFloat(index - topCardIndex) * 10)
+                                .rotationEffect(.degrees(index == topCardIndex ? Double(offset.width / 20) : rotationDegrees[index]), anchor: .center)
+                                .scaleEffect(index == topCardIndex ? 1.0 : 0.95)
+                                .animation(.spring(), value: offset)
+                                .zIndex(Double(vm.responses.count - index))
+                                .gesture(
+                                    DragGesture()
+                                        .onChanged { gesture in
+                                            if index == topCardIndex {
+                                                offset = gesture.translation
+                                            }
                                         }
-                                    }
-                                    .onEnded { _ in
-                                        if abs(offset.width) > 150 {
-                                            withAnimation {
-                                                offset = CGSize(width: offset.width > 0 ? 500 : -500, height: 0)
-                                                topCardIndex += 1
-                                                if topCardIndex >= vm.responses.count {
-                                                    topCardIndex = 0
+                                        .onEnded { _ in
+                                            if abs(offset.width) > 150 {
+                                                withAnimation {
+                                                    offset = CGSize(width: offset.width > 0 ? 500 : -500, height: 0)
+                                                    topCardIndex += 1
+                                                    if topCardIndex >= vm.responses.count {
+                                                        topCardIndex = 0
+                                                    }
+                                                    offset = .zero
                                                 }
-                                                offset = .zero
-                                            }
-                                        } else {
-                                            withAnimation {
-                                                offset = .zero
+                                            } else {
+                                                withAnimation {
+                                                    offset = .zero
+                                                }
                                             }
                                         }
-                                    }
-                            )
-                            .padding(8)
+                                )
+                                .padding(8)
+                            }
                         }
                     }
                     
+                    
+                    
+                    
                     if !vm.currentUserHasPosted {
-                        Color.white.opacity(0.5)
-                            .frame(maxWidth: .infinity, maxHeight: .infinity)
-                            .allowsHitTesting(false)
-                        
-                        VStack {
-                            Spacer()
-                            Image(systemName: "lock.fill")
-                                .resizable()
+                        ZStack {
+                            Image("blurredbackgroundfordailyaurora") // Icon for the reply button
+                                .resizable()// Icon size
                                 .scaledToFit()
-                                .frame(width: 100, height: 100)
-                                .foregroundColor(.gray)
-                            
-                            Text("发布一条动态以解锁好友圈")
-                                .font(.headline)
-                                .padding()
-                            
-                            Button(action: {
-                                vm.showResponseInput = true
-                            }) {
-                                Text("立即发布")
-                                    .foregroundColor(.white)
-                                    .padding()
-                                    .background(Color.blue)
-                                    .cornerRadius(8)
+                                .scaleEffect(1.3)
+                            VStack {
+                                Spacer()
+                                
+                                Image("lockimage")
+                                    .resizable()
+                                    .scaledToFit()
+                                    .frame(width: 250, height: 130)
+                                
+                                Button(action: {
+                                    vm.showResponseInput = true
+                                }) {
+                                    Image("writeyourownresponsebutton")
+                                        .resizable()
+                                        .scaledToFit()
+                                        .frame(width: 180, height: 100)
+                                }
+                                
+                                Spacer()
                             }
-                            Spacer()
+                            .frame(maxWidth: .infinity, maxHeight: .infinity)
+                            .opacity(0.8)
+                            .zIndex(100)
                         }
-                        .frame(maxWidth: .infinity, maxHeight: .infinity)
-                        .opacity(0.8)
-                        .zIndex(100)
-                        .background(Color.white.opacity(0.8))
                     }
                 }
                 .frame(maxWidth: .infinity, maxHeight: 450)
@@ -412,8 +430,10 @@ struct FriendGroupView: View {
             .fullScreenCover(isPresented: $vm.showResponseInput) {
                 FullScreenResponseInputView(vm: vm, selectedUser: selectedUser)
             }
+            
         }
     }
+    
     
     func getCardColor(index: Int) -> Color {
         let colors = [Color.mint, Color.cyan, Color.pink]
@@ -425,7 +445,7 @@ struct FriendGroupView: View {
         let font = UIFont.preferredFont(forTextStyle: .headline)
         let size = CGSize(width: textWidth, height: .greatestFiniteMagnitude)
         let boundingBox = text.boundingRect(with: size, options: .usesLineFragmentOrigin, attributes: [.font: font], context: nil)
-
+        
         return boundingBox.height + 80 // Add 80 for date, spacing, and padding
     }
 }
@@ -434,52 +454,117 @@ struct ResponseCard: View {
     var response: FriendResponse
     var cardColor: Color
     var likeAction: () -> Void
-
+    
     var body: some View {
         ZStack {
             // Background image based on the card color
             if cardColor == Color.mint {
                 Image("greencard")
                     .resizable()
-                    .scaledToFit() // Ensures image maintains its aspect ratio
+                    .scaledToFit()
+                    .frame(width: UIScreen.main.bounds.width * 0.692111, height: UIScreen.main.bounds.height*0.42253)// Ensures image maintains its aspect ratio
                     .cornerRadius(25)
             } else if cardColor == Color.cyan {
                 Image("bluecard")
                     .resizable()
                     .scaledToFit() // Ensures image maintains its aspect ratio
+                    .frame(width: UIScreen.main.bounds.width * 0.692111, height: UIScreen.main.bounds.height*0.42253)
                     .cornerRadius(25)
             } else if cardColor == Color.pink {
                 Image("purplecard")
                     .resizable()
                     .scaledToFit() // Ensures image maintains its aspect ratio
+                    .frame(width: UIScreen.main.bounds.width * 0.692111, height: UIScreen.main.bounds.height*0.42253)
                     .cornerRadius(25)
             }
-
+            
             // Content overlay on top of the image
             VStack(alignment: .leading, spacing: 12) {
+                HStack{
+                    Spacer()
+                    Button(action: {
+                        print("three dots pressed")
+                    }) {
+                        if cardColor == Color.mint {
+                            Image("reportbuttongreencard")
+                                .resizable()
+                                .scaledToFit()
+                                .frame(width: 24, height: 24)
+                        } else if cardColor == Color.cyan {
+                            Image("reportbuttonbluecard")
+                                .resizable()
+                                .scaledToFit()
+                                .frame(width: 24, height: 24)
+                        } else if cardColor == Color.pink {
+                            Image("reportbuttonpurplecard")
+                                .resizable()
+                                .scaledToFit()
+                                .frame(width: 24, height: 24)
+                        }
+                    }
+                    .padding(.trailing, 35)
+                    .padding(.top, 35)
+                }
                 Spacer()
                 // Latest message text
-                Text(response.latestMessage)
-                    .font(.system(size: 16, weight: .bold))
-                    .foregroundColor(Color(red: 0.49, green: 0.52, blue: 0.75))
-                    .fixedSize(horizontal: false, vertical: true)
-                    .padding(30)
-
+                /*if cardColor == Color.mint {
+                    
+                } else if cardColor == Color.cyan {
+                  
+                } else if cardColor == Color.pink {
+                   
+                }*/
+                
+                if cardColor == Color.mint {
+                    Text(response.latestMessage)
+                        .font(.system(size: 14, weight: .bold))
+                        .foregroundColor(Color(red: 0.357, green: 0.635, blue: 0.451))
+                        .fixedSize(horizontal: false, vertical: true)
+                        .padding(98)
+                } else if cardColor == Color.cyan {
+                    Text(response.latestMessage)
+                        .font(.system(size: 14, weight: .bold))
+                        .foregroundColor(Color(red: 0.388, green: 0.655, blue: 0.835))
+                        .fixedSize(horizontal: false, vertical: true)
+                        .padding(98)
+                } else if cardColor == Color.pink {
+                    Text(response.latestMessage)
+                        .font(.system(size: 14, weight: .bold))
+                        .foregroundColor(Color(red: 0.49, green: 0.52, blue: 0.75))
+                        .fixedSize(horizontal: false, vertical: true)
+                        .padding(98)
+                }
+                
+                
+                
                 Spacer()
-
-                HStack(alignment: .center) {
+                
+                HStack{
                     // Profile image
                     WebImage(url: URL(string: response.profileImageUrl))
                         .resizable()
                         .scaledToFill()
                         .frame(width: 45, height: 45)
                         .clipShape(Circle())
-
+                    
                     VStack(alignment: .leading) {
                         // User email and timestamp
-                        Text(response.email)
-                            .font(.system(size: 12, weight: .bold))
-                            .foregroundColor(Color(red: 0.49, green: 0.52, blue: 0.75))
+                        
+                        
+                        
+                        if cardColor == Color.mint {
+                            Text(response.username)
+                                .font(.system(size: 12, weight: .bold))
+                                .foregroundColor(Color(red: 0.357, green: 0.635, blue: 0.451))
+                        } else if cardColor == Color.cyan {
+                            Text(response.username)
+                                .font(.system(size: 12, weight: .bold))
+                                .foregroundColor(Color(red: 0.388, green: 0.655, blue: 0.835))
+                        } else if cardColor == Color.pink {
+                            Text(response.username)
+                                .font(.system(size: 12, weight: .bold))
+                                .foregroundColor(Color(red: 0.49, green: 0.52, blue: 0.75))
+                        }
                         Text(response.timestamp, style: .time)
                             .font(.system(size: 10))
                             .foregroundColor(Color.gray)
@@ -510,29 +595,42 @@ struct ResponseCard: View {
                             }
                         }
                         
-                        // Display the number of likes
-                        Text("\(response.likes)")
-                            .font(.subheadline)
+                        if cardColor == Color.mint {
+                            Text("\(response.likes)")
+                                .font(.system(size: 16, weight: .bold))
+                                .foregroundColor(Color(red: 0.357, green: 0.635, blue: 0.451))
+                                
+                        } else if cardColor == Color.cyan {
+                            Text("\(response.likes)")
+                                .font(.system(size: 16, weight: .bold))
+                                .foregroundColor(Color(red: 0.388, green: 0.655, blue: 0.835))
+                        } else if cardColor == Color.pink {
+                            Text("\(response.likes)")
+                                .font(.system(size: 16, weight: .bold))
+                                .foregroundColor(Color(red: 0.49, green: 0.52, blue: 0.75))
+                        }
+                        
                     }
-                    .padding(.trailing, 20)
-
+                    
+                    
                 }
-                .padding([.leading, .bottom], 20)
+                .padding(.bottom, 30)
+                .padding(.trailing, 30)
+                .padding(.leading, 30)
             }
         }
         .aspectRatio(contentMode: .fit) // Matches the image's aspect ratio
     }
+    
 }
-
-import SwiftUI
 
 struct FullScreenResponseInputView: View {
     @ObservedObject var vm: FriendGroupViewModel
     let selectedUser: ChatUser
-
+    
     @State private var keyboardHeight: CGFloat = 0 // Track keyboard height
     @FocusState private var isResponseTextFocused: Bool // For focusing the TextEditor
-
+    
     var body: some View {
         NavigationView {
             GeometryReader { geometry in

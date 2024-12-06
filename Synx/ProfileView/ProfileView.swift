@@ -483,7 +483,8 @@ struct ProfileView: View {
                         location: data["location"] as? String ?? "",
                         username: data["username"] as? String ?? "",
                         birthdate: data["birthdate"] as? String ?? "",
-                        pronouns: data["pronouns"] as? String ?? ""
+                        pronouns: data["pronouns"] as? String ?? "",
+                        name: data["name"] as? String ?? ""
                     )
                     completion(info)
                 } else if let error = error {
@@ -616,4 +617,5 @@ struct BasicInfo {
     var username: String
     var birthdate: String
     var pronouns: String
+    var name: String
 }

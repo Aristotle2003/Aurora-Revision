@@ -19,70 +19,195 @@ struct ChangeEmailView: View {
     @State private var phoneNumber: String = ""
     @State private var email: String = ""
     
+    @State private var showConfirmationAlert = false
+    @State private var isDeleting = false
+    @State private var deletionError: String?
+    @State private var isUserCurrentlyLoggedOut = false
+    @State private var confirmationInput = ""
     
     var body: some View {
         NavigationView {
-                VStack(spacing: 20) {
-                    // First Section: Phone Number and Email
-                    VStack(alignment: .leading, spacing: 20) {
-                        Text("Linked Information")
-                            .font(.headline)
-                            .foregroundColor(.gray)
-                        
-                        VStack(spacing: 20) {
-                            Text("Phone Number: \(phoneNumber.isEmpty ? "Not Linked" : phoneNumber)")
-                                .font(.body)
-                            Text("Email: \(email.isEmpty ? "Not Linked" : email)")
-                                .font(.body)
-                        }
-                        .padding()
-                        .background(Color(UIColor.systemGroupedBackground))
-                        .cornerRadius(10)
-                    }
-                    .padding(.horizontal)
-
-                    // Second Section: Buttons
-                    VStack(alignment: .leading, spacing: 20) {
-                        Text("Link Accounts")
-                            .font(.headline)
-                            .foregroundColor(.gray)
-
-                        VStack(spacing: 20) {
-                            googleSignInButton
-                            appleSignInButton
-                            changePhoneNavigationLink
-                        }
-                        .padding()
-                        .background(Color(UIColor.systemGroupedBackground))
-                        .cornerRadius(10)
-                    }
-                    .padding(.horizontal)
+            VStack(spacing: 20) {
+                // First Section: Phone Number and Email
+                VStack(alignment: .leading, spacing: 20) {
+                    Text("Linked Information")
+                        .font(.headline)
+                        .foregroundColor(.gray)
                     
-                    VStack(alignment: .leading, spacing: 20){
-                        Text("Account actions")
-                            .font(.headline)
-                            .foregroundColor(.gray)
-                        
+                    VStack(spacing: 20) {
+                        Text("Phone Number: \(phoneNumber.isEmpty ? "Not Linked" : phoneNumber)")
+                            .font(.body)
+                        Text("Email: \(email.isEmpty ? "Not Linked" : email)")
+                            .font(.body)
                     }
+                    .padding()
+                    .background(Color(UIColor.systemGroupedBackground))
+                    .cornerRadius(10)
+                }
+                .padding(.horizontal)
+                
+                // Second Section: Buttons
+                VStack(alignment: .leading, spacing: 20) {
+                    Text("Link Accounts")
+                        .font(.headline)
+                        .foregroundColor(.gray)
                     
-                    // Error Message
-                    if !errorMessage.isEmpty {
-                        Text(errorMessage)
-                            .font(.caption)
-                            .foregroundColor(.red)
-                            .padding(.top)
+                    VStack(spacing: 20) {
+                        googleSignInButton
+                        appleSignInButton
+                        changePhoneNavigationLink
+                    }
+                    .padding()
+                    .background(Color(UIColor.systemGroupedBackground))
+                    .cornerRadius(10)
+                }
+                .padding(.horizontal)
+                
+                VStack(alignment: .leading, spacing: 20){
+                    Text("Account actions")
+                        .font(.headline)
+                        .foregroundColor(.gray)
+                    Button {
+                        showConfirmationAlert = true
+                    } label: {
+                        HStack {
+                            Text("Delete Account")
+                                .font(.system(size: 16, weight: .medium))
+                                .foregroundColor(.red)
+                        }
+                        .frame(maxWidth: .infinity)
+                        .padding(.vertical, 12)
+                        .background(
+                            RoundedRectangle(cornerRadius: 12)
+                                .stroke(Color.gray.opacity(0.5), lineWidth: 1)
+                        )
+                    }
+                    .fullScreenCover(isPresented: $isUserCurrentlyLoggedOut) {
+                        LoginView()
                     }
                 }
-                .padding()
-                .navigationTitle("Security")
-                .navigationBarItems(leading: Button("Cancel") {
-                    dismiss()
-                })
-                .onAppear {
-                    checkUserProviders()
-                    fetchPhoneNumberAndEmail()
+                
+                // Error Message
+                if !errorMessage.isEmpty {
+                    Text(errorMessage)
+                        .font(.caption)
+                        .foregroundColor(.red)
+                        .padding(.top)
                 }
-            }.navigationBarBackButtonHidden(true)
+            }
+            .padding()
+            .sheet(isPresented: $showConfirmationAlert) {
+                        ConfirmationDialog(
+                            confirmationInput: $confirmationInput,
+                            onConfirm: {
+                                if confirmationInput == "I want to permanently delete the account" {
+                                    deleteAccount()
+                                } else {
+                                    deletionError = "You must type the exact confirmation message to delete the account."
+                                }
+                                showConfirmationAlert = false
+                            },
+                            onCancel: {
+                                showConfirmationAlert = false
+                            }
+                        )
+                    }
+            .navigationTitle("Security")
+            .navigationBarItems(leading: Button("Cancel") {
+                dismiss()
+            })
+            .onAppear {
+                checkUserProviders()
+                fetchPhoneNumberAndEmail()
+            }
+        }.navigationBarBackButtonHidden(true)
+    }
+    
+    private func handleSignOut() {
+        guard let currentUserID = FirebaseManager.shared.auth.currentUser?.uid else { return }
+        
+        // Reference to the user's FCM token in Firestore
+        let userRef = FirebaseManager.shared.firestore.collection("users").document(currentUserID)
+        
+        // Update the FCM token to an empty string
+        userRef.updateData(["fcmToken": ""]) { error in
+            if let error = error {
+                print("Failed to update FCM token: \(error)")
+                return
+            }
+            
+            // Proceed to sign out if the FCM token update is successful
+            self.isUserCurrentlyLoggedOut.toggle()
+            try? FirebaseManager.shared.auth.signOut()
+        }
+    }
+    
+    /// Function to delete the account
+    func deleteAccount() {
+        guard let user = Auth.auth().currentUser else {
+            deletionError = "User not authenticated."
+            return
+        }
+        
+        isDeleting = true
+        deletionError = nil
+        
+        let userId = user.uid
+        let db = Firestore.firestore()
+        
+        // Delete user data from Firestore
+        db.collection("users").document(userId).delete { error in
+            if let error = error {
+                self.deletionError = "Failed to delete user data: \(error.localizedDescription)"
+                self.isDeleting = false
+                return
+            }
+            
+            // Delete the user authentication
+            user.delete { authError in
+                if let authError = authError {
+                    self.deletionError = "Failed to delete user authentication: \(authError.localizedDescription)"
+                    self.isDeleting = false
+                    return
+                }
+                
+                // Optional: Perform cleanup of any other user-related data
+                cleanupUserData(userId: userId) { cleanupError in
+                    if let cleanupError = cleanupError {
+                        self.deletionError = "Failed to clean up related data: \(cleanupError.localizedDescription)"
+                    }
+                    self.isDeleting = false
+                }
+            }
+        }
+    }
+    
+    /// Cleanup other user-related data in Firestore (e.g., messages, posts)
+    func cleanupUserData(userId: String, completion: @escaping (Error?) -> Void) {
+        let db = Firestore.firestore()
+        
+        // Example: Remove user-related messages
+        let messagesCollection = db.collection("messages")
+        messagesCollection.whereField("userId", isEqualTo: userId).getDocuments { snapshot, error in
+            if let error = error {
+                completion(error)
+                return
+            }
+            
+            guard let documents = snapshot?.documents else {
+                completion(nil)
+                return
+            }
+            
+            let batch = db.batch()
+            for document in documents {
+                batch.deleteDocument(document.reference)
+            }
+            
+            batch.commit { batchError in
+                completion(batchError)
+            }
+        }
     }
     
     private func fetchPhoneNumberAndEmail(){
@@ -179,42 +304,42 @@ struct ChangeEmailView: View {
             errorMessage = "Error getting client ID"
             return
         }
-
+        
         // Create Google Sign-In configuration object.
         let config = GIDConfiguration(clientID: clientID)
         GIDSignIn.sharedInstance.configuration = config
-
+        
         guard let windowScene = UIApplication.shared.connectedScenes.first as? UIWindowScene,
               let rootViewController = windowScene.windows.first?.rootViewController else {
             errorMessage = "Error getting root view controller"
             return
         }
-
+        
         // Start the sign-in flow.
         GIDSignIn.sharedInstance.signIn(withPresenting: rootViewController) { result, error in
             if let error = error {
                 errorMessage = "Error signing in with Google: \(error.localizedDescription)"
                 return
             }
-
+            
             guard let user = result?.user,
                   let idToken = user.idToken?.tokenString else {
                 errorMessage = "Error getting user data"
                 return
             }
-
+            
             let credential = GoogleAuthProvider.credential(
                 withIDToken: idToken,
                 accessToken: user.accessToken.tokenString
             )
-
+            
             // Handle linking logic based on the current account state
             handleLinking(with: credential, providerID: "google.com")
         }
     }
-
     
-
+    
+    
     
     
     
@@ -233,13 +358,13 @@ struct ChangeEmailView: View {
                 errorMessage = "Unable to serialize token string from data: \(appleIDToken.debugDescription)"
                 return
             }
-
+            
             let credential = OAuthProvider.appleCredential(
                 withIDToken: idTokenString,
                 rawNonce: nonce,
                 fullName: appleIDCredential.fullName
             )
-
+            
             // Handle linking logic based on the current account state
             handleLinking(with: credential, providerID: "apple.com")
         }
@@ -256,7 +381,7 @@ struct ChangeEmailView: View {
             self.errorMessage = "No current user found"
             return
         }
-
+        
         // Check existing linked providers
         let emailProviders = currentUser.providerData.filter { $0.providerID != PhoneAuthProviderID }
         
@@ -275,7 +400,7 @@ struct ChangeEmailView: View {
             }
         }
     }
-
+    
     
     
     
@@ -317,11 +442,11 @@ struct ChangeEmailView: View {
             }
         }
     }
-
-
-
-
-
+    
+    
+    
+    
+    
     
     
     
@@ -371,11 +496,11 @@ struct ChangeEmailView: View {
             }
         }
     }
-
     
-
     
-
+    
+    
+    
     
     
     
@@ -426,7 +551,55 @@ struct ChangeEmailView: View {
 }
 
 
+/// Custom confirmation dialog
+struct ConfirmationDialog: View {
+    @Binding var confirmationInput: String
+    let onConfirm: () -> Void
+    let onCancel: () -> Void
 
+    var body: some View {
+        VStack(spacing: 20) {
+            Text("Confirm Account Deletion")
+                .font(.title2)
+                .fontWeight(.bold)
+                .foregroundColor(.red)
+            
+            Text("To confirm deletion, type:")
+                .font(.body)
+            Text("\"I want to permanently delete the account\"")
+                .font(.headline)
+                .foregroundColor(.red)
+            
+            TextField("Type the message here", text: $confirmationInput)
+                .textFieldStyle(RoundedBorderTextFieldStyle())
+                .padding(.horizontal)
+            
+            HStack {
+                Button("Cancel") {
+                    onCancel()
+                }
+                .padding()
+                .frame(maxWidth: .infinity)
+                .background(Color.gray.opacity(0.2))
+                .cornerRadius(8)
+                
+                Button("Delete") {
+                    onConfirm()
+                }
+                .padding()
+                .frame(maxWidth: .infinity)
+                .background(Color.red)
+                .foregroundColor(.white)
+                .cornerRadius(8)
+            }
+            .padding(.horizontal)
+        }
+        .padding()
+        .background(Color.white)
+        .cornerRadius(16)
+        .shadow(radius: 10)
+    }
+}
 
 #Preview {
     ChangeEmailView()

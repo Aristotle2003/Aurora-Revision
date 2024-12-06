@@ -716,13 +716,24 @@ struct ChatLogView: View {
                                                 Image("Seen")
                                                     .resizable()
                                                     .scaledToFit()
-                                                    .frame(width: 52, height: 19)
+                                                    .frame(width: 44, height: 20)
                                             } else {
                                                 Image("Unseen")
                                                     .resizable()
                                                     .scaledToFit()
                                                     .frame(width: 44, height: 20)
                                             }
+                                        }
+                                        if vm.savingTrigger{
+                                            Image("savedbutton")
+                                                .resizable()
+                                                .scaledToFit()
+                                                .frame(width: 44, height: 20)
+                                                .onAppear{
+                                                    DispatchQueue.main.asyncAfter(deadline: .now() + 3.0){
+                                                        vm.setTriggerToFalse()
+                                                    }
+                                                }
                                         }
                                         Spacer()
                                     }
@@ -857,16 +868,7 @@ struct ChatLogView: View {
                     Spacer()
                 }
                 .frame(maxHeight: .infinity)
-                if vm.savingTrigger{
-                    Text("Saved a message by your chatuser")
-                        .onAppear{
-                            DispatchQueue.main.asyncAfter(deadline: .now() + 5.0){
-                                vm.setTriggerToFalse()
-                            }
-                        }
-                }else{
-                    Text("")
-                }
+                
             }
             
         }
