@@ -203,7 +203,7 @@ class ChatLogViewModel: ObservableObject {
     func startAutoSend() {
         timer?.invalidate()
         timer = nil
-        timer = Timer.scheduledTimer(withTimeInterval: 3, repeats: true) { _ in
+        timer = Timer.scheduledTimer(withTimeInterval: 0.5, repeats: true) { _ in
             print(self.chatText)
             self.handleSend()
         }
@@ -317,20 +317,26 @@ class ChatLogViewModel: ObservableObject {
         }
     }
     
+    private var senderMessageListener: ListenerRegistration?
+    private var recipientMessageListener: ListenerRegistration?
+    
     func fetchLatestMessages() {
         guard let fromId = FirebaseManager.shared.auth.currentUser?.uid else { return }
         guard let toId = chatUser?.uid else { return }
         
-        // Fetch latest message sent by the current user
-        FirebaseManager.shared.firestore
+        senderMessageListener?.remove()
+        recipientMessageListener?.remove()
+        
+        // Listener for latest message sent by the current user
+        senderMessageListener = FirebaseManager.shared.firestore
             .collection("messages")
             .document(fromId)
             .collection(toId)
             .order(by: "timeStamp", descending: true)
             .limit(to: 1)
-            .getDocuments { querySnapshot, error in
+            .addSnapshotListener { querySnapshot, error in
                 if let error = error {
-                    self.errorMessage = "Failed to fetch sender's latest message: \(error)"
+                    self.errorMessage = "Failed to listen for sender's latest message: \(error)"
                     return
                 }
                 if let document = querySnapshot?.documents.first {
@@ -338,16 +344,17 @@ class ChatLogViewModel: ObservableObject {
                     self.latestSenderMessage = ChatMessage(documentId: document.documentID, data: data)
                 }
             }
-        // Fetch the latest message sent by the recipient
-        FirebaseManager.shared.firestore
+        
+        // Listener for latest message sent by the recipient
+        recipientMessageListener = FirebaseManager.shared.firestore
             .collection("messages")
             .document(toId)
             .collection(fromId)
             .order(by: "timeStamp", descending: true)
             .limit(to: 1)
-            .getDocuments { querySnapshot, error in
+            .addSnapshotListener { querySnapshot, error in
                 if let error = error {
-                    self.errorMessage = "Failed to fetch recipient's latest message: \(error)"
+                    self.errorMessage = "Failed to listen for recipient's latest message: \(error)"
                     return
                 }
                 if let document = querySnapshot?.documents.first {
@@ -355,6 +362,13 @@ class ChatLogViewModel: ObservableObject {
                     self.latestRecipientMessage = ChatMessage(documentId: document.documentID, data: data)
                 }
             }
+    }
+    
+    func stopListening(){
+        senderMessageListener?.remove()
+        senderMessageListener = nil
+        recipientMessageListener?.remove()
+        recipientMessageListener = nil
     }
     
     
@@ -387,7 +401,6 @@ class ChatLogViewModel: ObservableObject {
             ]
             
             if self.chatText == self.latestSenderMessage?.text {
-                self.fetchLatestMessages()
                 return  // Skip sending if the message is the same as the previous one
             }
             
@@ -521,6 +534,7 @@ struct ChatLogView: View {
     @FocusState private var isInputFocused: Bool
     @State private var isAppInBackground = false
     @Environment(\.presentationMode) var presentationMode
+    @State private var currentTime = Date()
     
     var body: some View {
         NavigationStack {
@@ -534,6 +548,7 @@ struct ChatLogView: View {
                         Button(action: {
                             presentationMode.wrappedValue.dismiss()
                             vm.stopAutoSend()
+                            vm.stopListening()
                         }) {
                             Image("chatlogviewbackbutton")
                                 .resizable()
@@ -612,7 +627,7 @@ struct ChatLogView: View {
                                                     .font(.system(size: 12))
                                                     .foregroundColor(Color.gray)
                                             } else if let lastSeen = vm.chatUserLastSeen {
-                                                let timeInterval = Date().timeIntervalSince(lastSeen.dateValue())
+                                                let timeInterval = currentTime.timeIntervalSince(lastSeen.dateValue())
                                                 let lastSeenText = formatTimeInterval(timeInterval)
                                                 Text("Active \(lastSeenText) ago")
                                                     .font(.system(size: 12))
@@ -861,20 +876,15 @@ struct ChatLogView: View {
                             }
                             //.background(Color.blue)
                             .frame(width: width, height: height)
-                            
-                            
                         }
                         .frame(maxWidth: .infinity, alignment: .center)
                     }
                     //.background(Color.blue)
                     .frame(height: geoheight)
-                    
                     Spacer()
                 }
                 .frame(maxHeight: .infinity)
-                
             }
-            
         }
         .onAppear {
             vm.initializeMessages()
@@ -884,6 +894,10 @@ struct ChatLogView: View {
             addAppLifecycleObservers()
             vm.startListeningForActiveStatus()
             vm.startListeningForSavingTrigger()
+            vm.fetchLatestMessages()
+            Timer.scheduledTimer(withTimeInterval: 1, repeats: true) { _ in
+                currentTime = Date()
+            }
         }
         .onDisappear {
             vm.stopAutoSend()
@@ -892,6 +906,7 @@ struct ChatLogView: View {
             removeAppLifecycleObservers()
             vm.stopListeningForActiveStatus()
             vm.stopListeningForSavingTrigger()
+            vm.stopListening()
         }
         .navigationBarBackButtonHidden(true) // Hide the default back button
     }
@@ -925,12 +940,14 @@ struct ChatLogView: View {
     private func appWentToBackground() {
         print("App went to background")
         vm.stopAutoSend()
+        vm.stopListening()
         vm.setActiveStatusToFalse()
     }
     
     private func appCameToForeground() {
         print("App came to foreground")
         vm.startAutoSend()
+        vm.fetchLatestMessages()
         vm.setActiveStatusToTrue()
     }
     
@@ -960,7 +977,7 @@ struct ChatLogView: View {
         } else if seconds > 0 {
             return "\(seconds) second\(seconds > 1 ? "s" : "")"
         } else {
-            return "1s"
+            return "just"
         }
     }
 
