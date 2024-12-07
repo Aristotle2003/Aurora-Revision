@@ -542,7 +542,6 @@ struct MainMessagesView: View {
             // 如果在本周内，显示星期几
             let weekdaySymbols = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"]
             let weekday = calendar.component(.weekday, from: date)
-            print(weekday)
             if weekday == 1 {
                 formatter.dateFormat = "yyyy/MM/dd"
                 return formatter.string(from: date)

@@ -120,11 +120,9 @@ class CustomTabNavigationViewModel: ObservableObject {
             self.errorMessage = "Could not find firebase uid"
             return
         }
-        print("1")
         // 如果已有监听器，先移除
         likesListener?.remove()
         likesListener = nil
-        print("2")
         
         // double to int64
         let lastCheckedTimestampInt64 = Int64(lastCheckedTimestamp)
@@ -137,7 +135,6 @@ class CustomTabNavigationViewModel: ObservableObject {
                     print("Failed to listen for likes updates: \(error)")
                     return
                 }
-                print("3")
                 guard let documents = snapshot?.documents else { return }
                 var hasNewLikes = false
 

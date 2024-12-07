@@ -151,7 +151,7 @@ struct SelfProfileView: View {
                             .padding(.horizontal)
                     }
                     // Navigate to Change Email View
-                    NavigationLink(destination: ChangeEmailView()) {
+                    NavigationLink(destination: SecurityView()) {
                         Text("Security")
                             .font(.headline)
                             .frame(maxWidth: .infinity, minHeight: 50)

@@ -388,85 +388,39 @@ struct ProfileView: View {
                         }
                     }
                 }
-            
-            
-            /*VStack(spacing: 10) {
-                Toggle(isOn: $isPinned) {
-                    HStack {
-                        Image(systemName: "pin.fill")
-                        Text("Pin")
-                    }
-                }
-                .padding()
-                .onChange(of: isPinned) { newValue in
-                    if newValue {
-                        pinToTop()
-                    } else {
-                        unpinToTop()
-                    }
-                }
-                
-                Toggle(isOn: $isMuted) {
-                    HStack {
-                        Image(systemName: "bell.slash.fill")
-                        Text("Mute")
-                    }
-                }
-                .padding()
-                .onChange(of: isMuted) { newValue in
-                    if newValue {
-                        muteFriend()
-                    } else {
-                        unmuteFriend()
-                    }
-                }
-                
-                Button(action: {
-                    showReportSheet = true
-                }) {
-                    HStack {
-                        Image(systemName: "exclamationmark.bubble.fill")
-                        Text("Report")
-                    }
-                    .foregroundColor(.red)
-                }
-                .padding()
-                
-                Button(action: {
-                    showDeleteConfirmation = true
-                }) {
-                    HStack {
-                        Image(systemName: "trash.fill")
-                        Text("Delete")
-                    }
-                    .foregroundColor(.red)
-                }
-                .padding()
-            }
-            .background(Color.gray.opacity(0.1))
-            .cornerRadius(10)
-            .padding(.horizontal)*/
         }
     }
     
     // 陌生人选项
+    /*private var strangerOptions: some View {
+
+        VStack(spacing: 20) {
+            Button(action: {
+                sendFriendRequest()
+            }) {
+                Image(friendRequestSent?, "requestedbuttonforstrangerprofile", : "addfriendbuttonforprofileview"）
+                 .resizable()
+                 .scaledToFit()
+                 .frame(width: UIScreen.main.bounds.width - 40)
+                 .padding(20)
+            }
+        }*/
     private var strangerOptions: some View {
         VStack(spacing: 20) {
             Button(action: {
                 sendFriendRequest()
             }) {
-                Image(systemName: "person.badge.plus.fill")
-                Text(friendRequestSent ? "Friend Request Sent" : "Add Friend")
-                    .padding()
+                Image(friendRequestSent ? "requestedbuttonforstrangerprofile" : "addfriendbuttonforstrangerprofile")
+                    .resizable()
+                    .scaledToFit()
+                    .frame(width: UIScreen.main.bounds.width - 40)
+                    .padding(20)
             }
-            .font(.headline)
-            .frame(maxWidth: .greatestFiniteMagnitude/2)
-            .foregroundColor(.purple)
-            .background(Color.purple.opacity(0.5))
-            .cornerRadius(24)
             .disabled(friendRequestSent)
         }
     }
+    
+
     
     private func checkIfFriend() {
         FirebaseManager.shared.firestore
