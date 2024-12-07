@@ -296,6 +296,7 @@
 		FB7E20B32CBF23B200209582 /* MainMessages */ = {
 			isa = PBXGroup;
 			children = (
+				FBB505012CCEA5FA00FF1C87 /* FriendRequestsView */,
 				FB7E20C32CC565BF00209582 /* ChatLogView */,
 				FB7E20B42CBF23CB00209582 /* MainMessagesView.swift */,
 			);
@@ -340,7 +341,6 @@
 		FB83BD9E2CD87CBB00A7BE4E /* AddFriendView */ = {
 			isa = PBXGroup;
 			children = (
-				FBB505012CCEA5FA00FF1C87 /* FriendRequestsView */,
 				FB83BD9F2CD87CE200A7BE4E /* AddFriendView.swift */,
 			);
 			path = AddFriendView;

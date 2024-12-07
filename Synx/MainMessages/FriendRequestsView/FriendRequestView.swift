@@ -48,23 +48,32 @@ struct FriendRequestsView: View {
                             
                             Spacer()
                             
-                            Button("Accept") {
+                            Button(action: {
                                 acceptFriendRequest(request)
+                            }){
+                                HStack {
+                                    Text("Accept")
+                                }
                             }
-                            .padding(.horizontal)
+                            .padding(.horizontal, 6)
                             .background(Color.green)
                             .foregroundColor(.white)
                             .cornerRadius(8)
                             
-                            Button("Reject") {
+                            Button(action: {
                                 rejectFriendRequest(request)
+                            }) {
+                                HStack {
+                                    Text("Reject")
+                                }
                             }
-                            .padding(.horizontal)
+                            .padding(.horizontal, 6)
                             .background(Color.red)
                             .foregroundColor(.white)
                             .cornerRadius(8)
                         }
                     }
+                    .buttonStyle(PlainButtonStyle())
                 }
                 Spacer()
             }
@@ -253,3 +262,4 @@ struct FriendRequest: Identifiable {
         self.fromId = data["fromUid"] as? String ?? ""
     }
 }
+
