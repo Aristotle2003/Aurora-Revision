@@ -203,6 +203,7 @@ struct MainMessagesView: View {
     @State var errorMessage = ""
     @State var latestSenderMessage: ChatMessage?
     @State private var shouldShowFriendGroupView = false
+    @State private var showCarouselView = true
     
     @ObservedObject private var vm = MainMessagesViewModel()
     @StateObject private var chatLogViewModel = ChatLogViewModel(chatUser: nil)
@@ -221,71 +222,140 @@ struct MainMessagesView: View {
                 // Background Color
                 Color(red: 0.976, green: 0.980, blue: 1.0)
                     .ignoresSafeArea()
-                
-                // ScrollView with users
-                ScrollView {
-                    LazyVStack(spacing: 8) {
-                        ForEach(vm.users) { user in
-                            Button {
-                                if let chatUser = vm.chatUser {
-                                    self.selectedUser = chatUser
-                                    self.chatUser = user
-                                    self.shouldNavigateToChatLogView.toggle()
-                                    vm.markMessageAsSeen(for: user.uid)
-                                }
-                            } label: {
-                                ZStack {
-                                    if user.isPinned {
-                                        Image("pinnedperson")
-                                            .resizable()
-                                            .scaledToFit()
-                                            .cornerRadius(16)
-                                    } else {
-                                        Image("notpinnedperson")
-                                            .resizable()
-                                            .scaledToFit()
-                                            .cornerRadius(16)
+                if showCarouselView{
+                    // ScrollView with users
+                    ScrollView {
+                        LazyVStack(spacing: 8) {
+                            ForEach(vm.users) { user in
+                                Button {
+                                    if let chatUser = vm.chatUser {
+                                        self.selectedUser = chatUser
+                                        self.chatUser = user
+                                        self.shouldNavigateToChatLogView.toggle()
+                                        vm.markMessageAsSeen(for: user.uid)
                                     }
-                                    
-                                    // Overlay Content
-                                    HStack(spacing: 16) {
-                                        ZStack{
-                                            WebImage(url: URL(string: user.profileImageUrl))
+                                } label: {
+                                    ZStack {
+                                        if user.isPinned {
+                                            Image("pinnedperson")
                                                 .resizable()
-                                                .scaledToFill()
-                                                .frame(width: 45, height: 45)
-                                                .clipShape(Circle())
-                                            if user.hasUnseenLatestMessage {
-                                                Image("reddot")
+                                                .scaledToFit()
+                                                .cornerRadius(16)
+                                        } else {
+                                            Image("notpinnedperson")
+                                                .resizable()
+                                                .scaledToFit()
+                                                .cornerRadius(16)
+                                        }
+                                        
+                                        // Overlay Content
+                                        HStack(spacing: 16) {
+                                            ZStack{
+                                                WebImage(url: URL(string: user.profileImageUrl))
                                                     .resizable()
-                                                    .scaledToFit()
-                                                    .frame(width: 12, height: 12)
-                                                    .offset(x: 16, y: -16)
+                                                    .scaledToFill()
+                                                    .frame(width: 45, height: 45)
+                                                    .clipShape(Circle())
+                                                if user.hasUnseenLatestMessage {
+                                                    Image("reddot")
+                                                        .resizable()
+                                                        .scaledToFit()
+                                                        .frame(width: 12, height: 12)
+                                                        .offset(x: 16, y: -16)
+                                                }
                                             }
-                                        }
-                                        
-                                        VStack(alignment: .leading, spacing: 4) {
-                                            Text(user.username)
-                                                .font(.system(size: 16, weight: .bold))
-                                                .foregroundColor(Color(red: 0.49, green: 0.52, blue: 0.75))
                                             
-                                            if let timestamp = user.latestMessageTimestamp {
-                                                Text(formatTimestamp(timestamp))
-                                                    .font(.system(size: 14))
-                                                    .foregroundColor(Color.gray)
+                                            VStack(alignment: .leading, spacing: 4) {
+                                                Text(user.username)
+                                                    .font(.system(size: 16, weight: .bold))
+                                                    .foregroundColor(Color(red: 0.49, green: 0.52, blue: 0.75))
+                                                
+                                                if let timestamp = user.latestMessageTimestamp {
+                                                    Text(formatTimestamp(timestamp))
+                                                        .font(.system(size: 14))
+                                                        .foregroundColor(Color.gray)
+                                                }
                                             }
+                                            
+                                            Spacer()
+                                            
                                         }
-                                        
-                                        Spacer()
-                    
+                                        .padding(.leading, 16)
                                     }
-                                    .padding(.leading, 16)
+                                    .padding(.horizontal, 20)
                                 }
-                                .padding(.horizontal, 20)
                             }
                         }
+                        .padding(.top, UIScreen.main.bounds.height * 0.07 + 190) // Start 8 points below the header
                     }
-                    .padding(.top, UIScreen.main.bounds.height * 0.07 + 8) // Start 8 points below the header
+                }
+                
+                if !showCarouselView{
+                    // ScrollView with users
+                    ScrollView {
+                        LazyVStack(spacing: 8) {
+                            ForEach(vm.users) { user in
+                                Button {
+                                    if let chatUser = vm.chatUser {
+                                        self.selectedUser = chatUser
+                                        self.chatUser = user
+                                        self.shouldNavigateToChatLogView.toggle()
+                                        vm.markMessageAsSeen(for: user.uid)
+                                    }
+                                } label: {
+                                    ZStack {
+                                        if user.isPinned {
+                                            Image("pinnedperson")
+                                                .resizable()
+                                                .scaledToFit()
+                                                .cornerRadius(16)
+                                        } else {
+                                            Image("notpinnedperson")
+                                                .resizable()
+                                                .scaledToFit()
+                                                .cornerRadius(16)
+                                        }
+                                        
+                                        // Overlay Content
+                                        HStack(spacing: 16) {
+                                            ZStack{
+                                                WebImage(url: URL(string: user.profileImageUrl))
+                                                    .resizable()
+                                                    .scaledToFill()
+                                                    .frame(width: 45, height: 45)
+                                                    .clipShape(Circle())
+                                                if user.hasUnseenLatestMessage {
+                                                    Image("reddot")
+                                                        .resizable()
+                                                        .scaledToFit()
+                                                        .frame(width: 12, height: 12)
+                                                        .offset(x: 16, y: -16)
+                                                }
+                                            }
+                                            
+                                            VStack(alignment: .leading, spacing: 4) {
+                                                Text(user.username)
+                                                    .font(.system(size: 16, weight: .bold))
+                                                    .foregroundColor(Color(red: 0.49, green: 0.52, blue: 0.75))
+                                                
+                                                if let timestamp = user.latestMessageTimestamp {
+                                                    Text(formatTimestamp(timestamp))
+                                                        .font(.system(size: 14))
+                                                        .foregroundColor(Color.gray)
+                                                }
+                                            }
+                                            
+                                            Spacer()
+                                            
+                                        }
+                                        .padding(.leading, 16)
+                                    }
+                                    .padding(.horizontal, 20)
+                                }
+                            }
+                        }
+                        .padding(.top, UIScreen.main.bounds.height * 0.07 + 8) // Start 8 points below the header
+                    }
                 }
                 
                 // Header (on top)
@@ -333,7 +403,22 @@ struct MainMessagesView: View {
                         }
                     }
                     .frame(maxHeight: UIScreen.main.bounds.height * 0.07)
-                    
+                    if showCarouselView{
+                        ZStack(alignment: .topTrailing){
+                            CarouselView()
+                            
+                            Button{
+                                showCarouselView = false
+                            }label : {
+                                Image("CloseCarouselButton")
+                                    .padding(.trailing, 20)
+                                    .padding(.top, 20)
+                            }
+                            .padding(.trailing, 15)
+                            .padding(.top,10)
+                            
+                        }
+                    }
                     Spacer()
                 }
             }
@@ -553,5 +638,29 @@ struct MainMessagesView: View {
             formatter.dateFormat = "yyyy/MM/dd"
             return formatter.string(from: date)
         }
+    }
+}
+
+import SwiftUI
+
+struct CarouselView: View {
+    let items = [
+        "CarouselPicture1",
+        "CarouselPicture2"
+    ]
+    
+    var body: some View {
+        TabView {
+            ForEach(items, id: \.self) { item in
+                Image(item)
+                    .resizable()
+                    .scaledToFill() // Ensures the image fills the frame
+                    .frame(width: 400, height: 150) // Matches desired size
+                    .padding()
+            }
+        }
+        .tabViewStyle(PageTabViewStyle()) // Enables navigation dots
+        .frame(height: 180) // Sets the height of the carousel
+        .background(Color.clear) // Ensures the background is clear
     }
 }
