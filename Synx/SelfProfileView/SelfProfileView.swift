@@ -82,163 +82,230 @@ struct SelfProfileView: View {
     
     var body: some View {
         NavigationStack{
-            VStack {
-                if !showTemporaryImage{
-                    WebImage(url: URL(string: self.currentUser.profileImageUrl))
-                        .resizable()
-                        .scaledToFill()
-                        .frame(width: 150, height: 150)
-                        .clipShape(Circle())
-                        .shadow(radius: 10)
-                        .onTapGesture {
-                            if isCurrentUser {
-                                showImagePicker = true
-                            }
+            ZStack{
+                Color(red: 0.976, green: 0.980, blue: 1.0)
+                    .ignoresSafeArea()
+                VStack {
+                    let topbarheight = UIScreen.main.bounds.height * 0.055
+                    HStack {
+                        Spacer()
+                        NavigationLink(destination: EditProfileView(currentUser: currentUser, chatLogViewModel: chatLogViewModel)){
+                            Image("writedailyaurorabutton")
+                                .resizable()
+                                .frame(width: 24, height: 24)
+                                .padding(.trailing, 20)
                         }
-                }
-                else{
-                    WebImage(url: URL(string: self.savingImageUrl))
-                        .resizable()
-                        .scaledToFill()
-                        .frame(width: 150, height: 150)
-                        .clipShape(Circle())
-                        .shadow(radius: 10)
-                        .onTapGesture {
-                            if isCurrentUser {
-                                showImagePicker = true
-                            }
+                    }
+                    .frame(height: topbarheight)
+                    
+                    Spacer()
+                        .frame(height: 20)
+                    
+                    ScrollView{
+                        if !showTemporaryImage{
+                            WebImage(url: URL(string: self.currentUser.profileImageUrl))
+                                .resizable()
+                                .scaledToFill()
+                                .frame(width: 100, height: 100)
+                                .clipShape(Circle())
+                                .onTapGesture {
+                                    if isCurrentUser {
+                                        showImagePicker = true
+                                    }
+                                }
                         }
-                }
-                
-                if isCurrentUser, let info = basicInfo {
-                    Text("\(info.username)")
-                        .font(.title)
-                    // 当前用户的基本信息
-                    VStack(alignment: .leading, spacing: 5) {
-                        Text("Age: \(info.age)")
-                        Text("Gender: \(info.gender)")
-                        Text("Location: \(info.location)")
-                        Text("Email: \(info.email)")
-                        Text("Bio: \(info.bio)")
+                        else{
+                            WebImage(url: URL(string: self.savingImageUrl))
+                                .resizable()
+                                .scaledToFill()
+                                .frame(width: 100, height: 100)
+                                .clipShape(Circle())
+                                .onTapGesture {
+                                    if isCurrentUser {
+                                        showImagePicker = true
+                                    }
+                                }
+                        }
+                            
+                        Spacer()
+                            .frame(height: 8)
                         
+                        if isCurrentUser, let info = basicInfo {
+                            Text("\(info.username)")
+                                .font(.system(size: 16, weight: .bold))
+                                .foregroundColor(Color(red: 0.337, green: 0.337, blue: 0.337))
+                            
+                            Text("@\(info.name)")
+                                .font(.system(size: 14))
+                                .foregroundColor(Color(red: 0.490, green: 0.490, blue: 0.490))
+                            VStack(alignment: .leading) {
+                                Text("\(info.bio)")
+                                    .font(.system(size: 14))
+                                    .foregroundColor(Color(red: 0.490, green: 0.490, blue: 0.490))
+                                    .padding(.horizontal, 12)
+                                    .lineLimit(nil) // Allow unlimited lines
+                                    .fixedSize(horizontal: false, vertical: true) // Ensure wrapping for long text
+                                HStack {
+                                    if !info.age.isEmpty{
+                                        Text("\(info.age)'ys old")
+                                            .font(.system(size: 12))
+                                            .foregroundColor(Color(red: 0.490, green: 0.490, blue: 0.490))
+                                            .padding(8)
+                                            .background(Color(red: 0.898, green: 0.910, blue: 0.996))
+                                            .cornerRadius(50)
+                                    }
+                                    if !info.pronouns.isEmpty{
+                                        Text("\(info.pronouns)")
+                                            .font(.system(size: 12))
+                                            .foregroundColor(Color(red: 0.490, green: 0.490, blue: 0.490))
+                                            .padding(8)
+                                            .background(Color(red: 0.898, green: 0.910, blue: 0.996))
+                                            .cornerRadius(50)
+                                    }
+                                    if !info.location.isEmpty{
+                                        Text("\(info.location)")
+                                            .font(.system(size: 12))
+                                            .foregroundColor(Color(red: 0.490, green: 0.490, blue: 0.490))
+                                            .padding(8)
+                                            .background(Color(red: 0.898, green: 0.910, blue: 0.996))
+                                            .cornerRadius(50)
+                                    }
+                                    
+                                    Spacer()
+                                }
+                                .padding(.leading, 12)
+                                .frame(maxWidth: .infinity)
+                            }
+                            .padding(8)
+                        }
+                        
+                        Spacer()
+                        
+                        HStack{
+                            Text("General")
+                                .font(.system(size: 12, weight: .bold))
+                                .foregroundColor(Color(.gray))
+                                .padding(.leading, 16)
+                                .padding(.top, 8)
+                                .padding(.bottom, 8)
+                            Spacer()
+                        }
+                    
+                        // New Rectangle Buttons
+                        VStack(spacing: 0){
+                            /*NavigationLink(destination: EditProfileView(currentUser: currentUser, chatLogViewModel: chatLogViewModel)) {
+                             Text("Change Basic Info")
+                             .font(.headline)
+                             .frame(maxWidth: .infinity, minHeight: 50)
+                             .background(Color.green)
+                             .foregroundColor(.white)
+                             .cornerRadius(8)
+                             .padding(.horizontal)
+                             }*/
+                            
+                            Button(action: {
+                                showPrivacyPage.toggle()
+                            }) {
+                                Image("privacybuttonforselfprofileview")
+                            }
+                            // Navigate to Change Email View
+                            NavigationLink(destination: SecurityView()) {
+                                Image("securitybuttonforselfprofileview")
+                            }
+                            Button(action: {
+                                print("reportbuttonpressed")
+                            }) {
+                                Image("reportbuttonforselfprofileview")
+                            }
+                            HStack{
+                                Text("Account Actions")
+                                    .font(.system(size: 12, weight: .bold))
+                                    .foregroundColor(Color(.gray))
+                                    .padding(.leading, 16)
+                                    .padding(.top, 20)
+                                    .padding(.bottom, 8)
+                                Spacer()
+                            }
+                            Button(action: {
+                                shouldShowLogOutOptions.toggle()
+                            }) {
+                                Image("switchaccountbuttonforselfprofileview")
+                            }
+                            
+                            // Logout Button
+                            Button(action: {
+                                shouldShowLogOutOptions.toggle()
+                            }) {
+                                Image("logoutbuttonforselfprofileview")
+                            }
+                        }
                     }
                     .padding()
-                }
-                
-                Spacer()
-                
-                // New Rectangle Buttons
-                VStack(spacing: 10) {
-                    NavigationLink(destination: EditProfileView(currentUser: currentUser, chatLogViewModel: chatLogViewModel)) {
-                        Text("Change Basic Info")
-                            .font(.headline)
-                            .frame(maxWidth: .infinity, minHeight: 50)
-                            .background(Color.green)
-                            .foregroundColor(.white)
-                            .cornerRadius(8)
-                            .padding(.horizontal)
+                    .actionSheet(isPresented: $shouldShowLogOutOptions) {
+                        ActionSheet(
+                            title: Text("Settings"),
+                            message: Text("What do you want to do?"),
+                            buttons: [
+                                .destructive(Text("Sign Out"), action: {
+                                    isLoggedIn = false
+                                    handleSignOut()
+                                }),
+                                .cancel()
+                            ]
+                        )
+                    }
+                    .fullScreenCover(isPresented: $isUserCurrentlyLoggedOut) {
+                        LoginView()
+                    }
+                    .fullScreenCover(isPresented: $showPrivacyPage){
+                        PrivacyView()
                     }
                     
-                    Button(action: {
-                        showPrivacyPage.toggle()
-                    }) {
-                        Text("Privacy")
-                            .font(.headline)
-                            .frame(maxWidth: .infinity, minHeight: 50)
-                            .background(Color.blue)
-                            .foregroundColor(.white)
-                            .cornerRadius(8)
-                            .padding(.horizontal)
-                    }
-                    // Navigate to Change Email View
-                    NavigationLink(destination: SecurityView()) {
-                        Text("Security")
-                            .font(.headline)
-                            .frame(maxWidth: .infinity, minHeight: 50)
-                            .background(Color.orange)
-                            .foregroundColor(.white)
-                            .cornerRadius(8)
-                            .padding(.horizontal)
-                    }
-                    
-                    // Logout Button
-                    Button(action: {
-                        shouldShowLogOutOptions.toggle()
-                    }) {
-                        Text("Sign Out")
-                            .font(.headline)
-                            .frame(maxWidth: .infinity, minHeight: 50)
-                            .background(Color.red)
-                            .foregroundColor(.white)
-                            .cornerRadius(8)
-                            .padding(.horizontal)
-                    }
+                    Spacer()
                 }
-                .padding()
-                .actionSheet(isPresented: $shouldShowLogOutOptions) {
-                    ActionSheet(
-                        title: Text("Settings"),
-                        message: Text("What do you want to do?"),
-                        buttons: [
-                            .destructive(Text("Sign Out"), action: {
-                                isLoggedIn = false
-                                handleSignOut()
-                            }),
-                            .cancel()
-                        ]
-                    )
-                }
-                .fullScreenCover(isPresented: $isUserCurrentlyLoggedOut) {
-                    LoginView()
-                }
-                .fullScreenCover(isPresented: $showPrivacyPage){
-                    PrivacyView()
-                }
-                
-                Spacer()
-            }
-            .padding()
-            .onAppear {
-                fetchCurrentUser()
-                checkIfFriend()
-                if isCurrentUser {
-                    fetchBasicInfo(for: currentUser.uid) { info in
-                        self.basicInfo = info
-                    }
-                } else {
-                    fetchBasicInfo(for: chatUser.uid) { info in
-                        self.otherUserInfo = info
-                    }
-                }
-            }
-            .onDisappear{
-                self.showTemporaryImage = false
-            }
-            .sheet(isPresented: $showImagePicker) {
-                ImagePicker(image: $selectedImage)
-                    .onDisappear {
-                        if selectedImage != nil {
-                            updateProfilePhoto()
-                            print("Image selected successfully!")
-                            showConfirmationDialog = true
-                        } else {
-                            print("No image selected.")
+                .onAppear {
+                    fetchCurrentUser()
+                    checkIfFriend()
+                    if isCurrentUser {
+                        fetchBasicInfo(for: currentUser.uid) { info in
+                            self.basicInfo = info
+                        }
+                    } else {
+                        fetchBasicInfo(for: chatUser.uid) { info in
+                            self.otherUserInfo = info
                         }
                     }
-            }
-            .alert(isPresented: $showConfirmationDialog) {
-                Alert(
-                    title: Text("Confirm Photo"),
-                    message: Text("Are you sure you want to use this photo?"),
-                    primaryButton: .default(Text("Yes"), action: updateProfilePhoto),
-                    secondaryButton: .cancel()
-                )
-            }
-            .onDisappear{
-                self.showTemporaryImage = false
+                }
+                .onDisappear{
+                    self.showTemporaryImage = false
+                }
+                .sheet(isPresented: $showImagePicker) {
+                    ImagePicker(image: $selectedImage)
+                        .onDisappear {
+                            if selectedImage != nil {
+                                updateProfilePhoto()
+                                print("Image selected successfully!")
+                                showConfirmationDialog = true
+                            } else {
+                                print("No image selected.")
+                            }
+                        }
+                }
+                .alert(isPresented: $showConfirmationDialog) {
+                    Alert(
+                        title: Text("Confirm Photo"),
+                        message: Text("Are you sure you want to use this photo?"),
+                        primaryButton: .default(Text("Yes"), action: updateProfilePhoto),
+                        secondaryButton: .cancel()
+                    )
+                }
+                .onDisappear{
+                    self.showTemporaryImage = false
+                }
+                
+                .navigationBarBackButtonHidden(true)
             }
             
-            .navigationBarBackButtonHidden(true)
         }
         .onDisappear{
             self.showTemporaryImage = false

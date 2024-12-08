@@ -169,11 +169,11 @@ struct EditProfileView: View {
                         }
                     }
                     
-                    NavigationLink(destination: DetailInputView(title: "Email", value: $profileVM.email)) {
+                    NavigationLink(destination: DetailInputView(title: "Pronouns", value: $profileVM.pronouns)) {
                         HStack {
-                            Text("Email")
+                            Text("Pronouns")
                             Spacer()
-                            Text(profileVM.email.isEmpty ? "Enter Email" : profileVM.email)
+                            Text(profileVM.pronouns.isEmpty ? "Enter pronouns" : profileVM.pronouns)
                                 .foregroundColor(.gray)
                         }
                     }

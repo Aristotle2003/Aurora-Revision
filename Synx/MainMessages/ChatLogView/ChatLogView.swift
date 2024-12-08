@@ -327,23 +327,23 @@ class ChatLogViewModel: ObservableObject {
         senderMessageListener?.remove()
         recipientMessageListener?.remove()
         
-        // Listener for latest message sent by the current user
-        senderMessageListener = FirebaseManager.shared.firestore
-            .collection("messages")
-            .document(fromId)
-            .collection(toId)
-            .order(by: "timeStamp", descending: true)
-            .limit(to: 1)
-            .addSnapshotListener { querySnapshot, error in
-                if let error = error {
-                    self.errorMessage = "Failed to listen for sender's latest message: \(error)"
-                    return
-                }
-                if let document = querySnapshot?.documents.first {
-                    let data = document.data()
-                    self.latestSenderMessage = ChatMessage(documentId: document.documentID, data: data)
-                }
-            }
+//        // Listener for latest message sent by the current user
+//        senderMessageListener = FirebaseManager.shared.firestore
+//            .collection("messages")
+//            .document(fromId)
+//            .collection(toId)
+//            .order(by: "timeStamp", descending: true)
+//            .limit(to: 1)
+//            .addSnapshotListener { querySnapshot, error in
+//                if let error = error {
+//                    self.errorMessage = "Failed to listen for sender's latest message: \(error)"
+//                    return
+//                }
+//                if let document = querySnapshot?.documents.first {
+//                    let data = document.data()
+//                    self.latestSenderMessage = ChatMessage(documentId: document.documentID, data: data)
+//                }
+//            }
         
         // Listener for latest message sent by the recipient
         recipientMessageListener = FirebaseManager.shared.firestore
@@ -404,21 +404,30 @@ class ChatLogViewModel: ObservableObject {
                 return  // Skip sending if the message is the same as the previous one
             }
             
-            FirebaseManager.shared.firestore
-                .collection("messages")
-                .document(fromId)
-                .collection(toId)
-                .addDocument(data: messageData) { error in
-                    if let error = error {
-                        self.errorMessage = "Failed to send message: \(error)"
-                        return
+            
+            
+            let messageRef = FirebaseManager.shared.firestore
+                        .collection("messages")
+                        .document(fromId)
+                        .collection(toId)
+                        .document() // Generate a new document ID
+
+                    messageRef.setData(messageData) { error in
+                        if let error = error {
+                            self.errorMessage = "Failed to send message: \(error)"
+                            return
+                        }
+
+                        // Update the latest sender message
+                        self.latestSenderMessage = ChatMessage(
+                            documentId: messageRef.documentID,
+                            data: messageData
+                        )
+
+                        // Update friend list timestamps
+                        self.updateFriendLatestMessageTimestampForRecipient(friendId: toId)
+                        self.updateFriendLatestMessageTimestampForSelf(friendId: toId)
                     }
-                    
-                    // 更新当前用户好友列表中的好友的 latestMessageTimestamp
-                    self.updateFriendLatestMessageTimestampForRecipient(friendId: toId)
-                    self.updateFriendLatestMessageTimestampForSelf(friendId: toId)
-                    self.fetchLatestMessages()
-                }
         }
     }
     

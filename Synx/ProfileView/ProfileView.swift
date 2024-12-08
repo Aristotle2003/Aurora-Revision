@@ -80,92 +80,94 @@ struct ProfileView: View {
                 .frame(height: topbarheight)
                 Spacer()
                     .frame(height: UIScreen.main.bounds.height*0.03403755868)
-                
-                // Profile Image Section
-                if !showTemporaryImage {
-                    WebImage(url: URL(string: chatUser.profileImageUrl))
-                        .resizable()
-                        .scaledToFill()
-                        .frame(width: 100, height: 100)
-                        .clipShape(Circle())
-                        .onTapGesture {
-                            if isCurrentUser {
-                                showImagePicker = true
+                ScrollView{
+                    
+                    // Profile Image Section
+                    if !showTemporaryImage {
+                        WebImage(url: URL(string: chatUser.profileImageUrl))
+                            .resizable()
+                            .scaledToFill()
+                            .frame(width: 100, height: 100)
+                            .clipShape(Circle())
+                            .onTapGesture {
+                                if isCurrentUser {
+                                    showImagePicker = true
+                                }
                             }
-                        }
-                } else {
-                    WebImage(url: URL(string: self.savingImageUrl))
-                        .resizable()
-                        .scaledToFill()
-                        .frame(width: 100, height: 100)
-                        .clipShape(Circle())
-                        .onTapGesture {
-                            if isCurrentUser {
-                                showImagePicker = true
+                    } else {
+                        WebImage(url: URL(string: self.savingImageUrl))
+                            .resizable()
+                            .scaledToFill()
+                            .frame(width: 100, height: 100)
+                            .clipShape(Circle())
+                            .onTapGesture {
+                                if isCurrentUser {
+                                    showImagePicker = true
+                                }
                             }
-                        }
-                }
-                
-                Spacer()
-                    .frame(height: 8)
-                
-                Text(chatUser.username)
-                    .font(.system(size: 16, weight: .bold))
-                    .foregroundColor(Color(red: 0.337, green: 0.337, blue: 0.337))
-
-                Text(chatUser.email)
-                    .font(.system(size: 14))
-                    .foregroundColor(Color(red: 0.490, green: 0.490, blue: 0.490))
-                
-                Spacer()
-                    .frame(height: 20)
-                
-                if let otherInfo = otherUserInfo {
-                    VStack(alignment: .leading) {
-                        Text(otherInfo.bio)
-                            .font(.system(size: 14))
-                            .foregroundColor(Color(red: 0.490, green: 0.490, blue: 0.490))
-                            .padding(.horizontal, 12)
-                            .lineLimit(nil) // Allow unlimited lines
-                            .fixedSize(horizontal: false, vertical: true) // Ensure wrapping for long text
-                        HStack {
-                            if !otherInfo.age.isEmpty{
-                                Text("\(otherInfo.age)ys old")
-                                    .font(.system(size: 12))
-                                    .foregroundColor(Color(red: 0.490, green: 0.490, blue: 0.490))
-                                    .padding(8)
-                                    .background(Color(red: 0.898, green: 0.910, blue: 0.996))
-                                    .cornerRadius(50)
-                            }
-                            if !otherInfo.pronouns.isEmpty{
-                                Text(otherInfo.pronouns)
-                                    .font(.system(size: 12))
-                                    .foregroundColor(Color(red: 0.490, green: 0.490, blue: 0.490))
-                                    .padding(8)
-                                    .background(Color(red: 0.898, green: 0.910, blue: 0.996))
-                                    .cornerRadius(50)
-                            }
-                            if !otherInfo.location.isEmpty{
-                                Text(otherInfo.location)
-                                    .font(.system(size: 12))
-                                    .foregroundColor(Color(red: 0.490, green: 0.490, blue: 0.490))
-                                    .padding(8)
-                                    .background(Color(red: 0.898, green: 0.910, blue: 0.996))
-                                    .cornerRadius(50)
-                            }
-                            Spacer()
-                        }
-                        .padding(.leading, 12)
-                        .frame(maxWidth: .infinity)
                     }
-                    .padding(8)
+                    
+                    Spacer()
+                        .frame(height: 8)
+                    
+                    Text(chatUser.username)
+                        .font(.system(size: 16, weight: .bold))
+                        .foregroundColor(Color(red: 0.337, green: 0.337, blue: 0.337))
+                    
+                    Text(chatUser.email)
+                        .font(.system(size: 14))
+                        .foregroundColor(Color(red: 0.490, green: 0.490, blue: 0.490))
+                    
+                    Spacer()
+                        .frame(height: 20)
+                    
+                    if let otherInfo = otherUserInfo {
+                        VStack(alignment: .leading) {
+                            Text(otherInfo.bio)
+                                .font(.system(size: 14))
+                                .foregroundColor(Color(red: 0.490, green: 0.490, blue: 0.490))
+                                .padding(.horizontal, 12)
+                                .lineLimit(nil) // Allow unlimited lines
+                                .fixedSize(horizontal: false, vertical: true) // Ensure wrapping for long text
+                            HStack {
+                                if !otherInfo.age.isEmpty{
+                                    Text("\(otherInfo.age)ys old")
+                                        .font(.system(size: 12))
+                                        .foregroundColor(Color(red: 0.490, green: 0.490, blue: 0.490))
+                                        .padding(8)
+                                        .background(Color(red: 0.898, green: 0.910, blue: 0.996))
+                                        .cornerRadius(50)
+                                }
+                                if !otherInfo.pronouns.isEmpty{
+                                    Text(otherInfo.pronouns)
+                                        .font(.system(size: 12))
+                                        .foregroundColor(Color(red: 0.490, green: 0.490, blue: 0.490))
+                                        .padding(8)
+                                        .background(Color(red: 0.898, green: 0.910, blue: 0.996))
+                                        .cornerRadius(50)
+                                }
+                                if !otherInfo.location.isEmpty{
+                                    Text(otherInfo.location)
+                                        .font(.system(size: 12))
+                                        .foregroundColor(Color(red: 0.490, green: 0.490, blue: 0.490))
+                                        .padding(8)
+                                        .background(Color(red: 0.898, green: 0.910, blue: 0.996))
+                                        .cornerRadius(50)
+                                }
+                                Spacer()
+                            }
+                            .padding(.leading, 12)
+                            .frame(maxWidth: .infinity)
+                        }
+                        .padding(8)
+                    }
+                    if isFriend{
+                        friendOptions
+                    } else {
+                        strangerOptions
+                    }
+                    Spacer()
                 }
-                if isFriend{
-                    friendOptions
-                } else {
-                    strangerOptions
-                }
-                Spacer()
             }
         }
         .onAppear {
