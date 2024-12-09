@@ -9,6 +9,7 @@ struct FriendRequestsView: View {
     @State private var errorMessage = ""
     @State private var navigateToMainMessage = false
     @Environment(\.presentationMode) var presentationMode
+    @Binding var currentView: String
     
     var body: some View {
         NavigationStack{
@@ -83,7 +84,7 @@ struct FriendRequestsView: View {
             }
             .navigationBarHidden(true)
             .navigationDestination(isPresented: $navigateToMainMessage) {
-                MainMessagesView()
+                MainMessagesView(currentView: $currentView)
             }
         }
     }

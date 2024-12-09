@@ -202,12 +202,12 @@ struct MainMessagesView: View {
     @State private var isCurrentUser = false
     @State var errorMessage = ""
     @State var latestSenderMessage: ChatMessage?
-    @State private var shouldShowFriendGroupView = false
     @State private var showCarouselView = true
     
     @ObservedObject private var vm = MainMessagesViewModel()
     @StateObject private var chatLogViewModel = ChatLogViewModel(chatUser: nil)
     @State private var showFriendRequestsView = false
+    @Binding var currentView: String
     
     var safeAreaTopInset: CGFloat {
         UIApplication.shared.connectedScenes
@@ -405,7 +405,13 @@ struct MainMessagesView: View {
                     .frame(maxHeight: UIScreen.main.bounds.height * 0.07)
                     if showCarouselView{
                         ZStack(alignment: .topTrailing){
-                            CarouselView()
+                            if let chatUser = vm.chatUser {
+                                CarouselView(currentUser: chatUser, currentView: $currentView)
+                            } else {
+                                // Handle the case where chatUser is nil, possibly show a placeholder or an empty view
+                                Text("Loading...")
+                                    .frame(height: 180) // Ensure the placeholder takes up space
+                            }
                             
                             Button{
                                 showCarouselView = false
@@ -433,7 +439,7 @@ struct MainMessagesView: View {
             }
             .navigationDestination(isPresented: $shouldShowFriendRequests) {
                 if let user = self.selectedUser {
-                    FriendRequestsView(currentUser: user)
+                    FriendRequestsView(currentUser: user, currentView: $currentView)
                 }
             }
         }
@@ -446,89 +452,6 @@ struct MainMessagesView: View {
         }
     }
 
-    
-    private var customNavBar: some View {
-        HStack(spacing: 16) {
-            Button(action: {
-                if let chatUser = vm.chatUser {
-                    self.selectedUser = chatUser
-                    self.chatUser = chatUser
-                    self.isCurrentUser = true
-                    shouldShowProfileView.toggle()
-                }
-            }) {
-                WebImage(url: URL(string: vm.chatUser?.profileImageUrl ?? ""))
-                    .resizable()
-                    .scaledToFill()
-                    .frame(width: 50, height: 50)
-                    .cornerRadius(50)
-                    .overlay(RoundedRectangle(cornerRadius: 44).stroke(Color(.label), lineWidth: 1))
-                    .shadow(radius: 5)
-            }
-            
-            VStack(alignment: .leading, spacing: 4) {
-                Text(vm.chatUser?.username ?? "")
-                    .font(.system(size: 24, weight: .bold))
-                HStack {
-                    Circle()
-                        .foregroundColor(.green)
-                        .frame(width: 14, height: 14)
-                    Text("online")
-                        .font(.system(size: 12))
-                        .foregroundColor(Color(.lightGray))
-                }
-            }
-            Spacer()
-            
-            Button(action: {
-                if let chatUser = vm.chatUser {
-                    self.selectedUser = chatUser
-                    shouldShowFriendGroupView.toggle()
-                }
-            }) {
-                Image(systemName: "questionmark.circle")
-                    .font(.system(size: 24, weight: .bold))
-                    .foregroundColor(Color(.label))
-            }
-
-            // Mail Button - Navigates to FriendRequestsView
-            Button(action: {
-                if let chatUser = vm.chatUser{
-                    self.selectedUser = chatUser
-                    shouldShowFriendRequests.toggle()
-                }
-            }) {
-                Image(systemName: "envelope")
-                    .font(.system(size: 24, weight: .bold))
-                    .foregroundColor(Color(.label))
-            }
-            
-            // Gear Button - Shows Sign-Out Options
-            Button(action: {
-                shouldShowLogOutOptions.toggle()
-            }) {
-                Image(systemName: "gear")
-                    .font(.system(size: 24, weight: .bold))
-                    .foregroundColor(Color(.label))
-            }
-            .actionSheet(isPresented: $shouldShowLogOutOptions) {
-                ActionSheet(
-                    title: Text("Settings"),
-                    message: Text("What do you want to do?"),
-                    buttons: [
-                        .destructive(Text("Sign Out"), action: {
-                            vm.handleSignOut()
-                        }),
-                        .cancel()
-                    ]
-                )
-            }
-            .fullScreenCover(isPresented: $vm.isUserCurrentlyLoggedOut) {
-                LoginView()
-            }
-        }
-        .padding()
-    }
     
     private var usersListView: some View {
         ScrollView {
@@ -641,26 +564,50 @@ struct MainMessagesView: View {
     }
 }
 
-import SwiftUI
-
 struct CarouselView: View {
     let items = [
         "CarouselPicture1",
         "CarouselPicture2"
     ]
-    
+
+    let currentUser: ChatUser  // Ensure you pass the current user if needed
+    @Binding var currentView: String
+
     var body: some View {
-        TabView {
-            ForEach(items, id: \.self) { item in
-                Image(item)
-                    .resizable()
-                    .scaledToFill() // Ensures the image fills the frame
-                    .frame(width: 400, height: 150) // Matches desired size
-                    .padding()
+         // 固定外部框架的尺寸，例如使用 VStack 或 ZStack
+        ZStack {
+            Image("CarouselBackground")
+                .resizable()
+//                .scaledToFill()
+                .frame(width: UIScreen.main.bounds.width/1.1, height: 150)
+                .clipped()
+
+            // 内部内容
+            TabView {
+                ForEach(0..<items.count, id: \.self) { index in
+                    ZStack(alignment: .bottomLeading) {
+                        if index == 0 {
+                            Button(action: {
+                                currentView = "DailyAurora"
+                            }) {
+                                Image(items[index])
+                                    .resizable()
+                                    .frame(width: 330, height: 123.6)
+                                    .padding()
+                            }
+                        } else {
+                            Image(items[index])
+                                .resizable()
+                                .frame(width: 330, height: 123.6)
+                                .padding()
+                        }
+                    }
+                }
             }
+            .tabViewStyle(PageTabViewStyle()) // Enables navigation dots
+            .frame(height: 180) // Sets the height of the carousel
+            .background(Color.clear) // Ensures the background is clear
         }
-        .tabViewStyle(PageTabViewStyle()) // Enables navigation dots
-        .frame(height: 180) // Sets the height of the carousel
-        .background(Color.clear) // Ensures the background is clear
+        .frame(width: UIScreen.main.bounds.width/1.1, height: 180) // 固定外部框架的高度
     }
 }

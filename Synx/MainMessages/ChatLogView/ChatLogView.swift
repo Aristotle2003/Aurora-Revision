@@ -93,7 +93,7 @@ class ChatLogViewModel: ObservableObject {
         
         savingTriggerRef.setData(["triggering": false], merge: true) { error in
             if let error = error {
-                print("Failed to reset trigger")
+                print("Failed to reset trigger \(error)")
             } else {
                 print("Trigger to false")
             }

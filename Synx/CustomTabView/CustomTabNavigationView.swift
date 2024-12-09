@@ -195,7 +195,7 @@ struct CustomTabNavigationView: View {
             VStack {
                 switch currentView {
                 case "MainMessages":
-                    MainMessagesView()
+                    MainMessagesView(currentView: $currentView)
                 case "Profile":
                     if let user = vm.currentUser{
                         SelfProfileView(
@@ -213,7 +213,7 @@ struct CustomTabNavigationView: View {
                         FriendGroupView(selectedUser: user)
                     }
                 default:
-                    MainMessagesView()
+                    MainMessagesView(currentView: $currentView)
                 }
             }
             VStack{
