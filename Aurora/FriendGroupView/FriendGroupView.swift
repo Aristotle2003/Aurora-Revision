@@ -59,6 +59,8 @@ class FriendGroupViewModel: ObservableObject {
                 print("Response submitted successfully")
                 // 更新 hasPosted 状态
                 self.updateHasPostedStatus(for: userId)
+                // 重新获取最新的响应数据
+                self.fetchLatestResponses(for: userId)
             } else {
                 print("Failed to submit response: \(error?.localizedDescription ?? "Unknown error")")
             }
@@ -632,7 +634,7 @@ struct ResponseCard: View {
 }
 
 struct FullScreenResponseInputView: View {
-    @ObservedObject var vm: FriendGroupViewModel
+    @StateObject var vm: FriendGroupViewModel
     let selectedUser: ChatUser
     
     @State private var keyboardHeight: CGFloat = 0 // Track keyboard height

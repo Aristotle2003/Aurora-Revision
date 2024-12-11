@@ -113,11 +113,11 @@ struct ProfileView: View {
                     Text(chatUser.username)
                         .font(.system(size: 16, weight: .bold))
                         .foregroundColor(Color(red: 0.337, green: 0.337, blue: 0.337))
-                    
-                    Text(chatUser.email)
-                        .font(.system(size: 14))
-                        .foregroundColor(Color(red: 0.490, green: 0.490, blue: 0.490))
-                    
+                    if let otherInfo = otherUserInfo{
+                        Text("@\(otherInfo.name)")
+                            .font(.system(size: 14))
+                            .foregroundColor(Color(red: 0.490, green: 0.490, blue: 0.490))
+                    }
                     Spacer()
                         .frame(height: 20)
                     

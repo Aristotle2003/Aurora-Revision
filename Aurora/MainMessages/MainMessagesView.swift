@@ -204,7 +204,7 @@ struct MainMessagesView: View {
     @State var latestSenderMessage: ChatMessage?
     @State private var showCarouselView = true
     
-    @ObservedObject private var vm = MainMessagesViewModel()
+    @StateObject private var vm = MainMessagesViewModel()
     @StateObject private var chatLogViewModel = ChatLogViewModel(chatUser: nil)
     @State private var showFriendRequestsView = false
     @Binding var currentView: String

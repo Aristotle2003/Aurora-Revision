@@ -130,6 +130,8 @@ class CustomTabNavigationViewModel: ObservableObject {
         likesListener = FirebaseManager.shared.firestore
             .collection("response_to_prompt")
             .whereField("latestLikeTime", isGreaterThan: Timestamp(seconds: lastCheckedTimestampInt64, nanoseconds: 0))
+            .order(by: "latestLikeTime", descending: true)
+            .limit(to: 1)
             .addSnapshotListener { [weak self] snapshot, error in
                 if let error = error {
                     print("Failed to listen for likes updates: \(error)")
@@ -186,7 +188,7 @@ class CustomTabNavigationViewModel: ObservableObject {
 struct CustomTabNavigationView: View {
     @State private var currentView: String = "Home"
     
-    @ObservedObject private var vm = CustomTabNavigationViewModel()
+    @StateObject private var vm = CustomTabNavigationViewModel()
     @StateObject private var chatLogViewModel = ChatLogViewModel(chatUser: nil)
     @State private var currentUser: ChatUser? = nil
     
@@ -233,7 +235,7 @@ struct CustomTabNavigationView: View {
 
 struct CustomNavBar: View {
     @Binding var currentView: String
-    @ObservedObject private var vm = CustomTabNavigationViewModel()
+    @StateObject private var vm = CustomTabNavigationViewModel()
     
     
     var body: some View {
@@ -258,7 +260,7 @@ struct CustomNavBar: View {
                             .resizable()
                             .scaledToFit()
                             .frame(width: 36, height: 36)
-                        if (vm.hasNewPost || vm.hasNewLike) {
+                        if ((vm.hasNewPost || vm.hasNewLike)/* && currentView != "DailyAurora" */) {
                             Image("reddot")
                                 .resizable()
                                 .scaledToFit()
