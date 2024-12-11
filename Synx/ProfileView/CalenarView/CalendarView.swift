@@ -180,12 +180,40 @@ struct CalendarView: View {
     @Binding var selectedDate: Date?
     @State private var currentMonth: Date = Date()
 
+    private var months: [Date] {
+        let calendar = Calendar.current
+        let currentYear = calendar.component(.year, from: Date())
+        var allMonths: [Date] = []
+        for month in 1...12 {
+            let components = DateComponents(year: currentYear, month: month, day: 1)
+            if let monthDate = calendar.date(from: components) {
+                allMonths.append(monthDate)
+            }
+        }
+        return allMonths
+    }
+
     var body: some View {
         VStack {
-            // Month and Year Display
-            Text("\(currentMonth, formatter: monthYearFormatter)")
-                .font(.headline)
-                .padding()
+            // Horizontal month bar
+            ScrollView(.horizontal, showsIndicators: false) {
+                HStack(spacing: 10) {
+                    ForEach(months, id: \.self) { monthDate in
+                        Button(action: {
+                            currentMonth = monthDate
+                        }) {
+                            Text("\(monthDate, formatter: monthFormatter)")
+                                .font(.subheadline)
+                                .foregroundColor(isSameMonth(monthDate, as: currentMonth) ? .white : .primary)
+                                .padding(.vertical, 8)
+                                .padding(.horizontal, 12)
+                                .background(isSameMonth(monthDate, as: currentMonth) ? Color.blue : Color.clear)
+                                .cornerRadius(5)
+                        }
+                    }
+                }
+                .padding(.horizontal)
+            }
 
             // Days of the Week Header
             HStack {
@@ -195,6 +223,7 @@ struct CalendarView: View {
                         .frame(maxWidth: .infinity)
                 }
             }
+
             let days = generateDaysInMonth(for: currentMonth)
             LazyVGrid(columns: Array(repeating: GridItem(.flexible()), count: 7)) {
                 ForEach(days, id: \.self) { day in
@@ -213,19 +242,27 @@ struct CalendarView: View {
                     }
                 }
             }
+            .padding()
         }
-        .padding()
     }
 
-    // Formatter for displaying the month and year
-    private let monthYearFormatter: DateFormatter = {
+    // Formatter for displaying month names (e.g. "Jan", "Feb", "Mar")
+    private let monthFormatter: DateFormatter = {
         let formatter = DateFormatter()
-        formatter.dateFormat = "MMMM yyyy"
+        formatter.dateFormat = "MMM"
         return formatter
     }()
 
     // Days of the week
     private let weekdays = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"]
+
+    // Check if two dates are in the same month and year
+    private func isSameMonth(_ date1: Date, as date2: Date) -> Bool {
+        let calendar = Calendar.current
+        let comp1 = calendar.dateComponents([.year, .month], from: date1)
+        let comp2 = calendar.dateComponents([.year, .month], from: date2)
+        return comp1.year == comp2.year && comp1.month == comp2.month
+    }
 
     // Function to generate all days in the current month
     private func generateDaysInMonth(for date: Date) -> [Date?] {

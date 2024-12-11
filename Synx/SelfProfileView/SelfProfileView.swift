@@ -285,19 +285,10 @@ struct SelfProfileView: View {
                             if selectedImage != nil {
                                 updateProfilePhoto()
                                 print("Image selected successfully!")
-                                showConfirmationDialog = true
                             } else {
                                 print("No image selected.")
                             }
                         }
-                }
-                .alert(isPresented: $showConfirmationDialog) {
-                    Alert(
-                        title: Text("Confirm Photo"),
-                        message: Text("Are you sure you want to use this photo?"),
-                        primaryButton: .default(Text("Yes"), action: updateProfilePhoto),
-                        secondaryButton: .cancel()
-                    )
                 }
                 .onDisappear{
                     self.showTemporaryImage = false

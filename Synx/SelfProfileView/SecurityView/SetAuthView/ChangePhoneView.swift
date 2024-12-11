@@ -18,7 +18,7 @@ struct ChangePhoneView: View {
     @State private var countryCode: String = "1"
     @State private var phoneNumber: String = ""
     
-    @State private var verificationID: String = ""
+    @State private var verificationID: String? = nil
     @State private var verificationCode: String = ""
     @State private var showVerificationField: Bool = false
     
@@ -204,7 +204,7 @@ struct ChangePhoneView: View {
                         self.errorMessage = error.localizedDescription
                         return
                     }
-                    self.verificationID = verificationID ?? ""
+                    self.verificationID = verificationID
                     self.showVerificationField = true
                 }
             }
@@ -216,7 +216,8 @@ struct ChangePhoneView: View {
         errorMessage = ""
         isLoading = true
         
-        guard let verificationID = UserDefaults.standard.string(forKey: "authVerificationID") else {
+        // Crucial Line
+        guard let verificationID = verificationID else {
             errorMessage = "Verification ID not found"
             isLoading = false
             return
@@ -235,10 +236,10 @@ struct ChangePhoneView: View {
         
         
         // Unlink all previous phone numbers first
-        unlinkAllPhoneProviders { success in
+        unlinkAllPhoneProviders(currentUser: currentUser) { success in
             if success {
                 // Link and update phone number after unlinking
-                self.linkCredentialAndUpdatePhone(credential: credential)
+                self.linkCredentialAndUpdatePhone(currentUser: currentUser, credential: credential)
             } else {
                 self.errorMessage = "Failed to unlink previous phone numbers."
                 self.isLoading = false
@@ -247,13 +248,7 @@ struct ChangePhoneView: View {
     }
     
     
-    private func unlinkAllPhoneProviders(completion: @escaping (Bool) -> Void) {
-        guard let currentUser = FirebaseManager.shared.auth.currentUser else {
-            self.errorMessage = "No current user found"
-            completion(false)
-            return
-        }
-        
+    private func unlinkAllPhoneProviders(currentUser: User, completion: @escaping (Bool) -> Void) {
         // Identify phone-based providers
         let phoneProviders = currentUser.providerData.filter { $0.providerID == PhoneAuthProviderID }
         let group = DispatchGroup()
@@ -287,17 +282,10 @@ struct ChangePhoneView: View {
     
     
     // Link credentials, update Firebase, update Firestore
-    private func linkCredentialAndUpdatePhone(credential: PhoneAuthCredential) {
-        guard let currentUser = FirebaseManager.shared.auth.currentUser else {
-            self.errorMessage = "No current user found"
-            return
-        }
-        
+    private func linkCredentialAndUpdatePhone(currentUser: User, credential: PhoneAuthCredential) {
         let newPhoneNumber = phoneNumber
         
         DispatchQueue.main.asyncAfter(deadline: .now() + 1) {
-            print("Credential phone number: \(credential.provider)")
-            print("Credential claims: \(String(describing: credential))")
             // Link the provided phone credential
             currentUser.link(with: credential) { authResult, error in
                 if let error = error {

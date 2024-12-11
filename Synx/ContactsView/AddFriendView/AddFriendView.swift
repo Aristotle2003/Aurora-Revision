@@ -497,7 +497,7 @@ struct AddFriendView: View {
             .collection("friend_request")
             .document(user.uid)
             .collection("request_list")
-            .document()
+            .document(friendRequestData["fromUid"] as! String)
             .setData(friendRequestData) { error in
                 if let error = error {
                     self.errorMessage = "Failed to send friend request: \(error)"
@@ -512,8 +512,4 @@ struct AddFriendView: View {
                 print("Friend request sent successfully!")
             }
     }
-}
-
-#Preview{
-    AddFriendView()
 }

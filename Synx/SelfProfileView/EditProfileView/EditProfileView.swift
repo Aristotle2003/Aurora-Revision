@@ -72,7 +72,7 @@ class ProfileViewModel: ObservableObject {
                     print("Profile information saved successfully!")
                 }
             }
-        updateUsername()
+        updateUsername()//Please skip update if the username doesn't change
     }
     
     private func updateUsername() {
@@ -130,120 +130,817 @@ struct EditProfileView: View {
     
     var body: some View {
         NavigationView {
-            Form {
-                Section(header: Text("Basic Information")) {
+            ZStack{
+                Color(red: 0.976, green: 0.980, blue: 1.0)
+                    .ignoresSafeArea()
+                VStack {
+                    // Custom Navigation Header
+                    HStack {
+                        Button(action: {
+                            dismiss() // Dismiss the view when back button is pressed
+                        }) {
+                            Image("chatlogviewbackbutton") // Replace with your back button image
+                                .resizable()
+                                .frame(width: 24, height: 24) // Customize this color
+                        }
+                        Spacer()
+                        Text("Edit Profile")
+                            .font(.system(size: 20, weight: .bold)) // Customize font style
+                            .foregroundColor(Color(red: 125/255, green: 133/255, blue: 191/255)) // Customize text color
+                        Spacer()
+                        Image("spacerformainmessageviewtopleft") // Replace with your back button image
+                            .resizable()
+                            .frame(width: 24, height: 24) // To balance the back button
+                    }
+                    .padding()
+                    .background(Color(red: 229/255, green: 232/255, blue: 254/255))
                     
-                    NavigationLink(destination: DetailInputView(title: "Your name", value: $profileVM.name)) {
-                        HStack {
-                            Text("Name")
-                            Spacer()
-                            Text(profileVM.name.isEmpty ? "Enter name" : profileVM.name)
-                                .foregroundColor(.gray)
+                    Form {
+                        Section(header: Text("")) {
+                            
+                            NavigationLink(destination: UsernameInputView(title: "Username", value: $profileVM.username)) {
+                                HStack {
+                                    Text("Username")
+                                        .font(.system(size: 14, weight: .bold))
+                                        .foregroundColor(Color(red: 86/255, green: 86/255, blue: 86/255))
+                                    Spacer()
+                                    Text(profileVM.username.isEmpty ? "Enter Username" : profileVM.username)
+                                        .foregroundColor(.gray)
+                                }
+                                .frame(height: 54)
+                            }
+                            
+                            NavigationLink(destination: NameInputView(title: "Your name", value: $profileVM.name)) {
+                                HStack {
+                                    Text("Name")
+                                        .font(.system(size: 14, weight: .bold))
+                                        .foregroundColor(Color(red: 86/255, green: 86/255, blue: 86/255))
+                                    Spacer()
+                                    Text(profileVM.name.isEmpty ? "Enter name" : profileVM.name)
+                                        .foregroundColor(.gray)
+                                }
+                                .frame(height: 54)
+                                
+                            }
+                            
+                            NavigationLink(destination: GenderInputView(title: "Gender", value: $profileVM.gender)) {
+                                HStack {
+                                    Text("Gender")
+                                        .font(.system(size: 14, weight: .bold))
+                                        .foregroundColor(Color(red: 86/255, green: 86/255, blue: 86/255))
+                                    Spacer()
+                                    Text(profileVM.gender.isEmpty ? "Enter Gender" : profileVM.gender)
+                                        .foregroundColor(.gray)
+                                }
+                                .frame(height: 54)
+                            }
+                            
+                            NavigationLink(destination: AgeInputView(title: "Age", value: $profileVM.age)) {
+                                HStack {
+                                    Text("Age")
+                                        .font(.system(size: 14, weight: .bold))
+                                        .foregroundColor(Color(red: 86/255, green: 86/255, blue: 86/255))
+                                    Spacer()
+                                    Text(profileVM.age.isEmpty ? "Enter Age" : profileVM.age)
+                                        .foregroundColor(.gray)
+                                }
+                                .frame(height: 54)
+                            }
+
+                            NavigationLink(destination: PronounsInputView(title: "Pronouns", value: $profileVM.pronouns)) {
+                                HStack {
+                                    Text("Pronouns")
+                                        .foregroundColor(Color(red: 86/255, green: 86/255, blue: 86/255))
+                                        .font(.system(size: 14, weight: .bold))
+                                    Spacer()
+                                    Text(profileVM.pronouns.isEmpty ? "Enter pronouns" : profileVM.pronouns)
+                                        .foregroundColor(.gray)
+                                }
+                                .frame(height: 54)
+                            }
+                            
+                            NavigationLink(destination: LocationInputView(title: "Location", value: $profileVM.location)) {
+                                HStack {
+                                    Text("Location")
+                                        .font(.system(size: 14, weight: .bold))
+                                        .foregroundColor(Color(red: 86/255, green: 86/255, blue: 86/255))
+
+                                    Spacer()
+                                    Text(profileVM.location.isEmpty ? "Select Location" : profileVM.location)
+                                        .foregroundColor(.gray)
+                                }
+                                .frame(height: 54)
+                            }
+                            
+                            NavigationLink(destination: BioInputView(title: "Bio", value: $profileVM.bio)) {
+                                HStack {
+                                    Text("Bio")
+                                        .font(.system(size: 14, weight: .bold))
+                                        .foregroundColor(Color(red: 86/255, green: 86/255, blue: 86/255))
+                                    Spacer()
+                                    Text(profileVM.bio.isEmpty ? "Enter Bio" : profileVM.bio)
+                                        .foregroundColor(.gray)
+                                }
+                                .frame(height: 54)
+                            }
+                            
+                    
+                            /*NavigationLink(destination: BirthdatePickerView(selectedDate: $profileVM.birthdate)) {
+                                HStack {
+                                    Text("Birthdate")
+                                        .font(.system(size: 14, weight: .bold))
+                                        .foregroundColor(Color(red: 86/255, green: 86/255, blue: 86/255))
+                                    Spacer()
+                                    Text("\(profileVM.birthdate.formatted(.dateTime.year().month().day()))")
+                                        .foregroundColor(.gray)
+                                }
+                                .frame(height: 64)
+                            }*/
+                        }
+                        
+                        
+                        Button(action: {
+                            profileVM.saveProfileInfo()
+                            dismiss()
+                        }) {
+                            Image("savebuttoneditprofileview")
+                                .scaledToFit()
                         }
                     }
-                    
-                    NavigationLink(destination: DetailInputView(title: "Username", value: $profileVM.username)) {
-                        HStack {
-                            Text("Username")
-                            Spacer()
-                            Text(profileVM.username.isEmpty ? "Enter Username" : profileVM.username)
-                                .foregroundColor(.gray)
-                        }
-                    }
-                    
-                    NavigationLink(destination: DetailInputView(title: "Age", value: $profileVM.age)) {
-                        HStack {
-                            Text("Age")
-                            Spacer()
-                            Text(profileVM.age.isEmpty ? "Enter Age" : profileVM.age)
-                                .foregroundColor(.gray)
-                        }
-                    }
-                    
-                    NavigationLink(destination: DetailInputView(title: "Gender", value: $profileVM.gender)) {
-                        HStack {
-                            Text("Gender")
-                            Spacer()
-                            Text(profileVM.gender.isEmpty ? "Enter Gender" : profileVM.gender)
-                                .foregroundColor(.gray)
-                        }
-                    }
-                    
-                    NavigationLink(destination: DetailInputView(title: "Pronouns", value: $profileVM.pronouns)) {
-                        HStack {
-                            Text("Pronouns")
-                            Spacer()
-                            Text(profileVM.pronouns.isEmpty ? "Enter pronouns" : profileVM.pronouns)
-                                .foregroundColor(.gray)
-                        }
-                    }
-                    
-                    NavigationLink(destination: DetailInputView(title: "Bio", value: $profileVM.bio)) {
-                        HStack {
-                            Text("Bio")
-                            Spacer()
-                            Text(profileVM.bio.isEmpty ? "Enter Bio" : profileVM.bio)
-                                .foregroundColor(.gray)
-                        }
-                    }
-                    
-                    NavigationLink(destination: LocationPickerView(selectedLocation: $profileVM.location)) {
-                        HStack {
-                            Text("Location")
-                            Spacer()
-                            Text(profileVM.location.isEmpty ? "Select Location" : profileVM.location)
-                                .foregroundColor(.gray)
-                        }
-                    }
-                    
-                    NavigationLink(destination: BirthdatePickerView(selectedDate: $profileVM.birthdate)) {
-                        HStack {
-                            Text("Birthdate")
-                            Spacer()
-                            Text("\(profileVM.birthdate.formatted(.dateTime.year().month().day()))")
-                                .foregroundColor(.gray)
-                        }
-                    }
+                    .scrollContentBackground(.hidden)
+                    .background(Color(red: 0.976, green: 0.980, blue: 1.0))
+                    .cornerRadius(32)
                 }
-                
-                Button("Save") {
-                    profileVM.saveProfileInfo()
-                    dismiss()
-                }
-                .frame(maxWidth: .infinity, alignment: .center)
-                .padding()
-                .background(Color.blue)
-                .foregroundColor(.white)
-                .cornerRadius(10)
             }
-            .navigationTitle("Edit Profile")
         }
+        .navigationBarBackButtonHidden(true)
     }
 }
 
 // MARK: - Detail Input View
-struct DetailInputView: View {
+struct NameInputView: View {
     let title: String
     @Binding var value: String
     @Environment(\.dismiss) var dismiss
     
     var body: some View {
-        VStack {
-            TextField("Enter \(title)", text: $value)
-                .textFieldStyle(RoundedBorderTextFieldStyle())
-                .padding()
-            
-            Button("OK") {
-                dismiss()
+        NavigationStack{
+            ZStack{
+                Color(red: 0.976, green: 0.980, blue: 1.0)
+                    .ignoresSafeArea()
+                VStack {
+                    // Custom Navigation Header
+                    HStack {
+                        Button(action: {
+                            dismiss() // Dismiss the view when back button is pressed
+                        }) {
+                            Image("chatlogviewbackbutton") // Replace with your back button image
+                                .resizable()
+                                .frame(width: 24, height: 24) // Customize this color
+                        }
+                        Spacer()
+                        Text("Name")
+                            .font(.system(size: 20, weight: .bold)) // Customize font style
+                            .foregroundColor(Color(red: 125/255, green: 133/255, blue: 191/255)) // Customize text color
+                        Spacer()
+                        Image("spacerformainmessageviewtopleft") // Replace with your back button image
+                            .resizable()
+                            .frame(width: 24, height: 24) // To balance the back button
+                    }
+                    .padding()
+                    .background(Color(red: 229/255, green: 232/255, blue: 254/255))
+                    
+                    Spacer()
+                        .frame(height: 28)
+                    
+                    HStack {
+                        TextField("Enter \(title)", text: $value)
+                            .padding()
+                            .background(Color.white)
+                            .foregroundColor(Color(red: 125/255, green: 125/255, blue: 125/255))
+                            .cornerRadius(24)
+                            .padding(.horizontal)
+                        
+                        if !value.isEmpty {
+                            Button(action: {
+                                value = "" // Clear the textfield
+                            }) {
+                                Image(systemName: "xmark.circle.fill")
+                                    .foregroundColor(.gray)
+                                    .padding(.trailing, 16)
+                            }
+                        }
+                    }
+                    
+                    HStack{
+                        Text("Consider filling in some 'real' name so your friends know who you are!")
+                            .font(.system(size: 12))
+                            .foregroundColor(Color(red: 86/255, green: 86/255, blue: 86/255))
+                            .padding(.horizontal)
+                            .padding(.top, 12)
+                        Spacer()
+                            .frame(width: 40)
+                    }
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                    
+                    Button(action: {
+                        dismiss()
+                    }) {
+                        Image("donebutton")
+                            .frame(maxWidth: .infinity, alignment: .center)
+                            .scaledToFit()
+                            .padding()
+                    }
+                    
+                    Spacer()
+                    
+                }
             }
-            .frame(maxWidth: .infinity, alignment: .center)
-            .padding()
-            .background(Color.blue)
-            .foregroundColor(.white)
-            .cornerRadius(10)
         }
-        .padding()
-        .navigationTitle(title)
+        .navigationBarBackButtonHidden(true)
+    }
+}
+
+// MARK: - Detail Input View
+struct UsernameInputView: View {
+    let title: String
+    @Binding var value: String
+    @Environment(\.dismiss) var dismiss
+    
+    var body: some View {
+        NavigationStack{
+            ZStack{
+                Color(red: 0.976, green: 0.980, blue: 1.0)
+                    .ignoresSafeArea()
+                VStack {
+                    // Custom Navigation Header
+                    HStack {
+                        Button(action: {
+                            dismiss() // Dismiss the view when back button is pressed
+                        }) {
+                            Image("chatlogviewbackbutton") // Replace with your back button image
+                                .resizable()
+                                .frame(width: 24, height: 24) // Customize this color
+                        }
+                        Spacer()
+                        Text("Username")
+                            .font(.system(size: 20, weight: .bold)) // Customize font style
+                            .foregroundColor(Color(red: 125/255, green: 133/255, blue: 191/255)) // Customize text color
+                        Spacer()
+                        Image("spacerformainmessageviewtopleft") // Replace with your back button image
+                            .resizable()
+                            .frame(width: 24, height: 24) // To balance the back button
+                    }
+                    .padding()
+                    .background(Color(red: 229/255, green: 232/255, blue: 254/255))
+                    
+                    Spacer()
+                        .frame(height: 28)
+                    
+                    HStack {
+                        TextField("Enter \(title)", text: $value)
+                            .padding()
+                            .background(Color.white)
+                            .foregroundColor(Color(red: 125/255, green: 125/255, blue: 125/255))
+                            .cornerRadius(24)
+                            .padding(.horizontal)
+                        
+                        if !value.isEmpty {
+                            Button(action: {
+                                value = "" // Clear the textfield
+                            }) {
+                                Image(systemName: "xmark.circle.fill")
+                                    .foregroundColor(.gray)
+                                    .padding(.trailing, 16)
+                            }
+                        }
+                    }
+                    
+                    HStack{
+                        Text("This is not a unique identifier of you! So think of Aurora's username as your 'internet name'. We uniquely identify our users by their email or phone.")
+                            .font(.system(size: 12))
+                            .foregroundColor(Color(red: 86/255, green: 86/255, blue: 86/255))
+                            .padding(.horizontal)
+                            .padding(.top, 12)
+                        Spacer()
+                            .frame(width: 40)
+                    }
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                    
+                    Button(action: {
+                        dismiss()
+                    }) {
+                        Image("donebutton")
+                            .frame(maxWidth: .infinity, alignment: .center)
+                            .scaledToFit()
+                            .padding()
+                    }
+                    
+                    Spacer()
+                    
+                }
+            }
+        }
+        .navigationBarBackButtonHidden(true)
+    }
+}
+
+// MARK: - Detail Input View
+struct AgeInputView: View {
+    let title: String
+    @Binding var value: String
+    @Environment(\.dismiss) var dismiss
+    
+    var body: some View {
+        NavigationStack{
+            ZStack{
+                Color(red: 0.976, green: 0.980, blue: 1.0)
+                    .ignoresSafeArea()
+                VStack {
+                    // Custom Navigation Header
+                    HStack {
+                        Button(action: {
+                            dismiss() // Dismiss the view when back button is pressed
+                        }) {
+                            Image("chatlogviewbackbutton") // Replace with your back button image
+                                .resizable()
+                                .frame(width: 24, height: 24) // Customize this color
+                        }
+                        Spacer()
+                        Text("Age")
+                            .font(.system(size: 20, weight: .bold)) // Customize font style
+                            .foregroundColor(Color(red: 125/255, green: 133/255, blue: 191/255)) // Customize text color
+                        Spacer()
+                        Image("spacerformainmessageviewtopleft") // Replace with your back button image
+                            .resizable()
+                            .frame(width: 24, height: 24) // To balance the back button
+                    }
+                    .padding()
+                    .background(Color(red: 229/255, green: 232/255, blue: 254/255))
+                    
+                    Spacer()
+                        .frame(height: 28)
+                    
+                    HStack {
+                        TextField("Enter \(title)", text: $value)
+                            .padding()
+                            .background(Color.white)
+                            .foregroundColor(Color(red: 125/255, green: 125/255, blue: 125/255))
+                            .cornerRadius(24)
+                            .padding(.horizontal)
+                        
+                        if !value.isEmpty {
+                            Button(action: {
+                                value = "" // Clear the textfield
+                            }) {
+                                Image(systemName: "xmark.circle.fill")
+                                    .foregroundColor(.gray)
+                                    .padding(.trailing, 16)
+                            }
+                        }
+                    }
+                    
+                    HStack{
+                        Text("How old are you?")
+                            .font(.system(size: 12))
+                            .foregroundColor(Color(red: 86/255, green: 86/255, blue: 86/255))
+                            .padding(.horizontal)
+                            .padding(.top, 12)
+                        Spacer()
+                            .frame(width: 40)
+                    }
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                    
+                    Button(action: {
+                        dismiss()
+                    }) {
+                        Image("donebutton")
+                            .frame(maxWidth: .infinity, alignment: .center)
+                            .scaledToFit()
+                            .padding()
+                    }
+                    
+                    Spacer()
+                    
+                }
+            }
+        }
+        .navigationBarBackButtonHidden(true)
+    }
+}
+
+// MARK: - Detail Input View
+struct GenderInputView: View {
+    let title: String
+    @Binding var value: String
+    @Environment(\.dismiss) var dismiss
+    
+    @State private var selectedGender: String = ""
+    @State private var isCustom: Bool = false
+    
+    var body: some View {
+        NavigationStack {
+            ZStack {
+                Color(red: 0.976, green: 0.980, blue: 1.0)
+                    .ignoresSafeArea()
+                
+                VStack {
+                    // Custom Navigation Header
+                    HStack {
+                        Button(action: { dismiss() }) {
+                            Image("chatlogviewbackbutton")
+                                .resizable()
+                                .frame(width: 24, height: 24)
+                        }
+                        Spacer()
+                        
+                        Text("Gender")
+                            .font(.system(size: 20, weight: .bold))
+                            .foregroundColor(Color(red: 125/255, green: 133/255, blue: 191/255))
+                        
+                        Spacer()
+                        
+                        Image("spacerformainmessageviewtopleft")
+                            .resizable()
+                            .frame(width: 24, height: 24)
+                    }
+                    .padding()
+                    .background(Color(red: 229/255, green: 232/255, blue: 254/255))
+                    
+                    Spacer().frame(height: 28)
+                    
+                    // Gender Selection Options
+                    VStack(alignment: .leading, spacing: 20) {
+                        GenderOptionButton(title: "Female", selectedGender: $selectedGender, isCustom: $isCustom)
+                        GenderOptionButton(title: "Male", selectedGender: $selectedGender, isCustom: $isCustom)
+                        
+                        Button(action: {
+                            isCustom = true
+                            selectedGender = ""
+                            value = ""
+                        }) {
+                            HStack {
+                                ZStack {
+                                    Circle()
+                                        .strokeBorder(
+                                            selectedGender.isEmpty && isCustom ?
+                                            Color(red: 125/255, green: 133/255, blue: 191/255) :
+                                            Color.gray, lineWidth: 2
+                                        )
+                                        .frame(width: 24, height: 24)
+                                    
+                                    if selectedGender.isEmpty && isCustom {
+                                        Circle()
+                                            .fill(Color(red: 125/255, green: 133/255, blue: 191/255))
+                                            .frame(width: 12, height: 12)
+                                    }
+                                }
+                                
+                                Text("Custom")
+                                    .foregroundColor(Color(red: 86/255, green: 86/255, blue: 86/255))
+                                    .font(.system(size: 16))
+                            }
+                        }
+
+                    }
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                    .padding(.horizontal, 20)
+
+                    
+                    // Custom Input Field
+                    if isCustom {
+                        HStack {
+                            TextField("Enter Custom Gender", text: $value)
+                                .padding()
+                                .background(Color.white)
+                                .foregroundColor(Color(red: 125/255, green: 125/255, blue: 125/255))
+                                .cornerRadius(24)
+                                .padding(.horizontal)
+                            
+                            if !value.isEmpty {
+                                Button(action: { value = "" }) {
+                                    Image(systemName: "xmark.circle.fill")
+                                        .foregroundColor(.gray)
+                                        .padding(.trailing, 16)
+                                }
+                            }
+                        }
+                    }
+                    
+                    Spacer().frame(height: 16)
+                    
+                    Button(action: {
+                        if !isCustom {
+                            value = selectedGender
+                        }
+                        dismiss()
+                    }) {
+                        Image("donebutton")
+                            .scaledToFit()
+                            .padding()
+                    }
+                    
+                    Spacer()
+                }
+            }
+        }
+        .navigationBarBackButtonHidden(true)
+    }
+}
+
+// Custom Button for Gender Selection
+// Custom Button for Gender Selection
+struct GenderOptionButton: View {
+    let title: String
+    @Binding var selectedGender: String
+    @Binding var isCustom: Bool
+    
+    var body: some View {
+        Button(action: {
+            selectedGender = title
+            isCustom = false
+        }) {
+            HStack {
+                ZStack {
+                    Circle()
+                        .strokeBorder(
+                            selectedGender == title && !isCustom ?
+                            Color(red: 125/255, green: 133/255, blue: 191/255) :
+                            Color.gray, lineWidth: 2
+                        )
+                        .frame(width: 24, height: 24)
+                    
+                    if selectedGender == title && !isCustom {
+                        Circle()
+                            .fill(Color(red: 125/255, green: 133/255, blue: 191/255))
+                            .frame(width: 12, height: 12)
+                    }
+                }
+                
+                Text(title)
+                    .foregroundColor(Color(red: 86/255, green: 86/255, blue: 86/255))
+                    .font(.system(size: 16))
+            }
+        }
+    }
+}
+
+
+
+
+// MARK: - Detail Input View
+struct PronounsInputView: View {
+    let title: String
+    @Binding var value: String
+    @Environment(\.dismiss) var dismiss
+    
+    var body: some View {
+        NavigationStack{
+            ZStack{
+                Color(red: 0.976, green: 0.980, blue: 1.0)
+                    .ignoresSafeArea()
+                VStack {
+                    // Custom Navigation Header
+                    HStack {
+                        Button(action: {
+                            dismiss() // Dismiss the view when back button is pressed
+                        }) {
+                            Image("chatlogviewbackbutton") // Replace with your back button image
+                                .resizable()
+                                .frame(width: 24, height: 24) // Customize this color
+                        }
+                        Spacer()
+                        Text("Pronouns")
+                            .font(.system(size: 20, weight: .bold)) // Customize font style
+                            .foregroundColor(Color(red: 125/255, green: 133/255, blue: 191/255)) // Customize text color
+                        Spacer()
+                        Image("spacerformainmessageviewtopleft") // Replace with your back button image
+                            .resizable()
+                            .frame(width: 24, height: 24) // To balance the back button
+                    }
+                    .padding()
+                    .background(Color(red: 229/255, green: 232/255, blue: 254/255))
+                    
+                    Spacer()
+                        .frame(height: 28)
+                    
+                    HStack {
+                        TextField("Enter \(title)", text: $value)
+                            .padding()
+                            .background(Color.white)
+                            .foregroundColor(Color(red: 125/255, green: 125/255, blue: 125/255))
+                            .cornerRadius(24)
+                            .padding(.horizontal)
+                        
+                        if !value.isEmpty {
+                            Button(action: {
+                                value = "" // Clear the textfield
+                            }) {
+                                Image(systemName: "xmark.circle.fill")
+                                    .foregroundColor(.gray)
+                                    .padding(.trailing, 16)
+                            }
+                        }
+                    }
+                    
+                    HStack{
+                        Text("Enter your pronouns.")
+                            .font(.system(size: 12))
+                            .foregroundColor(Color(red: 86/255, green: 86/255, blue: 86/255))
+                            .padding(.horizontal)
+                            .padding(.top, 12)
+                        Spacer()
+                            .frame(width: 40)
+                    }
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                    
+                    Button(action: {
+                        dismiss()
+                    }) {
+                        Image("donebutton")
+                            .frame(maxWidth: .infinity, alignment: .center)
+                            .scaledToFit()
+                            .padding()
+                    }
+                    
+                    Spacer()
+                    
+                }
+            }
+        }
+        .navigationBarBackButtonHidden(true)
+    }
+}
+
+// MARK: - Detail Input View
+struct BioInputView: View {
+    let title: String
+    @Binding var value: String
+    @Environment(\.dismiss) var dismiss
+    
+    var body: some View {
+        NavigationStack {
+            ZStack {
+                Color(red: 0.976, green: 0.980, blue: 1.0)
+                    .ignoresSafeArea()
+                
+                VStack {
+                    // Custom Navigation Header
+                    HStack {
+                        Button(action: {
+                            dismiss() // Dismiss the view when back button is pressed
+                        }) {
+                            Image("chatlogviewbackbutton") // Replace with your back button image
+                                .resizable()
+                                .frame(width: 24, height: 24)
+                        }
+                        
+                        Spacer()
+                        
+                        Text("Bio")
+                            .font(.system(size: 20, weight: .bold))
+                            .foregroundColor(Color(red: 125/255, green: 133/255, blue: 191/255))
+                        
+                        Spacer()
+                        
+                        Image("spacerformainmessageviewtopleft")
+                            .resizable()
+                            .frame(width: 24, height: 24)
+                    }
+                    .padding()
+                    .background(Color(red: 229/255, green: 232/255, blue: 254/255))
+                    
+                    Spacer().frame(height: 28)
+                    
+                    // Multiline Text Editor
+                    ZStack(alignment: .bottomTrailing) {
+                        TextEditor(text: $value)
+                            .padding()
+                            .foregroundColor(Color(red: 125/255, green: 125/255, blue: 125/255))
+                            .background(Color.white)
+                            .cornerRadius(20)
+                            .frame(height: 150) // TextEditor height
+                            .onChange(of: value) { newValue in
+                                if newValue.count > 100 {
+                                    value = String(newValue.prefix(100)) // Limit to 100 characters
+                                }
+                            }
+                        
+                        Text("\(value.count)/100")
+                            .foregroundColor(.gray)
+                            .font(.system(size: 12))
+                            .padding(.trailing, 16)
+                            .padding(.bottom, 8)
+                    }
+                    .padding(.horizontal)
+                    
+                    Text("Tell us what's special about you!")
+                        .font(.system(size: 12))
+                        .foregroundColor(Color(red: 86/255, green: 86/255, blue: 86/255))
+                        .padding(.horizontal)
+                        .padding(.top, 12)
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                    
+                    // Save Button
+                    Button(action: {
+                        dismiss()
+                    }) {
+                        Image("donebutton")
+                            .resizable()
+                            .scaledToFit()
+                            .padding()
+                    }
+                    
+                    Spacer()
+                }
+            }
+        }
+        .navigationBarBackButtonHidden(true)
+    }
+}
+
+
+// MARK: - Detail Input View
+struct LocationInputView: View {
+    let title: String
+    @Binding var value: String
+    @Environment(\.dismiss) var dismiss
+    
+    var body: some View {
+        NavigationStack{
+            ZStack{
+                Color(red: 0.976, green: 0.980, blue: 1.0)
+                    .ignoresSafeArea()
+                VStack {
+                    // Custom Navigation Header
+                    HStack {
+                        Button(action: {
+                            dismiss() // Dismiss the view when back button is pressed
+                        }) {
+                            Image("chatlogviewbackbutton") // Replace with your back button image
+                                .resizable()
+                                .frame(width: 24, height: 24) // Customize this color
+                        }
+                        Spacer()
+                        Text("Location")
+                            .font(.system(size: 20, weight: .bold)) // Customize font style
+                            .foregroundColor(Color(red: 125/255, green: 133/255, blue: 191/255)) // Customize text color
+                        Spacer()
+                        Image("spacerformainmessageviewtopleft") // Replace with your back button image
+                            .resizable()
+                            .frame(width: 24, height: 24) // To balance the back button
+                    }
+                    .padding()
+                    .background(Color(red: 229/255, green: 232/255, blue: 254/255))
+                    
+                    Spacer()
+                        .frame(height: 28)
+                    
+                    HStack {
+                        TextField("Enter \(title)", text: $value)
+                            .padding()
+                            .background(Color.white)
+                            .foregroundColor(Color(red: 125/255, green: 125/255, blue: 125/255))
+                            .cornerRadius(24)
+                            .padding(.horizontal)
+                        
+                        if !value.isEmpty {
+                            Button(action: {
+                                value = "" // Clear the textfield
+                            }) {
+                                Image(systemName: "xmark.circle.fill")
+                                    .foregroundColor(.gray)
+                                    .padding(.trailing, 16)
+                            }
+                        }
+                    }
+                    
+                    HStack{
+                        Text("Enter your location.")
+                            .font(.system(size: 12))
+                            .foregroundColor(Color(red: 86/255, green: 86/255, blue: 86/255))
+                            .padding(.horizontal)
+                            .padding(.top, 12)
+                        Spacer()
+                            .frame(width: 40)
+                    }
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                    
+                    Button(action: {
+                        dismiss()
+                    }) {
+                        Image("donebutton")
+                            .frame(maxWidth: .infinity, alignment: .center)
+                            .scaledToFit()
+                            .padding()
+                    }
+                    
+                    Spacer()
+                    
+                }
+            }
+        }
+        .navigationBarBackButtonHidden(true)
     }
 }
 
@@ -272,6 +969,8 @@ struct BirthdatePickerView: View {
         .navigationTitle("Birthdate")
     }
 }
+
+
 
 import SwiftUI
 import MapKit

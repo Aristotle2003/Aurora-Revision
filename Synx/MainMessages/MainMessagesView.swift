@@ -403,10 +403,12 @@ struct MainMessagesView: View {
                         }
                     }
                     .frame(maxHeight: UIScreen.main.bounds.height * 0.07)
+                    
                     if showCarouselView{
                         ZStack(alignment: .topTrailing){
                             if let chatUser = vm.chatUser {
                                 CarouselView(currentUser: chatUser, currentView: $currentView)
+                                    
                             } else {
                                 // Handle the case where chatUser is nil, possibly show a placeholder or an empty view
                                 Text("Loading...")
@@ -420,11 +422,12 @@ struct MainMessagesView: View {
                                     .padding(.trailing, 20)
                                     .padding(.top, 20)
                             }
-                            .padding(.trailing, 15)
-                            .padding(.top,10)
                             
                         }
+                        .padding(.top, 12)
+                        .padding(.bottom, 12)
                     }
+                    
                     Spacer()
                 }
             }
@@ -578,36 +581,32 @@ struct CarouselView: View {
         ZStack {
             Image("CarouselBackground")
                 .resizable()
-//                .scaledToFill()
-                .frame(width: UIScreen.main.bounds.width/1.1, height: 150)
-                .clipped()
+                .scaledToFit()
+                .frame(width: UIScreen.main.bounds.width - 40)
 
-            // 内部内容
+            // Internal content
             TabView {
                 ForEach(0..<items.count, id: \.self) { index in
-                    ZStack(alignment: .bottomLeading) {
+                    ZStack(alignment: .leading) {
                         if index == 0 {
                             Button(action: {
                                 currentView = "DailyAurora"
                             }) {
                                 Image(items[index])
-                                    .resizable()
-                                    .frame(width: 330, height: 123.6)
-                                    .padding()
+                                    .offset(x: -20)
                             }
                         } else {
                             Image(items[index])
-                                .resizable()
-                                .frame(width: 330, height: 123.6)
-                                .padding()
+                                .offset(x: -20)
                         }
                     }
                 }
             }
             .tabViewStyle(PageTabViewStyle()) // Enables navigation dots
-            .frame(height: 180) // Sets the height of the carousel
+            .frame(width: UIScreen.main.bounds.width, height: 160) // Sets the height of the carousel
             .background(Color.clear) // Ensures the background is clear
         }
-        .frame(width: UIScreen.main.bounds.width/1.1, height: 180) // 固定外部框架的高度
+        .frame(width: UIScreen.main.bounds.width - 40)
+
     }
 }
