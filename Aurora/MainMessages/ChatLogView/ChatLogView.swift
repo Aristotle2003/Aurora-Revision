@@ -578,8 +578,7 @@ struct ChatLogView: View {
                             NavigationLink(destination: ProfileView(
                                 chatUser: chatUser,
                                 currentUser: getCurrentUser(),
-                                isCurrentUser: false,
-                                chatLogViewModel: vm
+                                isCurrentUser: false
                             )) {
                                 Image("chatlogviewthreedotsbutton")
                                     .resizable()
@@ -611,8 +610,7 @@ struct ChatLogView: View {
                                             NavigationLink(destination: ProfileView(
                                                 chatUser: chatUser,
                                                 currentUser: getCurrentUser(),
-                                                isCurrentUser: false,
-                                                chatLogViewModel: vm
+                                                isCurrentUser: false
                                             )) {
                                                 WebImage(url: URL(string: vm.chatUser?.profileImageUrl ?? ""))
                                                     .resizable()
@@ -998,8 +996,7 @@ struct ChatLogView: View {
                 NavigationLink(destination: ProfileView(
                     chatUser: chatUser,
                     currentUser: getCurrentUser(),
-                    isCurrentUser: false,
-                    chatLogViewModel: vm
+                    isCurrentUser: false
                 )) {
                     WebImage(url: URL(string: vm.chatUser?.profileImageUrl ?? ""))
                         .resizable()

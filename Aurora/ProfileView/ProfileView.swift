@@ -24,7 +24,7 @@ struct ProfileView: View {
     @State private var isPinned = false
     @State private var isMuted = false
 
-    @ObservedObject var chatLogViewModel: ChatLogViewModel
+    @StateObject private var chatLogViewModel = ChatLogViewModel(chatUser: nil)
     @StateObject private var messagesViewModel = MessagesViewModel()
     @Environment(\.presentationMode) var presentationMode
     
@@ -245,6 +245,13 @@ struct ProfileView: View {
                 secondaryButton: .cancel()
             )
         }
+        .navigationDestination(isPresented: $showChatLogView) {
+            ChatLogView(vm: chatLogViewModel)
+                .onAppear {
+                    chatLogViewModel.chatUser = self.chatUser
+                    chatLogViewModel.initializeMessages()
+                }
+        }
 
         .navigationBarBackButtonHidden(true)
     }
@@ -316,15 +323,13 @@ struct ProfileView: View {
         }
     }
 
-    
+    @State private var showChatLogView = false
     // 好友选项
     private var friendOptions: some View {
         VStack(spacing: 20) {
-            NavigationLink(destination: ChatLogView(vm: chatLogViewModel)
-                .onAppear {
-                    chatLogViewModel.chatUser = chatUser
-                    chatLogViewModel.initializeMessages()
-                    chatLogViewModel.startAutoSend()
+            Button(action: {
+                showChatLogView = true
+                    
                 }) {
                     Image("messagebuttonforfriends")
                         .resizable()

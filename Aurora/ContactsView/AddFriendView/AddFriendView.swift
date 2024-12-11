@@ -308,8 +308,7 @@ struct AddFriendView: View {
                             ProfileView(
                                 chatUser: chatUser,
                                 currentUser: currentUser,
-                                isCurrentUser: false,
-                                chatLogViewModel: chatLogViewModel
+                                isCurrentUser: false
                             )
                         } else {
                             Text("Loading Profile...")

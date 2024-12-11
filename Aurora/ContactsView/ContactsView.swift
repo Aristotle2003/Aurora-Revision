@@ -137,8 +137,7 @@ struct CreateNewMessageView: View {
                     ProfileView(
                         chatUser: chatUser,
                         currentUser: currentUser,
-                        isCurrentUser: false,
-                        chatLogViewModel: chatLogViewModel
+                        isCurrentUser: false
                     )
                 } else {
                     Text("Loading Profile...") // Fallback if navigation occurs prematurely
