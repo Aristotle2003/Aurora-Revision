@@ -28,12 +28,12 @@
 		FB6764232CEE856400FCE17E /* Lottie in Frameworks */ = {isa = PBXBuildFile; productRef = FB6764222CEE856400FCE17E /* Lottie */; };
 		FB6764292CEEE82D00FCE17E /* Clear Button.json in Resources */ = {isa = PBXBuildFile; fileRef = FB6764282CEEE82D00FCE17E /* Clear Button.json */; };
 		FB67642B2CEEE83E00FCE17E /* Save Button.json in Resources */ = {isa = PBXBuildFile; fileRef = FB67642A2CEEE83E00FCE17E /* Save Button.json */; };
-		FB7E20792CBCC6E900209582 /* SynxApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = FB7E20782CBCC6E900209582 /* SynxApp.swift */; };
+		FB7E20792CBCC6E900209582 /* AuroraApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = FB7E20782CBCC6E900209582 /* AuroraApp.swift */; };
 		FB7E207B2CBCC6E900209582 /* LoginView.swift in Sources */ = {isa = PBXBuildFile; fileRef = FB7E207A2CBCC6E900209582 /* LoginView.swift */; };
 		FB7E20802CBCC6EA00209582 /* Preview Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = FB7E207F2CBCC6EA00209582 /* Preview Assets.xcassets */; };
-		FB7E208A2CBCC6EB00209582 /* SynxTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = FB7E20892CBCC6EB00209582 /* SynxTests.swift */; };
-		FB7E20942CBCC6EB00209582 /* SynxUITests.swift in Sources */ = {isa = PBXBuildFile; fileRef = FB7E20932CBCC6EB00209582 /* SynxUITests.swift */; };
-		FB7E20962CBCC6EB00209582 /* SynxUITestsLaunchTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = FB7E20952CBCC6EB00209582 /* SynxUITestsLaunchTests.swift */; };
+		FB7E208A2CBCC6EB00209582 /* AuroraTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = FB7E20892CBCC6EB00209582 /* AuroraTests.swift */; };
+		FB7E20942CBCC6EB00209582 /* AuroraUITests.swift in Sources */ = {isa = PBXBuildFile; fileRef = FB7E20932CBCC6EB00209582 /* AuroraUITests.swift */; };
+		FB7E20962CBCC6EB00209582 /* AuroraUITestsLaunchTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = FB7E20952CBCC6EB00209582 /* AuroraUITestsLaunchTests.swift */; };
 		FB7E20A42CBE262300209582 /* FirebaseAuth in Frameworks */ = {isa = PBXBuildFile; productRef = FB7E20A32CBE262300209582 /* FirebaseAuth */; };
 		FB7E20A62CBE262300209582 /* FirebaseStorage in Frameworks */ = {isa = PBXBuildFile; productRef = FB7E20A52CBE262300209582 /* FirebaseStorage */; };
 		FB7E20AE2CBEAFC900209582 /* ImagePicker.swift in Sources */ = {isa = PBXBuildFile; fileRef = FB7E20AD2CBEAFC900209582 /* ImagePicker.swift */; };
@@ -88,15 +88,15 @@
 		FB42CB822CD66D9E00283244 /* EditProfileView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EditProfileView.swift; sourceTree = "<group>"; };
 		FB6764282CEEE82D00FCE17E /* Clear Button.json */ = {isa = PBXFileReference; lastKnownFileType = text.json; path = "Clear Button.json"; sourceTree = "<group>"; };
 		FB67642A2CEEE83E00FCE17E /* Save Button.json */ = {isa = PBXFileReference; lastKnownFileType = text.json; path = "Save Button.json"; sourceTree = "<group>"; };
-		FB7E20752CBCC6E900209582 /* Synx.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Synx.app; sourceTree = BUILT_PRODUCTS_DIR; };
-		FB7E20782CBCC6E900209582 /* SynxApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SynxApp.swift; sourceTree = "<group>"; };
+		FB7E20752CBCC6E900209582 /* Aurora.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Aurora.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		FB7E20782CBCC6E900209582 /* AuroraApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AuroraApp.swift; sourceTree = "<group>"; };
 		FB7E207A2CBCC6E900209582 /* LoginView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LoginView.swift; sourceTree = "<group>"; };
 		FB7E207F2CBCC6EA00209582 /* Preview Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = "Preview Assets.xcassets"; sourceTree = "<group>"; };
-		FB7E20852CBCC6EB00209582 /* SynxTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = SynxTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
-		FB7E20892CBCC6EB00209582 /* SynxTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SynxTests.swift; sourceTree = "<group>"; };
-		FB7E208F2CBCC6EB00209582 /* SynxUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = SynxUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
-		FB7E20932CBCC6EB00209582 /* SynxUITests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SynxUITests.swift; sourceTree = "<group>"; };
-		FB7E20952CBCC6EB00209582 /* SynxUITestsLaunchTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SynxUITestsLaunchTests.swift; sourceTree = "<group>"; };
+		FB7E20852CBCC6EB00209582 /* AuroraTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = AuroraTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+		FB7E20892CBCC6EB00209582 /* AuroraTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AuroraTests.swift; sourceTree = "<group>"; };
+		FB7E208F2CBCC6EB00209582 /* AuroraUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = AuroraUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+		FB7E20932CBCC6EB00209582 /* AuroraUITests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AuroraUITests.swift; sourceTree = "<group>"; };
+		FB7E20952CBCC6EB00209582 /* AuroraUITestsLaunchTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AuroraUITestsLaunchTests.swift; sourceTree = "<group>"; };
 		FB7E20AD2CBEAFC900209582 /* ImagePicker.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ImagePicker.swift; sourceTree = "<group>"; };
 		FB7E20B42CBF23CB00209582 /* MainMessagesView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MainMessagesView.swift; sourceTree = "<group>"; };
 		FB7E20B72CC0114600209582 /* FirebaseManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FirebaseManager.swift; sourceTree = "<group>"; };
@@ -105,13 +105,13 @@
 		FB7E20C42CC565EA00209582 /* ChatLogView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChatLogView.swift; sourceTree = "<group>"; };
 		FB83BD902CD81ECC00A7BE4E /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
 		FB83BD932CD839A900A7BE4E /* SetUpView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SetUpView.swift; sourceTree = "<group>"; };
-		FB83BD952CD859BE00A7BE4E /* Synx.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = Synx.entitlements; sourceTree = "<group>"; };
 		FB83BD982CD85E6600A7BE4E /* GoogleService-Info.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; path = "GoogleService-Info.plist"; sourceTree = "<group>"; };
 		FB83BD9F2CD87CE200A7BE4E /* AddFriendView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AddFriendView.swift; sourceTree = "<group>"; };
 		FB83BDA12CDACB5400A7BE4E /* PhoneVerificationView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PhoneVerificationView.swift; sourceTree = "<group>"; };
 		FB83BDA32CDACB7500A7BE4E /* ProfileSetupView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProfileSetupView.swift; sourceTree = "<group>"; };
 		FBA6BD1C2CCD696F0019A5E1 /* ProfileView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProfileView.swift; sourceTree = "<group>"; };
 		FBA6BD1E2CCDA11E0019A5E1 /* FriendRequestView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FriendRequestView.swift; sourceTree = "<group>"; };
+		FBB259052D09132D004CC8CF /* Aurora.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = Aurora.entitlements; sourceTree = "<group>"; };
 		FBF6E94E2D08F9CF003C985E /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
@@ -226,9 +226,9 @@
 		FB7E206C2CBCC6E900209582 = {
 			isa = PBXGroup;
 			children = (
-				FB7E20772CBCC6E900209582 /* Synx */,
-				FB7E20882CBCC6EB00209582 /* SynxTests */,
-				FB7E20922CBCC6EB00209582 /* SynxUITests */,
+				FB7E20772CBCC6E900209582 /* Aurora */,
+				FB7E20882CBCC6EB00209582 /* AuroraTests */,
+				FB7E20922CBCC6EB00209582 /* AuroraUITests */,
 				FB7E20762CBCC6E900209582 /* Products */,
 			);
 			sourceTree = "<group>";
@@ -236,21 +236,21 @@
 		FB7E20762CBCC6E900209582 /* Products */ = {
 			isa = PBXGroup;
 			children = (
-				FB7E20752CBCC6E900209582 /* Synx.app */,
-				FB7E20852CBCC6EB00209582 /* SynxTests.xctest */,
-				FB7E208F2CBCC6EB00209582 /* SynxUITests.xctest */,
+				FB7E20752CBCC6E900209582 /* Aurora.app */,
+				FB7E20852CBCC6EB00209582 /* AuroraTests.xctest */,
+				FB7E208F2CBCC6EB00209582 /* AuroraUITests.xctest */,
 			);
 			name = Products;
 			sourceTree = "<group>";
 		};
-		FB7E20772CBCC6E900209582 /* Synx */ = {
+		FB7E20772CBCC6E900209582 /* Aurora */ = {
 			isa = PBXGroup;
 			children = (
-				FB7E20782CBCC6E900209582 /* SynxApp.swift */,
+				FB7E20782CBCC6E900209582 /* AuroraApp.swift */,
 				FB6764282CEEE82D00FCE17E /* Clear Button.json */,
 				FB67642A2CEEE83E00FCE17E /* Save Button.json */,
 				FB83BD902CD81ECC00A7BE4E /* Info.plist */,
-				FB83BD952CD859BE00A7BE4E /* Synx.entitlements */,
+				FBB259052D09132D004CC8CF /* Aurora.entitlements */,
 				FB0F8AFA2CF52ABE00A37CED /* TutorialView.swift */,
 				FBB505022CCEA62D00FF1C87 /* Login Process */,
 				FB23D55B2CF76C00003C245A /* CustomTabView */,
@@ -265,7 +265,7 @@
 				FBF6E94E2D08F9CF003C985E /* Assets.xcassets */,
 				FB7E207E2CBCC6EA00209582 /* Preview Content */,
 			);
-			path = Synx;
+			path = Aurora;
 			sourceTree = "<group>";
 		};
 		FB7E207E2CBCC6EA00209582 /* Preview Content */ = {
@@ -276,21 +276,21 @@
 			path = "Preview Content";
 			sourceTree = "<group>";
 		};
-		FB7E20882CBCC6EB00209582 /* SynxTests */ = {
+		FB7E20882CBCC6EB00209582 /* AuroraTests */ = {
 			isa = PBXGroup;
 			children = (
-				FB7E20892CBCC6EB00209582 /* SynxTests.swift */,
+				FB7E20892CBCC6EB00209582 /* AuroraTests.swift */,
 			);
-			path = SynxTests;
+			path = AuroraTests;
 			sourceTree = "<group>";
 		};
-		FB7E20922CBCC6EB00209582 /* SynxUITests */ = {
+		FB7E20922CBCC6EB00209582 /* AuroraUITests */ = {
 			isa = PBXGroup;
 			children = (
-				FB7E20932CBCC6EB00209582 /* SynxUITests.swift */,
-				FB7E20952CBCC6EB00209582 /* SynxUITestsLaunchTests.swift */,
+				FB7E20932CBCC6EB00209582 /* AuroraUITests.swift */,
+				FB7E20952CBCC6EB00209582 /* AuroraUITestsLaunchTests.swift */,
 			);
-			path = SynxUITests;
+			path = AuroraUITests;
 			sourceTree = "<group>";
 		};
 		FB7E20B32CBF23B200209582 /* MainMessages */ = {
@@ -377,9 +377,9 @@
 /* End PBXGroup section */
 
 /* Begin PBXNativeTarget section */
-		FB7E20742CBCC6E900209582 /* Synx */ = {
+		FB7E20742CBCC6E900209582 /* Aurora */ = {
 			isa = PBXNativeTarget;
-			buildConfigurationList = FB7E20992CBCC6EB00209582 /* Build configuration list for PBXNativeTarget "Synx" */;
+			buildConfigurationList = FB7E20992CBCC6EB00209582 /* Build configuration list for PBXNativeTarget "Aurora" */;
 			buildPhases = (
 				FB7E20712CBCC6E900209582 /* Sources */,
 				FB7E20722CBCC6E900209582 /* Frameworks */,
@@ -389,7 +389,7 @@
 			);
 			dependencies = (
 			);
-			name = Synx;
+			name = Aurora;
 			packageProductDependencies = (
 				FB7E20A32CBE262300209582 /* FirebaseAuth */,
 				FB7E20A52CBE262300209582 /* FirebaseStorage */,
@@ -406,12 +406,12 @@
 				FB23D5692CFA16B3003C245A /* Mantis */,
 			);
 			productName = Synx;
-			productReference = FB7E20752CBCC6E900209582 /* Synx.app */;
+			productReference = FB7E20752CBCC6E900209582 /* Aurora.app */;
 			productType = "com.apple.product-type.application";
 		};
-		FB7E20842CBCC6EB00209582 /* SynxTests */ = {
+		FB7E20842CBCC6EB00209582 /* AuroraTests */ = {
 			isa = PBXNativeTarget;
-			buildConfigurationList = FB7E209C2CBCC6EB00209582 /* Build configuration list for PBXNativeTarget "SynxTests" */;
+			buildConfigurationList = FB7E209C2CBCC6EB00209582 /* Build configuration list for PBXNativeTarget "AuroraTests" */;
 			buildPhases = (
 				FB7E20812CBCC6EB00209582 /* Sources */,
 				FB7E20822CBCC6EB00209582 /* Frameworks */,
@@ -422,14 +422,14 @@
 			dependencies = (
 				FB7E20872CBCC6EB00209582 /* PBXTargetDependency */,
 			);
-			name = SynxTests;
+			name = AuroraTests;
 			productName = SynxTests;
-			productReference = FB7E20852CBCC6EB00209582 /* SynxTests.xctest */;
+			productReference = FB7E20852CBCC6EB00209582 /* AuroraTests.xctest */;
 			productType = "com.apple.product-type.bundle.unit-test";
 		};
-		FB7E208E2CBCC6EB00209582 /* SynxUITests */ = {
+		FB7E208E2CBCC6EB00209582 /* AuroraUITests */ = {
 			isa = PBXNativeTarget;
-			buildConfigurationList = FB7E209F2CBCC6EB00209582 /* Build configuration list for PBXNativeTarget "SynxUITests" */;
+			buildConfigurationList = FB7E209F2CBCC6EB00209582 /* Build configuration list for PBXNativeTarget "AuroraUITests" */;
 			buildPhases = (
 				FB7E208B2CBCC6EB00209582 /* Sources */,
 				FB7E208C2CBCC6EB00209582 /* Frameworks */,
@@ -440,9 +440,9 @@
 			dependencies = (
 				FB7E20912CBCC6EB00209582 /* PBXTargetDependency */,
 			);
-			name = SynxUITests;
+			name = AuroraUITests;
 			productName = SynxUITests;
-			productReference = FB7E208F2CBCC6EB00209582 /* SynxUITests.xctest */;
+			productReference = FB7E208F2CBCC6EB00209582 /* AuroraUITests.xctest */;
 			productType = "com.apple.product-type.bundle.ui-testing";
 		};
 /* End PBXNativeTarget section */
@@ -468,7 +468,7 @@
 					};
 				};
 			};
-			buildConfigurationList = FB7E20702CBCC6E900209582 /* Build configuration list for PBXProject "Synx" */;
+			buildConfigurationList = FB7E20702CBCC6E900209582 /* Build configuration list for PBXProject "Aurora" */;
 			compatibilityVersion = "Xcode 14.0";
 			developmentRegion = en;
 			hasScannedForEncodings = 0;
@@ -490,9 +490,9 @@
 			projectDirPath = "";
 			projectRoot = "";
 			targets = (
-				FB7E20742CBCC6E900209582 /* Synx */,
-				FB7E20842CBCC6EB00209582 /* SynxTests */,
-				FB7E208E2CBCC6EB00209582 /* SynxUITests */,
+				FB7E20742CBCC6E900209582 /* Aurora */,
+				FB7E20842CBCC6EB00209582 /* AuroraTests */,
+				FB7E208E2CBCC6EB00209582 /* AuroraUITests */,
 			);
 		};
 /* End PBXProject section */
@@ -556,7 +556,7 @@
 				FB7E207B2CBCC6E900209582 /* LoginView.swift in Sources */,
 				FB23D5752CFE51C8003C245A /* ChangePhoneView.swift in Sources */,
 				FB83BDA22CDACB5400A7BE4E /* PhoneVerificationView.swift in Sources */,
-				FB7E20792CBCC6E900209582 /* SynxApp.swift in Sources */,
+				FB7E20792CBCC6E900209582 /* AuroraApp.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -564,7 +564,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				FB7E208A2CBCC6EB00209582 /* SynxTests.swift in Sources */,
+				FB7E208A2CBCC6EB00209582 /* AuroraTests.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -572,8 +572,8 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				FB7E20962CBCC6EB00209582 /* SynxUITestsLaunchTests.swift in Sources */,
-				FB7E20942CBCC6EB00209582 /* SynxUITests.swift in Sources */,
+				FB7E20962CBCC6EB00209582 /* AuroraUITestsLaunchTests.swift in Sources */,
+				FB7E20942CBCC6EB00209582 /* AuroraUITests.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -582,12 +582,12 @@
 /* Begin PBXTargetDependency section */
 		FB7E20872CBCC6EB00209582 /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;
-			target = FB7E20742CBCC6E900209582 /* Synx */;
+			target = FB7E20742CBCC6E900209582 /* Aurora */;
 			targetProxy = FB7E20862CBCC6EB00209582 /* PBXContainerItemProxy */;
 		};
 		FB7E20912CBCC6EB00209582 /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;
-			target = FB7E20742CBCC6E900209582 /* Synx */;
+			target = FB7E20742CBCC6E900209582 /* Aurora */;
 			targetProxy = FB7E20902CBCC6EB00209582 /* PBXContainerItemProxy */;
 		};
 /* End PBXTargetDependency section */
@@ -717,14 +717,14 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
-				CODE_SIGN_ENTITLEMENTS = Synx/Synx.entitlements;
+				CODE_SIGN_ENTITLEMENTS = Aurora/Aurora.entitlements;
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
-				DEVELOPMENT_ASSET_PATHS = "\"Synx/Preview Content\"";
+				DEVELOPMENT_ASSET_PATHS = "\"Aurora/Preview Content\"";
 				DEVELOPMENT_TEAM = P98A5JTTFZ;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
-				INFOPLIST_FILE = Synx/Info.plist;
+				INFOPLIST_FILE = Aurora/Info.plist;
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
@@ -748,14 +748,14 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
-				CODE_SIGN_ENTITLEMENTS = Synx/Synx.entitlements;
+				CODE_SIGN_ENTITLEMENTS = Aurora/Aurora.entitlements;
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
-				DEVELOPMENT_ASSET_PATHS = "\"Synx/Preview Content\"";
+				DEVELOPMENT_ASSET_PATHS = "\"Aurora/Preview Content\"";
 				DEVELOPMENT_TEAM = P98A5JTTFZ;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
-				INFOPLIST_FILE = Synx/Info.plist;
+				INFOPLIST_FILE = Aurora/Info.plist;
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
@@ -781,7 +781,7 @@
 				BUNDLE_LOADER = "$(TEST_HOST)";
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
-				DEVELOPMENT_TEAM = LUTC4G43XA;
+				DEVELOPMENT_TEAM = P98A5JTTFZ;
 				GENERATE_INFOPLIST_FILE = YES;
 				IPHONEOS_DEPLOYMENT_TARGET = 17.5;
 				MARKETING_VERSION = 1.0;
@@ -790,7 +790,7 @@
 				SWIFT_EMIT_LOC_STRINGS = NO;
 				SWIFT_VERSION = 5.0;
 				TARGETED_DEVICE_FAMILY = "1,2";
-				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/Synx.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/Synx";
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/Aurora.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/Aurora";
 			};
 			name = Debug;
 		};
@@ -801,7 +801,7 @@
 				BUNDLE_LOADER = "$(TEST_HOST)";
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
-				DEVELOPMENT_TEAM = LUTC4G43XA;
+				DEVELOPMENT_TEAM = P98A5JTTFZ;
 				GENERATE_INFOPLIST_FILE = YES;
 				IPHONEOS_DEPLOYMENT_TARGET = 17.5;
 				MARKETING_VERSION = 1.0;
@@ -810,7 +810,7 @@
 				SWIFT_EMIT_LOC_STRINGS = NO;
 				SWIFT_VERSION = 5.0;
 				TARGETED_DEVICE_FAMILY = "1,2";
-				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/Synx.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/Synx";
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/Aurora.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/Aurora";
 			};
 			name = Release;
 		};
@@ -820,7 +820,7 @@
 				ALWAYS_EMBED_SWIFT_STANDARD_LIBRARIES = YES;
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
-				DEVELOPMENT_TEAM = LUTC4G43XA;
+				DEVELOPMENT_TEAM = P98A5JTTFZ;
 				GENERATE_INFOPLIST_FILE = YES;
 				MARKETING_VERSION = 1.0;
 				PRODUCT_BUNDLE_IDENTIFIER = SYNX.SynxUITests;
@@ -838,7 +838,7 @@
 				ALWAYS_EMBED_SWIFT_STANDARD_LIBRARIES = YES;
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
-				DEVELOPMENT_TEAM = LUTC4G43XA;
+				DEVELOPMENT_TEAM = P98A5JTTFZ;
 				GENERATE_INFOPLIST_FILE = YES;
 				MARKETING_VERSION = 1.0;
 				PRODUCT_BUNDLE_IDENTIFIER = SYNX.SynxUITests;
@@ -853,7 +853,7 @@
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
-		FB7E20702CBCC6E900209582 /* Build configuration list for PBXProject "Synx" */ = {
+		FB7E20702CBCC6E900209582 /* Build configuration list for PBXProject "Aurora" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
 				FB7E20972CBCC6EB00209582 /* Debug */,
@@ -862,7 +862,7 @@
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
 		};
-		FB7E20992CBCC6EB00209582 /* Build configuration list for PBXNativeTarget "Synx" */ = {
+		FB7E20992CBCC6EB00209582 /* Build configuration list for PBXNativeTarget "Aurora" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
 				FB7E209A2CBCC6EB00209582 /* Debug */,
@@ -871,7 +871,7 @@
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
 		};
-		FB7E209C2CBCC6EB00209582 /* Build configuration list for PBXNativeTarget "SynxTests" */ = {
+		FB7E209C2CBCC6EB00209582 /* Build configuration list for PBXNativeTarget "AuroraTests" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
 				FB7E209D2CBCC6EB00209582 /* Debug */,
@@ -880,7 +880,7 @@
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
 		};
-		FB7E209F2CBCC6EB00209582 /* Build configuration list for PBXNativeTarget "SynxUITests" */ = {
+		FB7E209F2CBCC6EB00209582 /* Build configuration list for PBXNativeTarget "AuroraUITests" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
 				FB7E20A02CBCC6EB00209582 /* Debug */,

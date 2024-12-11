@@ -6,9 +6,9 @@
 //
 
 import XCTest
-@testable import Synx
+@testable import Aurora
 
-final class SynxTests: XCTestCase {
+final class AuroraTests: XCTestCase {
 
     override func setUpWithError() throws {
         // Put setup code here. This method is called before the invocation of each test method in the class.

@@ -34,7 +34,7 @@ import FirebaseAuth
 
 
 @main
-struct SynxApp: App {
+struct AuroraApp: App {
     @UIApplicationDelegateAdaptor(AppDelegate.self) var delegate
     
     var body: some Scene {

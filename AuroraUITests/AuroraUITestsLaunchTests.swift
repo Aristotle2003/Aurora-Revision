@@ -7,7 +7,7 @@
 
 import XCTest
 
-final class SynxUITestsLaunchTests: XCTestCase {
+final class AuroraUITestsLaunchTests: XCTestCase {
 
     override class var runsForEachTargetApplicationUIConfiguration: Bool {
         true
