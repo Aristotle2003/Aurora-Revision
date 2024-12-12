@@ -28,110 +28,167 @@ struct SecurityView: View {
     
     var body: some View {
         NavigationView {
-            VStack(spacing: 20) {
-                // First Section: Phone Number and Email
-                VStack(alignment: .leading, spacing: 20) {
-                    Text("Linked Information")
-                        .font(.headline)
-                        .foregroundColor(.gray)
-                    
-                    VStack(spacing: 20) {
-                        Text("Phone Number: \(phoneNumber.isEmpty ? "Not Linked" : phoneNumber)")
-                            .font(.body)
-                        Text("Email: \(email.isEmpty ? "Not Linked" : email)")
-                            .font(.body)
+            ZStack{
+                Color(red: 0.976, green: 0.980, blue: 1.0)
+                    .ignoresSafeArea()
+                VStack {
+                    // Custom Navigation Header
+                    HStack {
+                        Button(action: {
+                            dismiss() // Dismiss the view when back button is pressed
+                        }) {
+                            Image("chatlogviewbackbutton") // Replace with your back button image
+                                .resizable()
+                                .frame(width: 24, height: 24) // Customize this color
+                        }
+                        Spacer()
+                        Text("Security")
+                            .font(.system(size: 20, weight: .bold)) // Customize font style
+                            .foregroundColor(Color(red: 125/255, green: 133/255, blue: 191/255)) // Customize text color
+                        Spacer()
+                        Image("spacerformainmessageviewtopleft") // Replace with your back button image
+                            .resizable()
+                            .frame(width: 24, height: 24) // To balance the back button
                     }
                     .padding()
-                    .background(Color(UIColor.systemGroupedBackground))
-                    .cornerRadius(10)
-                }
-                
-                
-                // Second Section: Buttons
-                VStack(alignment: .leading, spacing: 20) {
-                    Text("Manage linked accounts")
-                        .font(.headline)
-                        .foregroundColor(.gray)
+                    .background(Color(red: 229/255, green: 232/255, blue: 254/255))
                     
-                    Button {
-                        showManageAccount = true
-                    } label: {
-                        HStack {
-                            Text("Manage linked accounts")
-                                .font(.system(size: 16, weight: .medium))
-                                .foregroundColor(.red)
+                    Form {
+                        Section(header:
+                                    HStack {
+                                        Text("Linked Accounts")
+                                            .font(.system(size: 12, weight: .bold))
+                                            .foregroundColor(Color(.gray))
+                                        Spacer()
+                                    }
+                        ) {
+                            HStack {
+                                Text("Phone Number:")
+                                    .font(.system(size: 14, weight: .bold))
+                                    .foregroundColor(Color(red: 86/255, green: 86/255, blue: 86/255))
+                                
+                                Spacer()
+                                
+                                Text(phoneNumber.isEmpty ? "Not Linked" : phoneNumber)
+                                    .font(.system(size: 14, weight: .regular))
+                                    .foregroundColor(.gray)
+                            }
+                            .frame(height: 54)
+                            
+                            HStack {
+                                Text("Email:")
+                                    .font(.system(size: 14, weight: .bold))
+                                    .foregroundColor(Color(red: 86/255, green: 86/255, blue: 86/255))
+                                
+                                Spacer()
+                                
+                                Text(email.isEmpty ? "Not Linked" : email)
+                                    .font(.system(size: 14, weight: .regular))
+                                    .foregroundColor(.gray)
+                            }
+                            .frame(height: 54)
                         }
-                        .frame(maxWidth: .infinity)
-                        .padding(.vertical, 12)
-                        .background(
-                            RoundedRectangle(cornerRadius: 12)
-                                .stroke(Color.gray.opacity(0.5), lineWidth: 1)
-                        )
                     }
-                    .fullScreenCover(isPresented: $showManageAccount){
+                    .scrollContentBackground(.hidden)
+                    .background(Color(red: 0.976, green: 0.980, blue: 1.0))
+                    .cornerRadius(32)
+                    
+                    
+                    // Second Section: Buttons
+                    
+                    
+                    Form {
+                        Section(header:
+                                    HStack {
+                                        Text("Manage Linked Accounts")
+                                            .font(.system(size: 12, weight: .bold))
+                                            .foregroundColor(Color(.gray))
+                                        Spacer()
+                                    }
+                        ) {
+                            Button(action: {
+                                showManageAccount = true
+                            }) {
+                                HStack {
+                                    Text("Manage linked accounts")
+                                        .font(.system(size: 14, weight: .bold))
+                                        .foregroundColor(Color(red: 86/255, green: 86/255, blue: 86/255))
+                                    Spacer()
+                                    Image(systemName: "chevron.right")
+                                        .foregroundColor(.gray)
+                                }
+                                .frame(height: 54)
+                            }
+                        }
+
+                        Section(header:
+                                    HStack {
+                                        Text("Account Actions")
+                                            .font(.system(size: 12, weight: .bold))
+                                            .foregroundColor(Color(.gray))
+                                        Spacer()
+                                    }
+                        ) {
+                            Button(action: {
+                                showConfirmationAlert = true
+                            }) {
+                                HStack {
+                                    Text("Delete Account")
+                                        .font(.system(size: 14, weight: .bold))
+                                        .foregroundColor(.red)
+                                    Spacer()
+                                    Image(systemName: "chevron.right")
+                                        .foregroundColor(.gray)
+                                }
+                                .frame(height: 54)
+                            }
+                        }
+                    }
+                    .scrollContentBackground(.hidden)
+                    .background(Color(red: 0.976, green: 0.980, blue: 1.0))
+                    .cornerRadius(32)
+                    .fullScreenCover(isPresented: $showManageAccount) {
                         ChangeEmailView()
-                    }
-                }
-                
-                
-                VStack(alignment: .leading, spacing: 20){
-                    Text("Account actions")
-                        .font(.headline)
-                        .foregroundColor(.gray)
-                    Button {
-                        showConfirmationAlert = true
-                    } label: {
-                        HStack {
-                            Text("Delete Account")
-                                .font(.system(size: 16, weight: .medium))
-                                .foregroundColor(.red)
-                        }
-                        .frame(maxWidth: .infinity)
-                        .padding(.vertical, 12)
-                        .background(
-                            RoundedRectangle(cornerRadius: 12)
-                                .stroke(Color.gray.opacity(0.5), lineWidth: 1)
-                        )
                     }
                     .fullScreenCover(isPresented: $isUserCurrentlyLoggedOut) {
                         LoginView()
                     }
-                }
-                
-                // Error Message
-                if !errorMessage.isEmpty {
-                    Text(errorMessage)
-                        .font(.caption)
-                        .foregroundColor(.red)
-                        .padding(.top)
-                }
-            }
-            .padding()
-            .sheet(isPresented: $showConfirmationAlert) {
-                        ConfirmationDialog(
-                            confirmationInput: $confirmationInput,
-                            onConfirm: {
-                                if confirmationInput == "I want to permanently delete the account" {
-                                    deleteAccount()
-                                } else {
-                                    deletionError = "You must type the exact confirmation message to delete the account."
-                                }
-                                showConfirmationAlert = false
-                            },
-                            onCancel: {
-                                showConfirmationAlert = false
-                            }
-                        )
+                    
+                    Spacer()
+                        .frame(height:200)
+                    
+                    
+                    // Error Message
+                    if !errorMessage.isEmpty {
+                        Text(errorMessage)
+                            .font(.caption)
+                            .foregroundColor(.red)
+                            .padding(.top)
                     }
-            .navigationTitle("Security")
-            .navigationBarItems(leading: Button("Cancel") {
-                dismiss()
-            })
-            .onAppear {
-                checkUserProviders()
-                fetchPhoneNumberAndEmail()
+                }
+                .sheet(isPresented: $showConfirmationAlert) {
+                    ConfirmationDialog(
+                        confirmationInput: $confirmationInput,
+                        onConfirm: {
+                            if confirmationInput == "I want to permanently delete the account" {
+                                deleteAccount()
+                            } else {
+                                deletionError = "You must type the exact confirmation message to delete the account."
+                            }
+                            showConfirmationAlert = false
+                        },
+                        onCancel: {
+                            showConfirmationAlert = false
+                        }
+                    )
+                }
+                .onAppear {
+                    checkUserProviders()
+                    fetchPhoneNumberAndEmail()
+                }
             }
-        }.navigationBarBackButtonHidden(true)
+        }
+        .navigationBarBackButtonHidden(true)
     }
     
     private func handleSignOut() {

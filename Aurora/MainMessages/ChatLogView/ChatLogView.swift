@@ -371,7 +371,7 @@ class ChatLogViewModel: ObservableObject {
         recipientMessageListener = nil
     }
     
-    
+    @Published var lastState = false
     
     func handleSend() {
         guard let fromId = FirebaseManager.shared.auth.currentUser?.uid else { return }
@@ -391,6 +391,7 @@ class ChatLogViewModel: ObservableObject {
             
             let isRecipientActiveToMe = snapshot?.data()?["isActive"] as? Bool ?? false
             
+            
             let messageData: [String: Any] = [
                 "fromId": fromId,
                 "toId": toId,
@@ -400,11 +401,11 @@ class ChatLogViewModel: ObservableObject {
                 "sender": "Me"
             ]
             
-            if self.chatText == self.latestSenderMessage?.text {
-                return  // Skip sending if the message is the same as the previous one
+            if self.chatText == self.latestSenderMessage?.text && (self.lastState == isRecipientActiveToMe || (self.lastState == true && isRecipientActiveToMe == false)){
+                return  // Skip sending
             }
             
-            
+            self.lastState = isRecipientActiveToMe
             
             let messageRef = FirebaseManager.shared.firestore
                         .collection("messages")

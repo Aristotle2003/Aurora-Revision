@@ -26,39 +26,60 @@ struct ChangeEmailView: View {
     
     var body: some View {
         NavigationView {
-            VStack(spacing: 20) {
-                Text("Link your Google or Apple Account")
-                    .font(.title2)
-                    .fontWeight(.bold)
-                    .multilineTextAlignment(.center)
-                    .padding(.top)
-                
-                Text("Link accounts so you have another way to verify just in case you lose your phone number.")
-                    .font(.body)
-                    .multilineTextAlignment(.center)
-                    .foregroundColor(.gray)
+            ZStack{
+                Color(red: 0.976, green: 0.980, blue: 1.0)
+                    .ignoresSafeArea()
+                VStack {
+                    // Custom Navigation Header
+                    HStack {
+                        Button(action: {
+                            dismiss() // Dismiss the view when back button is pressed
+                        }) {
+                            Image("chatlogviewbackbutton") // Replace with your back button image
+                                .resizable()
+                                .frame(width: 24, height: 24) // Customize this color
+                        }
+                        Spacer()
+                        Text("Manage Linked Accounts")
+                            .font(.system(size: 20, weight: .bold)) // Customize font style
+                            .foregroundColor(Color(red: 125/255, green: 133/255, blue: 191/255)) // Customize text color
+                        Spacer()
+                        Image("spacerformainmessageviewtopleft") // Replace with your back button image
+                            .resizable()
+                            .frame(width: 24, height: 24) // To balance the back button
+                    }
+                    .padding()
+                    .background(Color(red: 229/255, green: 232/255, blue: 254/255))
+                    
+                    HStack{
+                        Text("Link accounts so you have another way to verify just in case you lose your phone number.")
+                            .font(.system(size: 12, weight: .bold))
+                            .foregroundColor(Color(.gray))
+                            .multilineTextAlignment(.leading)
+                            .padding(.leading, 16)
+                            .padding(.top, 8)
+                            .padding(.bottom, 8)
+                        Spacer()
+                    }
+        
+                    
+                    VStack(spacing: 20) {
+                        googleSignInButton
+                        appleSignInButton
+                        changePhoneNavigationLink
+                    }
                     .padding(.horizontal)
-                
-                VStack(spacing: 20) {
-                    googleSignInButton
-                    appleSignInButton
-                    changePhoneNavigationLink
-                }
-                .padding(.horizontal)
-                
-                if !errorMessage.isEmpty {
-                    Text(errorMessage)
-                        .font(.caption)
-                        .foregroundColor(.red)
-                        .padding(.top)
+                    
+                    if !errorMessage.isEmpty {
+                        Text(errorMessage)
+                            .font(.caption)
+                            .foregroundColor(.red)
+                            .padding(.top)
+                    }
+                    Spacer()
                 }
             }
-            .padding()
-            .navigationTitle("Link Accounts")
             .navigationBarBackButtonHidden(true)
-            .navigationBarItems(leading: Button("Cancel") {
-                dismiss()
-            })
             .onAppear {
                 checkUserProviders()
             }
