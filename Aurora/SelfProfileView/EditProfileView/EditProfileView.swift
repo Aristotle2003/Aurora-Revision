@@ -277,53 +277,64 @@ struct EditProfileView: View {
     }
 }
 
-// MARK: - Detail Input View
 struct NameInputView: View {
     let title: String
-    @Binding var value: String
+    @Binding var value: String      // The binding coming from the parent
     @Environment(\.dismiss) var dismiss
     
+    // 1) Create a local state property
+    @State private var tempValue: String
+    
+    init(title: String, value: Binding<String>) {
+        self.title = title
+        self._value = value
+        // Initialize the local copy with the current parent value
+        _tempValue = State(initialValue: value.wrappedValue)
+    }
+
     var body: some View {
-        NavigationStack{
-            ZStack{
+        NavigationStack {
+            ZStack {
                 Color(red: 0.976, green: 0.980, blue: 1.0)
                     .ignoresSafeArea()
                 VStack {
+                    
                     // Custom Navigation Header
                     HStack {
                         Button(action: {
-                            dismiss() // Dismiss the view when back button is pressed
+                            // 2) If the user taps Back, just dismiss without saving changes
+                            dismiss()
                         }) {
-                            Image("chatlogviewbackbutton") // Replace with your back button image
+                            Image("chatlogviewbackbutton")
                                 .resizable()
-                                .frame(width: 24, height: 24) // Customize this color
+                                .frame(width: 24, height: 24)
                         }
                         Spacer()
                         Text("Name")
-                            .font(.system(size: 20, weight: .bold)) // Customize font style
-                            .foregroundColor(Color(red: 125/255, green: 133/255, blue: 191/255)) // Customize text color
+                            .font(.system(size: 20, weight: .bold))
+                            .foregroundColor(Color(red: 125/255, green: 133/255, blue: 191/255))
                         Spacer()
-                        Image("spacerformainmessageviewtopleft") // Replace with your back button image
+                        Image("spacerformainmessageviewtopleft")
                             .resizable()
-                            .frame(width: 24, height: 24) // To balance the back button
+                            .frame(width: 24, height: 24)
                     }
                     .padding()
                     .background(Color(red: 229/255, green: 232/255, blue: 254/255))
                     
-                    Spacer()
-                        .frame(height: 28)
+                    Spacer().frame(height: 28)
                     
+                    // 3) Bind the TextField to tempValue instead of the direct binding
                     HStack {
-                        TextField("Enter \(title)", text: $value)
+                        TextField("Enter \(title)", text: $tempValue)
                             .padding()
                             .background(Color.white)
                             .foregroundColor(Color(red: 125/255, green: 125/255, blue: 125/255))
                             .cornerRadius(24)
                             .padding(.horizontal)
                         
-                        if !value.isEmpty {
+                        if !tempValue.isEmpty {
                             Button(action: {
-                                value = "" // Clear the textfield
+                                tempValue = "" // Clear the textfield
                             }) {
                                 Image(systemName: "xmark.circle.fill")
                                     .foregroundColor(.gray)
@@ -332,18 +343,19 @@ struct NameInputView: View {
                         }
                     }
                     
-                    HStack{
+                    HStack {
                         Text("Consider filling in some 'real' name so your friends know who you are!")
                             .font(.system(size: 12))
                             .foregroundColor(Color(red: 86/255, green: 86/255, blue: 86/255))
                             .padding(.horizontal)
                             .padding(.top, 12)
-                        Spacer()
-                            .frame(width: 40)
+                        Spacer().frame(width: 40)
                     }
                     .frame(maxWidth: .infinity, alignment: .leading)
                     
+                    // 4) On tapping Done, copy local tempValue back into the original Binding, then dismiss
                     Button(action: {
+                        value = tempValue   // This actually saves the change to the parent's binding
                         dismiss()
                     }) {
                         Image("donebutton")
@@ -353,13 +365,13 @@ struct NameInputView: View {
                     }
                     
                     Spacer()
-                    
                 }
             }
         }
         .navigationBarBackButtonHidden(true)
     }
 }
+
 
 // MARK: - Detail Input View
 struct UsernameInputView: View {
@@ -367,176 +379,15 @@ struct UsernameInputView: View {
     @Binding var value: String
     @Environment(\.dismiss) var dismiss
     
-    var body: some View {
-        NavigationStack{
-            ZStack{
-                Color(red: 0.976, green: 0.980, blue: 1.0)
-                    .ignoresSafeArea()
-                VStack {
-                    // Custom Navigation Header
-                    HStack {
-                        Button(action: {
-                            dismiss() // Dismiss the view when back button is pressed
-                        }) {
-                            Image("chatlogviewbackbutton") // Replace with your back button image
-                                .resizable()
-                                .frame(width: 24, height: 24) // Customize this color
-                        }
-                        Spacer()
-                        Text("Username")
-                            .font(.system(size: 20, weight: .bold)) // Customize font style
-                            .foregroundColor(Color(red: 125/255, green: 133/255, blue: 191/255)) // Customize text color
-                        Spacer()
-                        Image("spacerformainmessageviewtopleft") // Replace with your back button image
-                            .resizable()
-                            .frame(width: 24, height: 24) // To balance the back button
-                    }
-                    .padding()
-                    .background(Color(red: 229/255, green: 232/255, blue: 254/255))
-                    
-                    Spacer()
-                        .frame(height: 28)
-                    
-                    HStack {
-                        TextField("Enter \(title)", text: $value)
-                            .padding()
-                            .background(Color.white)
-                            .foregroundColor(Color(red: 125/255, green: 125/255, blue: 125/255))
-                            .cornerRadius(24)
-                            .padding(.horizontal)
-                        
-                        if !value.isEmpty {
-                            Button(action: {
-                                value = "" // Clear the textfield
-                            }) {
-                                Image(systemName: "xmark.circle.fill")
-                                    .foregroundColor(.gray)
-                                    .padding(.trailing, 16)
-                            }
-                        }
-                    }
-                    
-                    HStack{
-                        Text("This is not a unique identifier of you! So think of Aurora's username as your 'internet name'. We uniquely identify our users by their email or phone.")
-                            .font(.system(size: 12))
-                            .foregroundColor(Color(red: 86/255, green: 86/255, blue: 86/255))
-                            .padding(.horizontal)
-                            .padding(.top, 12)
-                        Spacer()
-                            .frame(width: 40)
-                    }
-                    .frame(maxWidth: .infinity, alignment: .leading)
-                    
-                    Button(action: {
-                        dismiss()
-                    }) {
-                        Image("donebutton")
-                            .frame(maxWidth: .infinity, alignment: .center)
-                            .scaledToFit()
-                            .padding()
-                    }
-                    
-                    Spacer()
-                    
-                }
-            }
-        }
-        .navigationBarBackButtonHidden(true)
-    }
-}
-
-// MARK: - Detail Input View
-struct AgeInputView: View {
-    let title: String
-    @Binding var value: String
-    @Environment(\.dismiss) var dismiss
+    // Local copy of the binding text
+    @State private var tempValue: String
     
-    var body: some View {
-        NavigationStack{
-            ZStack{
-                Color(red: 0.976, green: 0.980, blue: 1.0)
-                    .ignoresSafeArea()
-                VStack {
-                    // Custom Navigation Header
-                    HStack {
-                        Button(action: {
-                            dismiss() // Dismiss the view when back button is pressed
-                        }) {
-                            Image("chatlogviewbackbutton") // Replace with your back button image
-                                .resizable()
-                                .frame(width: 24, height: 24) // Customize this color
-                        }
-                        Spacer()
-                        Text("Age")
-                            .font(.system(size: 20, weight: .bold)) // Customize font style
-                            .foregroundColor(Color(red: 125/255, green: 133/255, blue: 191/255)) // Customize text color
-                        Spacer()
-                        Image("spacerformainmessageviewtopleft") // Replace with your back button image
-                            .resizable()
-                            .frame(width: 24, height: 24) // To balance the back button
-                    }
-                    .padding()
-                    .background(Color(red: 229/255, green: 232/255, blue: 254/255))
-                    
-                    Spacer()
-                        .frame(height: 28)
-                    
-                    HStack {
-                        TextField("Enter \(title)", text: $value)
-                            .padding()
-                            .background(Color.white)
-                            .foregroundColor(Color(red: 125/255, green: 125/255, blue: 125/255))
-                            .cornerRadius(24)
-                            .padding(.horizontal)
-                        
-                        if !value.isEmpty {
-                            Button(action: {
-                                value = "" // Clear the textfield
-                            }) {
-                                Image(systemName: "xmark.circle.fill")
-                                    .foregroundColor(.gray)
-                                    .padding(.trailing, 16)
-                            }
-                        }
-                    }
-                    
-                    HStack{
-                        Text("How old are you?")
-                            .font(.system(size: 12))
-                            .foregroundColor(Color(red: 86/255, green: 86/255, blue: 86/255))
-                            .padding(.horizontal)
-                            .padding(.top, 12)
-                        Spacer()
-                            .frame(width: 40)
-                    }
-                    .frame(maxWidth: .infinity, alignment: .leading)
-                    
-                    Button(action: {
-                        dismiss()
-                    }) {
-                        Image("donebutton")
-                            .frame(maxWidth: .infinity, alignment: .center)
-                            .scaledToFit()
-                            .padding()
-                    }
-                    
-                    Spacer()
-                    
-                }
-            }
-        }
-        .navigationBarBackButtonHidden(true)
+    // We need a custom initializer so we can initialize `tempValue` with the parent's value
+    init(title: String, value: Binding<String>) {
+        self.title = title
+        self._value = value
+        self._tempValue = State(initialValue: value.wrappedValue)
     }
-}
-
-// MARK: - Detail Input View
-struct GenderInputView: View {
-    let title: String
-    @Binding var value: String
-    @Environment(\.dismiss) var dismiss
-    
-    @State private var selectedGender: String = ""
-    @State private var isCustom: Bool = false
     
     var body: some View {
         NavigationStack {
@@ -547,7 +398,226 @@ struct GenderInputView: View {
                 VStack {
                     // Custom Navigation Header
                     HStack {
-                        Button(action: { dismiss() }) {
+                        // Back Button -> Discard changes and dismiss
+                        Button(action: {
+                            dismiss()
+                        }) {
+                            Image("chatlogviewbackbutton") // Replace with your back button image
+                                .resizable()
+                                .frame(width: 24, height: 24)
+                        }
+                        Spacer()
+                        
+                        Text("Username")
+                            .font(.system(size: 20, weight: .bold))
+                            .foregroundColor(Color(red: 125/255, green: 133/255, blue: 191/255))
+                        
+                        Spacer()
+                        
+                        // Spacer image for symmetrical layout
+                        Image("spacerformainmessageviewtopleft")
+                            .resizable()
+                            .frame(width: 24, height: 24)
+                    }
+                    .padding()
+                    .background(Color(red: 229/255, green: 232/255, blue: 254/255))
+                    
+                    Spacer().frame(height: 28)
+                    
+                    // TextField bound to the local state `tempValue`
+                    HStack {
+                        TextField("Enter \(title)", text: $tempValue)
+                            .padding()
+                            .background(Color.white)
+                            .foregroundColor(Color(red: 125/255, green: 125/255, blue: 125/255))
+                            .cornerRadius(24)
+                            .padding(.horizontal)
+                        
+                        if !tempValue.isEmpty {
+                            Button(action: {
+                                tempValue = "" // Clear the textfield
+                            }) {
+                                Image(systemName: "xmark.circle.fill")
+                                    .foregroundColor(.gray)
+                                    .padding(.trailing, 16)
+                            }
+                        }
+                    }
+                    
+                    HStack {
+                        Text("This is not a unique identifier of you! So think of Aurora's username as your 'internet name'. We uniquely identify our users by their email or phone.")
+                            .font(.system(size: 12))
+                            .foregroundColor(Color(red: 86/255, green: 86/255, blue: 86/255))
+                            .padding(.horizontal)
+                            .padding(.top, 12)
+                        
+                        Spacer().frame(width: 40)
+                    }
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                    
+                    // Done button -> commit changes back to parent, then dismiss
+                    Button(action: {
+                        value = tempValue   // write the local changes back to the binding
+                        dismiss()
+                    }) {
+                        Image("donebutton")
+                            .frame(maxWidth: .infinity, alignment: .center)
+                            .scaledToFit()
+                            .padding()
+                    }
+                    
+                    Spacer()
+                }
+            }
+        }
+        .navigationBarBackButtonHidden(true)
+    }
+}
+
+
+// MARK: - Detail Input View
+struct AgeInputView: View {
+    let title: String
+    @Binding var value: String
+    @Environment(\.dismiss) var dismiss
+    
+    // Local copy of the binding text
+    @State private var tempValue: String
+    
+    // Custom initializer to initialize `tempValue`
+    init(title: String, value: Binding<String>) {
+        self.title = title
+        self._value = value
+        self._tempValue = State(initialValue: value.wrappedValue)
+    }
+    
+    var body: some View {
+        NavigationStack {
+            ZStack {
+                Color(red: 0.976, green: 0.980, blue: 1.0)
+                    .ignoresSafeArea()
+                
+                VStack {
+                    // Custom Navigation Header
+                    HStack {
+                        // Back button -> discard changes
+                        Button(action: {
+                            dismiss()
+                        }) {
+                            Image("chatlogviewbackbutton") // Replace with your back button image
+                                .resizable()
+                                .frame(width: 24, height: 24)
+                        }
+                        Spacer()
+                        
+                        Text("Age")
+                            .font(.system(size: 20, weight: .bold))
+                            .foregroundColor(Color(red: 125/255, green: 133/255, blue: 191/255))
+                        
+                        Spacer()
+                        
+                        Image("spacerformainmessageviewtopleft") // Symmetry
+                            .resizable()
+                            .frame(width: 24, height: 24)
+                    }
+                    .padding()
+                    .background(Color(red: 229/255, green: 232/255, blue: 254/255))
+                    
+                    Spacer().frame(height: 28)
+                    
+                    // TextField using our local state `tempValue`
+                    HStack {
+                        TextField("Enter \(title)", text: $tempValue)
+                            .padding()
+                            .background(Color.white)
+                            .foregroundColor(Color(red: 125/255, green: 125/255, blue: 125/255))
+                            .cornerRadius(24)
+                            .padding(.horizontal)
+                        
+                        if !tempValue.isEmpty {
+                            Button(action: {
+                                tempValue = "" // Clear the textfield
+                            }) {
+                                Image(systemName: "xmark.circle.fill")
+                                    .foregroundColor(.gray)
+                                    .padding(.trailing, 16)
+                            }
+                        }
+                    }
+                    
+                    HStack {
+                        Text("How old are you?")
+                            .font(.system(size: 12))
+                            .foregroundColor(Color(red: 86/255, green: 86/255, blue: 86/255))
+                            .padding(.horizontal)
+                            .padding(.top, 12)
+                        
+                        Spacer().frame(width: 40)
+                    }
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                    
+                    // Done button -> commit local changes back to parent, then dismiss
+                    Button(action: {
+                        value = tempValue  // Save changes to parent
+                        dismiss()
+                    }) {
+                        Image("donebutton")
+                            .frame(maxWidth: .infinity, alignment: .center)
+                            .scaledToFit()
+                            .padding()
+                    }
+                    
+                    Spacer()
+                }
+            }
+        }
+        .navigationBarBackButtonHidden(true)
+    }
+}
+
+
+// MARK: - Detail Input View
+struct GenderInputView: View {
+    let title: String
+    @Binding var value: String      // Parent binding
+    @Environment(\.dismiss) var dismiss
+    
+    // Local states
+    @State private var localSelectedGender: String = ""
+    @State private var localIsCustom: Bool = false
+    @State private var localCustomValue: String = ""
+    
+    init(title: String, value: Binding<String>) {
+        self.title = title
+        self._value = value
+        
+        // Initialize local states based on the parent's current value
+        if value.wrappedValue == "Male" || value.wrappedValue == "Female" {
+            // Parent's value is a known gender
+            _localSelectedGender = State(initialValue: value.wrappedValue)
+            _localIsCustom       = State(initialValue: false)
+            _localCustomValue    = State(initialValue: "")
+        } else {
+            // Parent's value is something else (custom)
+            _localSelectedGender = State(initialValue: "")
+            _localIsCustom       = State(initialValue: true)
+            _localCustomValue    = State(initialValue: value.wrappedValue)
+        }
+    }
+    
+    var body: some View {
+        NavigationStack {
+            ZStack {
+                Color(red: 0.976, green: 0.980, blue: 1.0)
+                    .ignoresSafeArea()
+                
+                VStack {
+                    // Custom Navigation Header
+                    HStack {
+                        // Back button -> discard changes
+                        Button(action: {
+                            dismiss()
+                        }) {
                             Image("chatlogviewbackbutton")
                                 .resizable()
                                 .frame(width: 24, height: 24)
@@ -571,25 +641,38 @@ struct GenderInputView: View {
                     
                     // Gender Selection Options
                     VStack(alignment: .leading, spacing: 20) {
-                        GenderOptionButton(title: "Female", selectedGender: $selectedGender, isCustom: $isCustom)
-                        GenderOptionButton(title: "Male", selectedGender: $selectedGender, isCustom: $isCustom)
+                        GenderOptionButton(
+                            title: "Female",
+                            selectedGender: $localSelectedGender,
+                            isCustom: $localIsCustom,
+                            localCustomValue: $localCustomValue
+                        )
                         
+                        GenderOptionButton(
+                            title: "Male",
+                            selectedGender: $localSelectedGender,
+                            isCustom: $localIsCustom,
+                            localCustomValue: $localCustomValue
+                        )
+                        
+                        // "Custom" option
                         Button(action: {
-                            isCustom = true
-                            selectedGender = ""
-                            value = ""
+                            localIsCustom = true
+                            localSelectedGender = ""
+                            localCustomValue = ""  // Clear any previous custom text
                         }) {
                             HStack {
                                 ZStack {
                                     Circle()
                                         .strokeBorder(
-                                            selectedGender.isEmpty && isCustom ?
-                                            Color(red: 125/255, green: 133/255, blue: 191/255) :
-                                            Color.gray, lineWidth: 2
+                                            localSelectedGender.isEmpty && localIsCustom
+                                            ? Color(red: 125/255, green: 133/255, blue: 191/255)
+                                            : Color.gray,
+                                            lineWidth: 2
                                         )
                                         .frame(width: 24, height: 24)
                                     
-                                    if selectedGender.isEmpty && isCustom {
+                                    if localSelectedGender.isEmpty && localIsCustom {
                                         Circle()
                                             .fill(Color(red: 125/255, green: 133/255, blue: 191/255))
                                             .frame(width: 12, height: 12)
@@ -601,24 +684,24 @@ struct GenderInputView: View {
                                     .font(.system(size: 16))
                             }
                         }
-
                     }
                     .frame(maxWidth: .infinity, alignment: .leading)
                     .padding(.horizontal, 20)
-
                     
-                    // Custom Input Field
-                    if isCustom {
+                    // If "Custom" is selected, show a text field
+                    if localIsCustom {
                         HStack {
-                            TextField("Enter Custom Gender", text: $value)
+                            TextField("Enter Custom Gender", text: $localCustomValue)
                                 .padding()
                                 .background(Color.white)
                                 .foregroundColor(Color(red: 125/255, green: 125/255, blue: 125/255))
                                 .cornerRadius(24)
                                 .padding(.horizontal)
                             
-                            if !value.isEmpty {
-                                Button(action: { value = "" }) {
+                            if !localCustomValue.isEmpty {
+                                Button(action: {
+                                    localCustomValue = ""
+                                }) {
                                     Image(systemName: "xmark.circle.fill")
                                         .foregroundColor(.gray)
                                         .padding(.trailing, 16)
@@ -629,9 +712,12 @@ struct GenderInputView: View {
                     
                     Spacer().frame(height: 16)
                     
+                    // Done button -> commit changes back to parent's `value`
                     Button(action: {
-                        if !isCustom {
-                            value = selectedGender
+                        if localIsCustom {
+                            value = localCustomValue
+                        } else {
+                            value = localSelectedGender
                         }
                         dismiss()
                     }) {
@@ -648,25 +734,28 @@ struct GenderInputView: View {
     }
 }
 
-// Custom Button for Gender Selection
-// Custom Button for Gender Selection
+// MARK: - Custom Button for Gender Selection
 struct GenderOptionButton: View {
     let title: String
+    
     @Binding var selectedGender: String
     @Binding var isCustom: Bool
+    @Binding var localCustomValue: String  // helps in clearing custom data if needed
     
     var body: some View {
         Button(action: {
             selectedGender = title
             isCustom = false
+            localCustomValue = ""  // clear out any custom text
         }) {
             HStack {
                 ZStack {
                     Circle()
                         .strokeBorder(
-                            selectedGender == title && !isCustom ?
-                            Color(red: 125/255, green: 133/255, blue: 191/255) :
-                            Color.gray, lineWidth: 2
+                            selectedGender == title && !isCustom
+                            ? Color(red: 125/255, green: 133/255, blue: 191/255)
+                            : Color.gray,
+                            lineWidth: 2
                         )
                         .frame(width: 24, height: 24)
                     
@@ -686,55 +775,68 @@ struct GenderOptionButton: View {
 }
 
 
-
-
 // MARK: - Detail Input View
 struct PronounsInputView: View {
     let title: String
     @Binding var value: String
     @Environment(\.dismiss) var dismiss
     
+    // Local state to hold the text while editing
+    @State private var tempValue: String
+    
+    init(title: String, value: Binding<String>) {
+        self.title = title
+        self._value = value
+        // Initialize the local copy from the parent binding
+        _tempValue = State(initialValue: value.wrappedValue)
+    }
+    
     var body: some View {
-        NavigationStack{
-            ZStack{
+        NavigationStack {
+            ZStack {
                 Color(red: 0.976, green: 0.980, blue: 1.0)
                     .ignoresSafeArea()
+                
                 VStack {
                     // Custom Navigation Header
                     HStack {
+                        // Back button -> discard changes
                         Button(action: {
-                            dismiss() // Dismiss the view when back button is pressed
+                            dismiss()
                         }) {
                             Image("chatlogviewbackbutton") // Replace with your back button image
                                 .resizable()
-                                .frame(width: 24, height: 24) // Customize this color
+                                .frame(width: 24, height: 24)
                         }
                         Spacer()
+                        
                         Text("Pronouns")
-                            .font(.system(size: 20, weight: .bold)) // Customize font style
-                            .foregroundColor(Color(red: 125/255, green: 133/255, blue: 191/255)) // Customize text color
+                            .font(.system(size: 20, weight: .bold))
+                            .foregroundColor(Color(red: 125/255, green: 133/255, blue: 191/255))
+                        
                         Spacer()
-                        Image("spacerformainmessageviewtopleft") // Replace with your back button image
+                        
+                        Image("spacerformainmessageviewtopleft") // Balance the layout
                             .resizable()
-                            .frame(width: 24, height: 24) // To balance the back button
+                            .frame(width: 24, height: 24)
                     }
                     .padding()
                     .background(Color(red: 229/255, green: 232/255, blue: 254/255))
                     
-                    Spacer()
-                        .frame(height: 28)
+                    Spacer().frame(height: 28)
                     
+                    // TextField uses the local state `tempValue`
                     HStack {
-                        TextField("Enter \(title)", text: $value)
+                        TextField("Enter \(title)", text: $tempValue)
                             .padding()
                             .background(Color.white)
                             .foregroundColor(Color(red: 125/255, green: 125/255, blue: 125/255))
                             .cornerRadius(24)
                             .padding(.horizontal)
                         
-                        if !value.isEmpty {
+                        if !tempValue.isEmpty {
                             Button(action: {
-                                value = "" // Clear the textfield
+                                tempValue = "" // Clear the textfield
                             }) {
                                 Image(systemName: "xmark.circle.fill")
                                     .foregroundColor(.gray)
@@ -743,18 +845,19 @@ struct PronounsInputView: View {
                         }
                     }
                     
-                    HStack{
+                    HStack {
                         Text("Enter your pronouns.")
                             .font(.system(size: 12))
                             .foregroundColor(Color(red: 86/255, green: 86/255, blue: 86/255))
                             .padding(.horizontal)
                             .padding(.top, 12)
-                        Spacer()
-                            .frame(width: 40)
+                        Spacer().frame(width: 40)
                     }
                     .frame(maxWidth: .infinity, alignment: .leading)
                     
+                    // Done button -> save tempValue to parent's binding, then dismiss
                     Button(action: {
+                        value = tempValue
                         dismiss()
                     }) {
                         Image("donebutton")
@@ -764,7 +867,6 @@ struct PronounsInputView: View {
                     }
                     
                     Spacer()
-                    
                 }
             }
         }
@@ -778,6 +880,16 @@ struct BioInputView: View {
     @Binding var value: String
     @Environment(\.dismiss) var dismiss
     
+    // Local copy of the bio text
+    @State private var tempValue: String
+    
+    init(title: String, value: Binding<String>) {
+        self.title = title
+        self._value = value
+        // Initialize local state from parent
+        _tempValue = State(initialValue: value.wrappedValue)
+    }
+    
     var body: some View {
         NavigationStack {
             ZStack {
@@ -787,14 +899,14 @@ struct BioInputView: View {
                 VStack {
                     // Custom Navigation Header
                     HStack {
+                        // Back button -> discard changes
                         Button(action: {
-                            dismiss() // Dismiss the view when back button is pressed
+                            dismiss()
                         }) {
-                            Image("chatlogviewbackbutton") // Replace with your back button image
+                            Image("chatlogviewbackbutton")
                                 .resizable()
                                 .frame(width: 24, height: 24)
                         }
-                        
                         Spacer()
                         
                         Text("Bio")
@@ -812,21 +924,22 @@ struct BioInputView: View {
                     
                     Spacer().frame(height: 28)
                     
-                    // Multiline Text Editor
+                    // Multiline Text Editor (bound to local state)
                     ZStack(alignment: .bottomTrailing) {
-                        TextEditor(text: $value)
+                        TextEditor(text: $tempValue)
                             .padding()
                             .foregroundColor(Color(red: 125/255, green: 125/255, blue: 125/255))
                             .background(Color.white)
                             .cornerRadius(20)
-                            .frame(height: 150) // TextEditor height
-                            .onChange(of: value) { newValue in
+                            .frame(height: 150)
+                            .onChange(of: tempValue) { newValue in
+                                // Limit to 100 characters
                                 if newValue.count > 100 {
-                                    value = String(newValue.prefix(100)) // Limit to 100 characters
+                                    tempValue = String(newValue.prefix(100))
                                 }
                             }
                         
-                        Text("\(value.count)/100")
+                        Text("\(tempValue.count)/100")
                             .foregroundColor(.gray)
                             .font(.system(size: 12))
                             .padding(.trailing, 16)
@@ -841,8 +954,9 @@ struct BioInputView: View {
                         .padding(.top, 12)
                         .frame(maxWidth: .infinity, alignment: .leading)
                     
-                    // Save Button
+                    // Done (Save) Button -> write tempValue to parent, then dismiss
                     Button(action: {
+                        value = tempValue
                         dismiss()
                     }) {
                         Image("donebutton")
@@ -860,53 +974,69 @@ struct BioInputView: View {
 }
 
 
+
 // MARK: - Detail Input View
 struct LocationInputView: View {
     let title: String
     @Binding var value: String
     @Environment(\.dismiss) var dismiss
     
+    // Local copy of the location text
+    @State private var tempValue: String
+    
+    init(title: String, value: Binding<String>) {
+        self.title = title
+        self._value = value
+        // Initialize local state from the parent's binding
+        _tempValue = State(initialValue: value.wrappedValue)
+    }
+    
     var body: some View {
-        NavigationStack{
-            ZStack{
+        NavigationStack {
+            ZStack {
                 Color(red: 0.976, green: 0.980, blue: 1.0)
                     .ignoresSafeArea()
+                
                 VStack {
                     // Custom Navigation Header
                     HStack {
+                        // Back button -> discard changes
                         Button(action: {
-                            dismiss() // Dismiss the view when back button is pressed
+                            dismiss()
                         }) {
-                            Image("chatlogviewbackbutton") // Replace with your back button image
+                            Image("chatlogviewbackbutton")
                                 .resizable()
-                                .frame(width: 24, height: 24) // Customize this color
+                                .frame(width: 24, height: 24)
                         }
                         Spacer()
+                        
                         Text("Location")
-                            .font(.system(size: 20, weight: .bold)) // Customize font style
-                            .foregroundColor(Color(red: 125/255, green: 133/255, blue: 191/255)) // Customize text color
+                            .font(.system(size: 20, weight: .bold))
+                            .foregroundColor(Color(red: 125/255, green: 133/255, blue: 191/255))
+                        
                         Spacer()
-                        Image("spacerformainmessageviewtopleft") // Replace with your back button image
+                        
+                        Image("spacerformainmessageviewtopleft")
                             .resizable()
-                            .frame(width: 24, height: 24) // To balance the back button
+                            .frame(width: 24, height: 24)
                     }
                     .padding()
                     .background(Color(red: 229/255, green: 232/255, blue: 254/255))
                     
-                    Spacer()
-                        .frame(height: 28)
+                    Spacer().frame(height: 28)
                     
+                    // TextField for local state
                     HStack {
-                        TextField("Enter \(title)", text: $value)
+                        TextField("Enter \(title)", text: $tempValue)
                             .padding()
                             .background(Color.white)
                             .foregroundColor(Color(red: 125/255, green: 125/255, blue: 125/255))
                             .cornerRadius(24)
                             .padding(.horizontal)
                         
-                        if !value.isEmpty {
+                        if !tempValue.isEmpty {
                             Button(action: {
-                                value = "" // Clear the textfield
+                                tempValue = "" // Clear the textfield
                             }) {
                                 Image(systemName: "xmark.circle.fill")
                                     .foregroundColor(.gray)
@@ -915,18 +1045,19 @@ struct LocationInputView: View {
                         }
                     }
                     
-                    HStack{
+                    HStack {
                         Text("Enter your location.")
                             .font(.system(size: 12))
                             .foregroundColor(Color(red: 86/255, green: 86/255, blue: 86/255))
                             .padding(.horizontal)
                             .padding(.top, 12)
-                        Spacer()
-                            .frame(width: 40)
+                        Spacer().frame(width: 40)
                     }
                     .frame(maxWidth: .infinity, alignment: .leading)
                     
+                    // Done button -> save changes to parent's binding, then dismiss
                     Button(action: {
+                        value = tempValue
                         dismiss()
                     }) {
                         Image("donebutton")
@@ -936,13 +1067,13 @@ struct LocationInputView: View {
                     }
                     
                     Spacer()
-                    
                 }
             }
         }
         .navigationBarBackButtonHidden(true)
     }
 }
+
 
 // MARK: - Birthdate Picker View
 struct BirthdatePickerView: View {

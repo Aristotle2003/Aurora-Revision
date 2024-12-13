@@ -603,7 +603,7 @@ struct CarouselView: View {
                 }
             }
             .tabViewStyle(PageTabViewStyle()) // Enables navigation dots
-            .frame(width: UIScreen.main.bounds.width, height: 160) // Sets the height of the carousel
+            .frame(width: UIScreen.main.bounds.width-40, height: 160) // Sets the height of the carousel
             .background(Color.clear) // Ensures the background is clear
         }
         .frame(width: UIScreen.main.bounds.width - 40)

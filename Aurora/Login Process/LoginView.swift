@@ -1,12 +1,3 @@
-//
-//  CreateNewMessageView.swift
-//  Synx
-//
-//  Created by Francis on 10/30/24.
-//
-
-
-
 import SwiftUI
 import Firebase
 import FirebaseAuth

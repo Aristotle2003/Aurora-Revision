@@ -564,19 +564,6 @@ struct SecurityView: View {
             }
         }
     }
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
     // MARK: Helper Functions
     // Checking if the user has phone or email or both
     private func checkUserProviders() {

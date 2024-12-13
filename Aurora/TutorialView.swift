@@ -1,9 +1,3 @@
-//
-//  Tutorial.swift
-//  Synx
-//
-//  Created by YiYang Peng on 11/23/24.
-//
 import SwiftUI
 import SDWebImageSwiftUI
 import Firebase

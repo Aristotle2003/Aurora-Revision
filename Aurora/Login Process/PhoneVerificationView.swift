@@ -1,10 +1,3 @@
-//
-//  PhoneVerificationView.swift
-//  Synx
-//
-//  Created by Zifan Deng on 11/3/24.
-//
-
 import SwiftUI
 import Firebase
 import FirebaseAuth

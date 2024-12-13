@@ -1,10 +1,3 @@
-//
-//  ProfileSetupView.swift
-//  Synx
-//
-//  Created by Zifan Deng on 11/5/24.
-//
-
 import SwiftUI
 import Firebase
 import FirebaseAuth

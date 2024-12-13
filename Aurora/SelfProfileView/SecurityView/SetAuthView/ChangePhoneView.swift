@@ -360,15 +360,6 @@ struct ChangePhoneView: View {
             completion(true) // Phone number already exists
         }
     }
-
-    
-    
-    
-    
-    
-    
-    
-    
 }
 
 
