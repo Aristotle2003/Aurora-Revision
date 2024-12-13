@@ -54,17 +54,29 @@ struct LoginView: View {
                 ScrollView {
                     VStack(spacing: 20) {
                         VStack(alignment: .leading, spacing: 8) {
-                            Text("Quick sign in with phone")
-                                .font(.headline)
-                                .foregroundColor(.primary)
+                            Spacer()
+                                .frame(height: 139)
                             
-                            Text("Enter your number to instantly sign in or create account")
-                                .font(.subheadline)
-                                .foregroundColor(.secondary)
+                            Text("Welcome to AURORA!")
+                                .font(.system(size: 32, weight: .bold))
+                                .foregroundColor(Color(red: 125/255, green: 133/255, blue: 191/255))
+                            
+                            Text("One-step Sign In")
+                                .font(.system(size: 24, weight: .bold))
+                                .foregroundColor(Color(red: 86/255, green: 86/255, blue: 86/255))
+                            
+                            Text("Enter your number to instantly login or create a new account.")
+                                .font(.system(size: 14))
+                                .foregroundColor(Color(red: 86/255, green: 86/255, blue: 86/255))
                                 .padding(.bottom, 4)
+                            
+                            Spacer()
+                                .frame(height: 90)
+                            
                             
                             phoneInputView
                         }
+                        .padding(.horizontal, 20)
                         .padding(.bottom, 10)
                         
                         
@@ -75,15 +87,12 @@ struct LoginView: View {
                         } label: {
                             HStack {
                                 Spacer()
-                                Text("Continue")
-                                    .foregroundColor(.white)
-                                    .padding(.vertical, 12)
-                                    .font(.system(size: 16, weight: .semibold))
+                                Image("continuebutton")
+                                    .resizable()
+                                    .scaledToFit()
+                                    .frame(width: UIScreen.main.bounds.width - 80)
                                 Spacer()
                             }
-                            .frame(maxWidth: .infinity)
-                            .background(Color.blue)
-                            .cornerRadius(12)
                         }
                         .disabled(phoneNumber.isEmpty)
                         .opacity(phoneNumber.isEmpty ? 0.6 : 1)
@@ -93,7 +102,7 @@ struct LoginView: View {
                         // Divider
                         HStack {
                             VStack { Divider() }.padding(.horizontal, 8)
-                            Text("or").foregroundColor(.gray)
+                            Text("OR").foregroundColor(.gray)
                             VStack { Divider() }.padding(.horizontal, 8)
                         }
                         
@@ -104,17 +113,11 @@ struct LoginView: View {
                             handleGoogleSignIn()
                         } label: {
                             HStack {
-                                Image(systemName: "g.circle.fill")
-                                    .font(.system(size: 20))
-                                Text("Continue with Google")
-                                    .font(.system(size: 16, weight: .medium))
+                                Image("googlebutton")
+                                    .resizable()
+                                    .scaledToFit()
+                                    .frame(width: UIScreen.main.bounds.width - 80)
                             }
-                            .frame(maxWidth: .infinity)
-                            .padding(.vertical, 12)
-                            .background(
-                                RoundedRectangle(cornerRadius: 12)
-                                    .stroke(Color.gray.opacity(0.5), lineWidth: 1)
-                            )
                         }
                         
                         
@@ -133,9 +136,21 @@ struct LoginView: View {
                                 loginStatusMessage = "Error signing in with Apple: \(error.localizedDescription)"
                             }
                         }
+                        .signInWithAppleButtonStyle(.black) // Choose black, white, or whiteOutline
                         .frame(maxWidth: .infinity)
                         .frame(height: 44)
-                        .cornerRadius(12)
+                        .cornerRadius(23)       // Adjust the corner radius here
+                        .padding(.horizontal, 20) // Adjust horizontal padding
+                        
+                        Spacer()
+                            .frame(height: 130)
+                        
+                        Text("By continuing, you accept Aurora’s\nTerm of Service and Privacy Policy.")
+                            .font(.system(size: 14))
+                            .foregroundColor(Color(red: 86/255, green: 86/255, blue: 86/255))
+                            .multilineTextAlignment(.center)
+                            .padding(.bottom, 40)
+
                         
                         
                         
@@ -143,12 +158,11 @@ struct LoginView: View {
                         Text(self.loginStatusMessage)
                             .foregroundColor(.red)
                     }
-                    .padding()
+                    .padding(.horizontal, 20)
                     
                 }
-                .navigationTitle("One-step Sign In")
-                .background(Color(.init(white: 0, alpha: 0.05))
-                    .ignoresSafeArea())
+                .background(Color(red: 0.976, green: 0.980, blue: 1.0))
+                    .ignoresSafeArea()
             }
             .navigationViewStyle(StackNavigationViewStyle())
             // Phone verification with no email
@@ -178,50 +192,42 @@ struct LoginView: View {
     
     
     private var phoneInputView: some View {
-        // Input field for entering a new phone number
-        HStack(spacing: 4) {
+        HStack(spacing: 8) {
             // Country Code Dropdown
             Menu {
                 ForEach(countryCodes, id: \.numericCode) { code in
-                    Button(action: { countryCode = code.numericCode }) {
-                        Text("+\(code.numericCode) (\(code.name))") // Show country code and name in the menu
+                    Button(action: {
+                        countryCode = code.numericCode
+                    }) {
+                        Text("+\(code.numericCode) (\(code.name))")
+                            .foregroundColor(Color(red: 86/255, green: 86/255, blue: 86/255))
                     }
                 }
             } label: {
-                HStack {
-                    Text("+\(countryCode)") // Only show the number in the button
-                        .foregroundColor(.primary)
-                    Image(systemName: "chevron.down") // Add a dropdown arrow icon
+                HStack(spacing: 4) {
+                    Text("+\(countryCode)")
+                        .foregroundColor(Color(red: 86/255, green: 86/255, blue: 86/255))
+                    Image(systemName: "chevron.down")
                         .foregroundColor(.gray)
                 }
-                .padding(12)
-                .background(Color.gray.opacity(0.1))
-                .cornerRadius(8)
+                .frame(width: 98, height: 48)
+                .background(Color.white)
+                .cornerRadius(100)
             }
-            .frame(width: 100)
-            .padding(.leading, -6)
-            
-            
+
             // Phone Number Input Field
             TextField("Phone Number", text: $phoneNumber)
                 .keyboardType(.phonePad)
                 .textContentType(.telephoneNumber)
-                .padding(12)
+                .foregroundColor(Color(red: 86/255, green: 86/255, blue: 86/255))
+                .padding(.horizontal, 16)
+                .frame(height: 48)
                 .background(Color.white)
-                .cornerRadius(8)
-                .overlay(
-                    RoundedRectangle(cornerRadius: 8)
-                        .stroke(Color.gray.opacity(0.5), lineWidth: 1)
-                )
+                .cornerRadius(100)
         }
-        .padding(8)
-        .background(Color.white)
-        .cornerRadius(8)
-        .overlay(
-            RoundedRectangle(cornerRadius: 8)
-                .stroke(Color.blue.opacity(0.3), lineWidth: 1)
-        )
     }
+
+
     
     
     

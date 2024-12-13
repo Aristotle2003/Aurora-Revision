@@ -53,7 +53,7 @@
 		FB83BDA42CDACB7500A7BE4E /* ProfileSetupView.swift in Sources */ = {isa = PBXBuildFile; fileRef = FB83BDA32CDACB7500A7BE4E /* ProfileSetupView.swift */; };
 		FBA6BD1D2CCD696F0019A5E1 /* ProfileView.swift in Sources */ = {isa = PBXBuildFile; fileRef = FBA6BD1C2CCD696F0019A5E1 /* ProfileView.swift */; };
 		FBA6BD1F2CCDA11E0019A5E1 /* FriendRequestView.swift in Sources */ = {isa = PBXBuildFile; fileRef = FBA6BD1E2CCDA11E0019A5E1 /* FriendRequestView.swift */; };
-		FBF6E94F2D08F9CF003C985E /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = FBF6E94E2D08F9CF003C985E /* Assets.xcassets */; };
+		FBB259072D0C96B4004CC8CF /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = FBB259062D0C96B4004CC8CF /* Assets.xcassets */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -112,7 +112,7 @@
 		FBA6BD1C2CCD696F0019A5E1 /* ProfileView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProfileView.swift; sourceTree = "<group>"; };
 		FBA6BD1E2CCDA11E0019A5E1 /* FriendRequestView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FriendRequestView.swift; sourceTree = "<group>"; };
 		FBB259052D09132D004CC8CF /* Aurora.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = Aurora.entitlements; sourceTree = "<group>"; };
-		FBF6E94E2D08F9CF003C985E /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
+		FBB259062D0C96B4004CC8CF /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -262,7 +262,7 @@
 				FB7E20BF2CC165D500209582 /* Model */,
 				FB7E20B62CC0112C00209582 /* Utils */,
 				FB83BD982CD85E6600A7BE4E /* GoogleService-Info.plist */,
-				FBF6E94E2D08F9CF003C985E /* Assets.xcassets */,
+				FBB259062D0C96B4004CC8CF /* Assets.xcassets */,
 				FB7E207E2CBCC6EA00209582 /* Preview Content */,
 			);
 			path = Aurora;
@@ -504,8 +504,8 @@
 			files = (
 				FB67642B2CEEE83E00FCE17E /* Save Button.json in Resources */,
 				FB7E20802CBCC6EA00209582 /* Preview Assets.xcassets in Resources */,
-				FBF6E94F2D08F9CF003C985E /* Assets.xcassets in Resources */,
 				FB6764292CEEE82D00FCE17E /* Clear Button.json in Resources */,
+				FBB259072D0C96B4004CC8CF /* Assets.xcassets in Resources */,
 				FB83BD992CD85E6600A7BE4E /* GoogleService-Info.plist in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;

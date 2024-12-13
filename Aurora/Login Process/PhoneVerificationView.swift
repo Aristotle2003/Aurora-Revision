@@ -45,7 +45,34 @@ struct PhoneVerificationView: View {
         NavigationView {
             ScrollView {
                 VStack(spacing: 20) {
-                    headerView
+                    VStack(alignment: .leading, spacing: 8) {
+                        Spacer()
+                            .frame(height: 139)
+                        
+                        Text("")
+                            .font(.system(size: 32, weight: .bold))
+                            .foregroundColor(Color(red: 125/255, green: 133/255, blue: 191/255))
+                        if isPreEmailVerification {
+                            Text("Verify Your Phone Number")
+                                .font(.system(size: 24, weight: .bold))
+                                .foregroundColor(Color(red: 86/255, green: 86/255, blue: 86/255))
+                        } else {
+                            Text("One-step Sign In")
+                                .font(.system(size: 24, weight: .bold))
+                                .foregroundColor(Color(red: 86/255, green: 86/255, blue: 86/255))
+                        }
+                        
+                        
+                        Text("You will receive an SMS verification code. Let’s register your phone number to find friends!")
+                            .font(.system(size: 14))
+                            .foregroundColor(Color(red: 86/255, green: 86/255, blue: 86/255))
+                            .padding(.bottom, 4)
+                        
+                        Spacer()
+                            .frame(height: 90)
+                        
+                    }
+                    .padding(.bottom, 10)
                     
                     if !showVerificationField {
                         if isPreEmailVerification {
@@ -54,20 +81,17 @@ struct PhoneVerificationView: View {
                             newPhoneInputView
                         }
                         
-                        // Friendly reminder
-                        Text("You will receive an SMS verification code.")
-                            .font(.caption)
-                            .foregroundColor(.gray)
-                        
                         sendCodeButton
                     } else {
                         // Verification code input
                         TextField("Enter verification code", text: $verificationCode)
                             .keyboardType(.numberPad)
-                            .padding(12)
-                            .background(Color.white)
-                            .cornerRadius(8)
                             .multilineTextAlignment(.center)
+                            .padding(.horizontal, 16)    // Horizontal padding for spacing inside the bubble
+                            .frame(height: 48)
+                            .background(Color.white)
+                            .cornerRadius(100)
+
                         
                         verifyCodeButton
                         
@@ -85,14 +109,19 @@ struct PhoneVerificationView: View {
                             .multilineTextAlignment(.center)
                     }
                 }
-                .padding()
+                .padding(.horizontal, 20)
             }
-            .navigationTitle(isPreEmailVerification ? "One-step Sign In" : "Phone Verification")
-            .navigationBarItems(leading: Button("Cancel") {
-                dismiss()
-            })
-            .background(Color(.init(white: 0, alpha: 0.05)).ignoresSafeArea())
+            .navigationBarItems(
+                leading: Button(action: {
+                    dismiss()
+                }) {
+                    Image("chatlogviewbackbutton") // Replace "YourImageName" with the name of your image asset
+                        .renderingMode(.original) // Optional: Keeps the original colors of the image
+                }
+            )
         }
+        .background(Color(red: 0.976, green: 0.980, blue: 1.0))
+            .ignoresSafeArea()
         .fullScreenCover(isPresented: $showProfileSetup) {
             if let user = FirebaseManager.shared.auth.currentUser {
                 ProfileSetupView(
@@ -119,60 +148,55 @@ struct PhoneVerificationView: View {
     
     private var oldPhoneView: some View {
         HStack(spacing: 8) {
-            // Display the `oldPhone` as text
             Text(oldPhone?.isEmpty == false ? oldPhone! : "No phone number provided")
-                .font(.title2)
-                .padding(12)
-                .background(Color.gray.opacity(0.2))
-                .cornerRadius(8)
+                .font(.system(size: 20, weight: .bold))
+                .foregroundColor(Color(red: 86/255, green: 86/255, blue: 86/255))
+                .padding(.horizontal, 16)
+                .frame(height: 48)
+                .background(Color.white)
+                .cornerRadius(100)
         }
     }
+
     
     private var newPhoneInputView: some View {
         // Input field for entering a new phone number
-        HStack(spacing: 4) {
+        HStack(spacing: 8) {
             // Country Code Dropdown
             Menu {
                 ForEach(countryCodes, id: \.numericCode) { code in
-                    Button(action: { countryCode = code.numericCode }) {
-                        Text("+\(code.numericCode) (\(code.name))") // Show country code and name in the menu
+                    Button(action: {
+                        countryCode = code.numericCode
+                    }) {
+                        Text("+\(code.numericCode) (\(code.name))")
+                            .foregroundColor(Color(red: 86/255, green: 86/255, blue: 86/255))
                     }
                 }
             } label: {
-                HStack {
-                    Text("+\(countryCode)") // Only show the number in the button
-                        .foregroundColor(.primary)
-                    Image(systemName: "chevron.down") // Add a dropdown arrow icon
+                HStack(spacing: 4) {
+                    Text("+\(countryCode)")
+                        .foregroundColor(Color(red: 86/255, green: 86/255, blue: 86/255))
+                    Image(systemName: "chevron.down")
                         .foregroundColor(.gray)
                 }
-                .padding(12)
-                .background(Color.gray.opacity(0.1))
-                .cornerRadius(8)
+                .frame(width: 98, height: 48)
+                .background(Color.white)
+                .cornerRadius(100)
             }
-            .frame(width: 100)
-            .padding(.leading, -6)
-            
-            
+
             // Phone Number Input Field
             TextField("Phone Number", text: $newPhone)
                 .keyboardType(.phonePad)
                 .textContentType(.telephoneNumber)
-                .padding(12)
+                .foregroundColor(Color(red: 86/255, green: 86/255, blue: 86/255))
+                .padding(.horizontal, 16)
+                .frame(height: 48)
                 .background(Color.white)
-                .cornerRadius(8)
-                .overlay(
-                    RoundedRectangle(cornerRadius: 8)
-                        .stroke(Color.gray.opacity(0.5), lineWidth: 1)
-                )
+                .cornerRadius(100)
         }
-        .padding(8)
-        .background(Color.white)
-        .cornerRadius(8)
-        .overlay(
-            RoundedRectangle(cornerRadius: 8)
-                .stroke(Color.blue.opacity(0.3), lineWidth: 1)
-        )
     }
+    
+    
     
     
     private var sendCodeButton: some View {
@@ -180,12 +204,10 @@ struct PhoneVerificationView: View {
         Button {
             requestVerificationCode()
         } label: {
-            Text("Send Code")
-                .foregroundColor(.white)
-                .padding(.vertical, 12)
-                .frame(maxWidth: .infinity)
-                .background(Color.blue)
-                .cornerRadius(12)
+            Image("sendbutton")
+                .resizable()
+                .scaledToFit()
+                .frame(width: UIScreen.main.bounds.width - 80)
         }
         .disabled(newPhone.isEmpty && !isPreEmailVerification)
         .opacity((newPhone.isEmpty && !isPreEmailVerification) ? 0.6 : 1)
@@ -195,13 +217,11 @@ struct PhoneVerificationView: View {
         Button {
             verifyCode()
         } label: {
-            Text("Verify")
+            Image("verifybutton")
+                .resizable()
+                .scaledToFit()
+                .frame(width: UIScreen.main.bounds.width - 80)
         }
-        .frame(maxWidth: .infinity)
-        .padding()
-        .background(Color.blue)
-        .foregroundColor(.white)
-        .cornerRadius(8)
     }
     
     

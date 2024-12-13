@@ -471,167 +471,151 @@ struct ResponseCard: View {
                 Image("greencard")
                     .resizable()
                     .scaledToFit()
-                    .frame(width: UIScreen.main.bounds.width * 0.692111, height: UIScreen.main.bounds.height*0.42253)// Ensures image maintains its aspect ratio
                     .cornerRadius(25)
             } else if cardColor == Color.cyan {
                 Image("bluecard")
                     .resizable()
-                    .scaledToFit() // Ensures image maintains its aspect ratio
-                    .frame(width: UIScreen.main.bounds.width * 0.692111, height: UIScreen.main.bounds.height*0.42253)
+                    .scaledToFit()
                     .cornerRadius(25)
             } else if cardColor == Color.pink {
                 Image("purplecard")
                     .resizable()
-                    .scaledToFit() // Ensures image maintains its aspect ratio
-                    .frame(width: UIScreen.main.bounds.width * 0.692111, height: UIScreen.main.bounds.height*0.42253)
+                    .scaledToFit()
                     .cornerRadius(25)
             }
             
-            // Content overlay on top of the image
-            VStack(alignment: .leading, spacing: 12) {
-                HStack{
-                    Spacer()
-                    Button(action: {
-                        print("three dots pressed")
-                    }) {
-                        if cardColor == Color.mint {
-                            Image("reportbuttongreencard")
-                                .resizable()
-                                .scaledToFit()
-                                .frame(width: 24, height: 24)
-                        } else if cardColor == Color.cyan {
-                            Image("reportbuttonbluecard")
-                                .resizable()
-                                .scaledToFit()
-                                .frame(width: 24, height: 24)
-                        } else if cardColor == Color.pink {
-                            Image("reportbuttonpurplecard")
-                                .resizable()
-                                .scaledToFit()
-                                .frame(width: 24, height: 24)
-                        }
-                    }
-                    .padding(.trailing, 35)
-                    .padding(.top, 35)
-                }
-                Spacer()
-                // Latest message text
-                /*if cardColor == Color.mint {
-                    
-                } else if cardColor == Color.cyan {
-                  
-                } else if cardColor == Color.pink {
-                   
-                }*/
+            GeometryReader { geo in
+                let w = geo.size.width
+                let h = geo.size.height
                 
-                if cardColor == Color.mint {
-                    Text(response.latestMessage)
-                        .font(.system(size: 14, weight: .bold))
-                        .foregroundColor(Color(red: 0.357, green: 0.635, blue: 0.451))
-                        .fixedSize(horizontal: false, vertical: true)
-                        .padding(98)
-                } else if cardColor == Color.cyan {
-                    Text(response.latestMessage)
-                        .font(.system(size: 14, weight: .bold))
-                        .foregroundColor(Color(red: 0.388, green: 0.655, blue: 0.835))
-                        .fixedSize(horizontal: false, vertical: true)
-                        .padding(98)
-                } else if cardColor == Color.pink {
-                    Text(response.latestMessage)
-                        .font(.system(size: 14, weight: .bold))
-                        .foregroundColor(Color(red: 0.49, green: 0.52, blue: 0.75))
-                        .fixedSize(horizontal: false, vertical: true)
-                        .padding(98)
+                // Positioning constants
+                let topPadding: CGFloat = 35
+                let sidePadding: CGFloat = 20
+                let bottomPadding: CGFloat = 20
+                
+                // MARK: - Report Button (top-right corner)
+                Group {
+                    let buttonWidth: CGFloat = 24
+                    if cardColor == .mint {
+                        Image("reportbuttongreencard")
+                            .resizable()
+                            .scaledToFit()
+                            .frame(width: buttonWidth, height: buttonWidth)
+                            .position(x: w - sidePadding-10, y: topPadding)
+                    } else if cardColor == .cyan {
+                        Image("reportbuttonbluecard")
+                            .resizable()
+                            .scaledToFit()
+                            .frame(width: buttonWidth, height: buttonWidth)
+                            .position(x: w - sidePadding-10, y: topPadding)
+                    } else if cardColor == .pink {
+                        Image("reportbuttonpurplecard")
+                            .resizable()
+                            .scaledToFit()
+                            .frame(width: buttonWidth, height: buttonWidth)
+                            .position(x: w - sidePadding-10, y: topPadding)
+                    }
                 }
                 
-                
-                
-                Spacer()
-                
-                HStack{
-                    // Profile image
-                    WebImage(url: URL(string: response.profileImageUrl))
-                        .resizable()
-                        .scaledToFill()
-                        .frame(width: 45, height: 45)
-                        .clipShape(Circle())
-                    
-                    VStack(alignment: .leading) {
-                        // User email and timestamp
-                        
-                        
-                        
-                        if cardColor == Color.mint {
-                            Text(response.username)
-                                .font(.system(size: 12, weight: .bold))
-                                .foregroundColor(Color(red: 0.357, green: 0.635, blue: 0.451))
-                        } else if cardColor == Color.cyan {
-                            Text(response.username)
-                                .font(.system(size: 12, weight: .bold))
-                                .foregroundColor(Color(red: 0.388, green: 0.655, blue: 0.835))
-                        } else if cardColor == Color.pink {
-                            Text(response.username)
-                                .font(.system(size: 12, weight: .bold))
-                                .foregroundColor(Color(red: 0.49, green: 0.52, blue: 0.75))
-                        }
-                        Text(response.timestamp, style: .time)
-                            .font(.system(size: 10))
-                            .foregroundColor(Color.gray)
+                // MARK: - Latest Message Text (Center)
+                // Adjust the position and padding as needed.
+                let textColor: Color = {
+                    if cardColor == .mint {
+                        return Color(red: 0.357, green: 0.635, blue: 0.451)
+                    } else if cardColor == .cyan {
+                        return Color(red: 0.388, green: 0.655, blue: 0.835)
+                    } else {
+                        return Color(red: 0.49, green: 0.52, blue: 0.75)
                     }
-                    Spacer()
-                    
-                    // Like button and count
-                    HStack {
-                        Button(action: {
-                            likeAction()
-                        }) {
-                            // Select the appropriate like image based on card color and liked status
-                            if cardColor == Color.mint {
-                                Image(response.likedByCurrentUser ? "likegivengreen" : "likenotgivengreen")
-                                    .resizable()
-                                    .scaledToFit()
-                                    .frame(width: 32, height: 32) // Size of the like button
-                            } else if cardColor == Color.cyan {
-                                Image(response.likedByCurrentUser ? "likegivenblue" : "likenotgivenblue")
-                                    .resizable()
-                                    .scaledToFit()
-                                    .frame(width: 32, height: 32) // Size of the like button
-                            } else if cardColor == Color.pink {
-                                Image(response.likedByCurrentUser ? "likegivenpurple" : "likenotgivenpurple")
-                                    .resizable()
-                                    .scaledToFit()
-                                    .frame(width: 32, height: 32) // Size of the like button
-                            }
-                        }
+                }()
+                
+                Text(response.latestMessage)
+                    .font(.system(size: 14, weight: .bold))
+                    .foregroundColor(textColor)
+                    // Try giving it a fixed width or a max width to keep it aligned.
+                    .frame(width: w * 0.7)
+                    .multilineTextAlignment(.center)
+                    .position(x: w/2, y: h/2)
+                
+                // MARK: - Profile Image (bottom-left area)
+                let profileSize: CGFloat = 45.0
+                WebImage(url: URL(string: response.profileImageUrl))
+                    .resizable()
+                    .scaledToFill()
+                    .frame(width: profileSize, height: profileSize)
+                    .clipShape(Circle())
+                    .position(x: sidePadding + profileSize/2,
+                              y: h - bottomPadding - profileSize/2)
+                
+                // MARK: - Username and Timestamp
+                // Position them next to the profile image
+                // Adjust these coordinates as needed to place them to the right of the profile image.
+                let textLeftOffset: CGFloat = sidePadding + profileSize + 10
+                let textWidth: CGFloat = 100 // choose a suitable width
+
+                Group {
+                    Text(response.username)
+                        .font(.system(size: 12, weight: .bold))
+                        .foregroundColor(textColor)
+                        .frame(width: textWidth, alignment: .leading)
+                        // The frame is left-aligned and 100 pts wide.
+                        // To position so that the left edge is at (textLeftOffset + 30),
+                        // set x to (textLeftOffset + 30) + (textWidth/2), since .position is from center.
+                        .position(x: (textLeftOffset) + (textWidth / 2),
+                                  y: h - bottomPadding - profileSize/2 - 8)
                         
-                        if cardColor == Color.mint {
-                            Text("\(response.likes)")
-                                .font(.system(size: 16, weight: .bold))
-                                .foregroundColor(Color(red: 0.357, green: 0.635, blue: 0.451))
-                                
-                        } else if cardColor == Color.cyan {
-                            Text("\(response.likes)")
-                                .font(.system(size: 16, weight: .bold))
-                                .foregroundColor(Color(red: 0.388, green: 0.655, blue: 0.835))
-                        } else if cardColor == Color.pink {
-                            Text("\(response.likes)")
-                                .font(.system(size: 16, weight: .bold))
-                                .foregroundColor(Color(red: 0.49, green: 0.52, blue: 0.75))
-                        }
-                        
-                    }
-                    
-                    
+                    Text(response.timestamp, style: .time)
+                        .font(.system(size: 10))
+                        .foregroundColor(Color.gray)
+                        .frame(width: textWidth, alignment: .leading)
+                        // Similarly, to position so that the left edge is at (textLeftOffset + 40),
+                        // add half the width.
+                        .position(x: (textLeftOffset) + (textWidth / 2),
+                                  y: h - bottomPadding - profileSize/2 + 8)
                 }
-                .padding(.bottom, 30)
-                .padding(.trailing, 30)
-                .padding(.leading, 30)
+
+                
+                // MARK: - Like Button and Count (bottom-right area)
+                let likeButtonSize: CGFloat = 32.0
+                let likeSectionX = w - sidePadding - likeButtonSize/2
+                let likeSectionY = h - bottomPadding - profileSize/2
+                
+                Button(action: {
+                    likeAction()
+                }) {
+                    if cardColor == Color.mint {
+                        Image(response.likedByCurrentUser ? "likegivengreen" : "likenotgivengreen")
+                            .resizable()
+                            .scaledToFit()
+                            .frame(width: likeButtonSize, height: likeButtonSize)
+                    } else if cardColor == Color.cyan {
+                        Image(response.likedByCurrentUser ? "likegivenblue" : "likenotgivenblue")
+                            .resizable()
+                            .scaledToFit()
+                            .frame(width: likeButtonSize, height: likeButtonSize)
+                    } else if cardColor == Color.pink {
+                        Image(response.likedByCurrentUser ? "likegivenpurple" : "likenotgivenpurple")
+                            .resizable()
+                            .scaledToFit()
+                            .frame(width: likeButtonSize, height: likeButtonSize)
+                    }
+                }
+                .position(x: likeSectionX, y: likeSectionY)
+                
+                // Like count slightly to the left of the button
+                Text("\(response.likes)")
+                    .font(.system(size: 16, weight: .bold))
+                    .foregroundColor(textColor)
+                    .position(x: likeSectionX - 30, y: likeSectionY)
             }
+            .padding(0) // No extra padding, we're positioning absolutely
         }
-        .aspectRatio(contentMode: .fit) // Matches the image's aspect ratio
+        .frame(width: UIScreen.main.bounds.width * 0.692111,
+               height: UIScreen.main.bounds.height * 0.42253)
+        .aspectRatio(contentMode: .fit)
     }
-    
 }
+
 
 struct FullScreenResponseInputView: View {
     @StateObject var vm: FriendGroupViewModel
