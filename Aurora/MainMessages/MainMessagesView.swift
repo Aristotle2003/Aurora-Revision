@@ -286,7 +286,7 @@ struct MainMessagesView: View {
                                 }
                             }
                         }
-                        .padding(.top, UIScreen.main.bounds.height * 0.07 + 190) // Start 8 points below the header
+                        .padding(.top, UIScreen.main.bounds.height * 0.07 + 171) // Start 8 points below the header
                     }
                 }
                 
@@ -424,8 +424,8 @@ struct MainMessagesView: View {
                             }
                             
                         }
-                        .padding(.top, 12)
-                        .padding(.bottom, 12)
+                        .padding(.top, 0)
+                        .padding(.bottom, 0)
                     }
                     
                     Spacer()
@@ -603,7 +603,7 @@ struct CarouselView: View {
                 }
             }
             .tabViewStyle(PageTabViewStyle()) // Enables navigation dots
-            .frame(width: UIScreen.main.bounds.width-40, height: 160) // Sets the height of the carousel
+            .frame(width: UIScreen.main.bounds.width-40, height: 148) // Sets the height of the carousel
             .background(Color.clear) // Ensures the background is clear
         }
         .frame(width: UIScreen.main.bounds.width - 40)

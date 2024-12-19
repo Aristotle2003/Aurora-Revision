@@ -177,44 +177,58 @@ struct CalendarMessagesView: View {
 
 
 struct CalendarView: View {
-    @Binding var selectedDate: Date?
-    @State private var currentMonth: Date = Date()
-
-    private var months: [Date] {
-        let calendar = Calendar.current
-        let currentYear = calendar.component(.year, from: Date())
-        var allMonths: [Date] = []
-        for month in 1...12 {
-            let components = DateComponents(year: currentYear, month: month, day: 1)
-            if let monthDate = calendar.date(from: components) {
-                allMonths.append(monthDate)
-            }
+    @Binding public var selectedDate: Date?
+    
+    public init(selectedDate: Binding<Date?>) {
+            self._selectedDate = selectedDate
         }
-        return allMonths
+    
+    @State private var currentMonth: Date = {
+        let calendar = Calendar.current
+        let components = calendar.dateComponents([.year, .month], from: Date())
+        return calendar.date(from: components) ?? Date()
+    }()
+    
+    private var calendar = Calendar.current
+    
+    // Maximum date: current month start
+    private var maxDate: Date {
+        let components = calendar.dateComponents([.year, .month], from: Date())
+        return calendar.date(from: components) ?? Date()
     }
-
+    
+    // Minimum date: three years ago from the maxDate (also month start)
+    private var minDate: Date {
+        calendar.date(byAdding: .year, value: -3, to: maxDate)!
+    }
+    
     var body: some View {
         VStack {
-            // Horizontal month bar
-            ScrollView(.horizontal, showsIndicators: false) {
-                HStack(spacing: 10) {
-                    ForEach(months, id: \.self) { monthDate in
-                        Button(action: {
-                            currentMonth = monthDate
-                        }) {
-                            Text("\(monthDate, formatter: monthFormatter)")
-                                .font(.subheadline)
-                                .foregroundColor(isSameMonth(monthDate, as: currentMonth) ? .white : .primary)
-                                .padding(.vertical, 8)
-                                .padding(.horizontal, 12)
-                                .background(isSameMonth(monthDate, as: currentMonth) ? Color.blue : Color.clear)
-                                .cornerRadius(5)
-                        }
-                    }
+            // Month navigation bar
+            HStack {
+                Button(action: {
+                    moveToPreviousMonth()
+                }) {
+                    Image(systemName: "chevron.left")
                 }
-                .padding(.horizontal)
+                .disabled(!canMoveToPreviousMonth())
+                
+                Spacer()
+                
+                Text("\(currentMonth, formatter: yearMonthFormatter)")
+                    .font(.headline)
+                
+                Spacer()
+                
+                Button(action: {
+                    moveToNextMonth()
+                }) {
+                    Image(systemName: "chevron.right")
+                }
+                .disabled(!canMoveToNextMonth())
             }
-
+            .padding(.horizontal)
+            
             // Days of the Week Header
             HStack {
                 ForEach(weekdays, id: \.self) { day in
@@ -223,7 +237,7 @@ struct CalendarView: View {
                         .frame(maxWidth: .infinity)
                 }
             }
-
+            
             let days = generateDaysInMonth(for: currentMonth)
             LazyVGrid(columns: Array(repeating: GridItem(.flexible()), count: 7)) {
                 ForEach(days, id: \.self) { day in
@@ -231,7 +245,7 @@ struct CalendarView: View {
                         Button(action: {
                             selectedDate = day
                         }) {
-                            Text("\(Calendar.current.component(.day, from: day))")
+                            Text("\(calendar.component(.day, from: day))")
                                 .frame(maxWidth: .infinity, minHeight: 40)
                                 .background(selectedDate == day ? Color.blue.opacity(0.3) : Color.clear)
                                 .cornerRadius(5)
@@ -245,45 +259,62 @@ struct CalendarView: View {
             .padding()
         }
     }
-
-    // Formatter for displaying month names (e.g. "Jan", "Feb", "Mar")
-    private let monthFormatter: DateFormatter = {
+    
+    // Formatter for displaying year-month (e.g. "Dec 2024")
+    private let yearMonthFormatter: DateFormatter = {
         let formatter = DateFormatter()
-        formatter.dateFormat = "MMM"
+        formatter.dateFormat = "LLL yyyy"
         return formatter
     }()
-
+    
     // Days of the week
     private let weekdays = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"]
-
-    // Check if two dates are in the same month and year
-    private func isSameMonth(_ date1: Date, as date2: Date) -> Bool {
-        let calendar = Calendar.current
-        let comp1 = calendar.dateComponents([.year, .month], from: date1)
-        let comp2 = calendar.dateComponents([.year, .month], from: date2)
-        return comp1.year == comp2.year && comp1.month == comp2.month
-    }
-
-    // Function to generate all days in the current month
+    
     private func generateDaysInMonth(for date: Date) -> [Date?] {
         var days: [Date?] = []
-        let calendar = Calendar.current
         let range = calendar.range(of: .day, in: .month, for: date)!
-
+        
         // Get the first day of the month
         let firstDayOfMonth = calendar.date(from: calendar.dateComponents([.year, .month], from: date))!
         let weekday = calendar.component(.weekday, from: firstDayOfMonth) - 1
-
+        
         // Add padding for days before the first day of the month
         days.append(contentsOf: Array(repeating: nil, count: weekday))
-
+        
         // Add all days in the current month
         for day in range {
             if let date = calendar.date(byAdding: .day, value: day - 1, to: firstDayOfMonth) {
                 days.append(date)
             }
         }
-
         return days
+    }
+    
+    private func moveToPreviousMonth() {
+        guard canMoveToPreviousMonth() else { return }
+        if let newMonth = calendar.date(byAdding: .month, value: -1, to: currentMonth) {
+            currentMonth = newMonth
+        }
+    }
+    
+    private func moveToNextMonth() {
+        guard canMoveToNextMonth() else { return }
+        if let newMonth = calendar.date(byAdding: .month, value: 1, to: currentMonth) {
+            currentMonth = newMonth
+        }
+    }
+    
+    private func canMoveToPreviousMonth() -> Bool {
+        if let previousMonth = calendar.date(byAdding: .month, value: -1, to: currentMonth) {
+            return previousMonth >= minDate
+        }
+        return false
+    }
+    
+    private func canMoveToNextMonth() -> Bool {
+        if let nextMonth = calendar.date(byAdding: .month, value: 1, to: currentMonth) {
+            return nextMonth <= maxDate
+        }
+        return false
     }
 }

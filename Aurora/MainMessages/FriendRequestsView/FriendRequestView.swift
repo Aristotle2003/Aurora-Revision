@@ -13,72 +13,82 @@ struct FriendRequestsView: View {
     
     var body: some View {
         NavigationStack{
-            VStack {
-                // Custom back button to navigate back to MainMessageView
-                HStack {
-                    Button(action: {
-                        presentationMode.wrappedValue.dismiss()
-                    }) {
-                        HStack {
-                            Image(systemName: "chevron.left")
-                            Text("Back")
+            ZStack {
+                Color(red: 0.976, green: 0.980, blue: 1.0)
+                    .ignoresSafeArea()
+                VStack {
+                    
+                    HStack {
+                        Button(action: {
+                            presentationMode.wrappedValue.dismiss()
+                        }) {
+                            Image("chatlogviewbackbutton")
+                                .resizable()
+                                .frame(width: 24, height: 24)
                         }
+                        Spacer()
+                        Text("Friend Requests")
+                            .font(.system(size: 20, weight: .bold))
+                            .foregroundColor(Color(red: 125/255, green: 133/255, blue: 191/255))
+                        Spacer()
+                        Image("spacerformainmessageviewtopleft")
+                            .resizable()
+                            .frame(width: 24, height: 24)
                     }
                     .padding()
-                    Spacer()
-                }
-                
-                if friendRequests.isEmpty {
-                    Text("No friend requests")
-                        .font(.system(size: 16))
-                        .foregroundColor(.gray)
-                } else {
-                    List(friendRequests) { request in
-                        HStack {
-                            WebImage(url: URL(string: request.profileImageUrl))
-                                .resizable()
-                                .scaledToFill()
-                                .frame(width: 50, height: 50)
-                                .clipShape(Circle())
-                                .shadow(radius: 5)
-                            
-                            VStack(alignment: .leading) {
-                                Text(request.username)
-                                    .font(.headline)
-                            }
-                            
-                            Spacer()
-                            
-                            Button(action: {
-                                acceptFriendRequest(request)
-                            }){
-                                HStack {
-                                    Text("Accept")
+                    .background(Color(red: 229/255, green: 232/255, blue: 254/255))
+                    
+                    if friendRequests.isEmpty {
+                        Text("No friend requests")
+                            .font(.system(size: 16))
+                            .foregroundColor(.gray)
+                    } else {
+                        ScrollView{
+                            VStack(spacing: 12) {
+                                ForEach(friendRequests) { request in
+                                    HStack(spacing: 16) {
+                                        // Profile Picture
+                                        WebImage(url: URL(string: request.profileImageUrl))
+                                            .resizable()
+                                            .scaledToFill()
+                                            .frame(width: 50, height: 50)
+                                            .clipShape(Circle())
+                                        
+                                        // Friend Request Message
+                                        Text("\(request.username) has sent you a friend request.")
+                                            .font(.system(size: 14))
+                                            .foregroundColor(Color(.gray))
+                                        
+                                        Spacer()
+                                        
+                                        // Accept Button with Custom Image
+                                        Button(action: {
+                                            acceptFriendRequest(request)
+                                        }) {
+                                            Image("acceptbuttonforfriendrequestview")
+                                                .resizable()
+                                                .frame(width: 63, height: 24)
+                                        }
+                                        
+                                        // Reject Button with Custom Image
+                                        Button(action: {
+                                            rejectFriendRequest(request)
+                                        }) {
+                                            Image("crossbuttonforfriendrequestview")
+                                                .resizable()
+                                                .frame(width: 8, height: 8)
+                                        }
+                                    }
+                                    .padding(.vertical, 8)
+                                    .padding(.horizontal, 20)
                                 }
                             }
-                            .padding(.horizontal, 6)
-                            .background(Color.green)
-                            .foregroundColor(.white)
-                            .cornerRadius(8)
-                            
-                            Button(action: {
-                                rejectFriendRequest(request)
-                            }) {
-                                HStack {
-                                    Text("Reject")
-                                }
-                            }
-                            .padding(.horizontal, 6)
-                            .background(Color.red)
-                            .foregroundColor(.white)
-                            .cornerRadius(8)
                         }
                     }
-                    .buttonStyle(PlainButtonStyle())
+                    Spacer()
+
                 }
-                Spacer()
             }
-            .padding()
             .onAppear{
                 fetchFriendRequests()
             }
