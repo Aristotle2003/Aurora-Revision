@@ -70,68 +70,104 @@ struct CalendarMessagesView: View {
     @State private var selectedDate: Date? = nil
     @State private var isEditing: Bool = false
     @State private var selectedMessages: Set<Message> = []
+    @Environment(\.dismiss) var dismiss
 
     var body: some View {
-        VStack {
-            // Calendar UI
-            CalendarView(selectedDate: $selectedDate)
-
-            // Edit Button
-            HStack {
-                if isEditing {
-                    Button("Delete") {
-                        deleteSelectedMessages()
+        ZStack{
+            Color(red: 0.976, green: 0.980, blue: 1.0)
+                .ignoresSafeArea()
+            VStack {
+                HStack {
+                    Button(action: {
+                        dismiss()
+                    }) {
+                        Image("chatlogviewbackbutton") // Replace with your back button image
+                            .resizable()
+                            .frame(width: 24, height: 24) // Customize this color
                     }
-                    .disabled(selectedMessages.isEmpty)
-                    .padding()
-                }
-
-                Spacer()
-
-                Button(isEditing ? "Done" : "Edit") {
-                    isEditing.toggle()
-                    if !isEditing {
-                        selectedMessages.removeAll()
-                    }
+                    Spacer()
+                    Text("Chat History Calendar")
+                        .font(.system(size: 20, weight: .bold)) // Customize font style
+                        .foregroundColor(Color(red: 125/255, green: 133/255, blue: 191/255)) // Customize text color
+                    Spacer()
+                    Image("spacerformainmessageviewtopleft") // Replace with your back button image
+                        .resizable()
+                        .frame(width: 24, height: 24) // To balance the back button
                 }
                 .padding()
-            }
-
-            // Display messages for the selected date
-            if let selectedDate = selectedDate {
-                if let messages = messagesViewModel.messagesByDate[selectedDate] {
-                    List(messages.sorted(by: { $0.timestamp < $1.timestamp }), id: \.id) { message in
-                        HStack {
-                            if isEditing {
-                                Button(action: {
-                                    toggleMessageSelection(message)
-                                }) {
-                                    Image(systemName: selectedMessages.contains(message) ? "checkmark.circle.fill" : "circle")
-                                        .foregroundColor(.blue)
-                                }
-                            }
-
-                            VStack(alignment: .leading) {
-                                Text(message.sender)
-                                    .font(.headline)
-                                Text(message.text)
-                                    .font(.subheadline)
-                                Text("\(message.timestamp, formatter: dateFormatter)")
-                                    .font(.caption)
-                                    .foregroundColor(.gray)
-                            }
+                .background(Color(red: 229/255, green: 232/255, blue: 254/255))
+                // Calendar UI
+                Spacer()
+                    .frame(height: 30)
+                
+                CalendarView(selectedDate: $selectedDate)
+    
+                
+                // Edit Button
+                HStack {
+                    if isEditing {
+                        Button("Delete") {
+                            deleteSelectedMessages()
+                        }
+                        .disabled(selectedMessages.isEmpty)
+                        .foregroundColor(selectedMessages.isEmpty ? .gray : Color(red: 125/255, green: 133/255, blue: 191/255)) // Button color
+                        .padding()
+                    }
+                    
+                    Spacer()
+                    
+                    Button(isEditing ? "Done" : "Edit") {
+                        isEditing.toggle()
+                        if !isEditing {
+                            selectedMessages.removeAll()
                         }
                     }
+                    .foregroundColor(Color(red: 125/255, green: 133/255, blue: 191/255)) // Button color
+                    .padding()
+                }
+
+                
+                // Display messages for the selected date
+                if let selectedDate = selectedDate {
+                    if let messages = messagesViewModel.messagesByDate[selectedDate] {
+                        List(messages.sorted(by: { $0.timestamp < $1.timestamp }), id: \.id) { message in
+                            HStack {
+                                if isEditing {
+                                    Button(action: {
+                                        toggleMessageSelection(message)
+                                    }) {
+                                        Image(systemName: selectedMessages.contains(message) ? "checkmark.circle.fill" : "circle")
+                                            .foregroundColor(Color(red: 125 / 255, green: 133 / 255, blue: 191 / 255))
+                                    }
+                                }
+                                
+                                VStack(alignment: .leading) {
+                                    Text(message.sender)
+                                        .font(.headline)
+                                        .foregroundColor(Color(red: 125 / 255, green: 133 / 255, blue: 191 / 255))
+                                    Text(message.text)
+                                        .font(.subheadline)
+                                        .foregroundColor(.gray)
+                                    Text("\(message.timestamp, formatter: dateFormatter)")
+                                        .font(.caption)
+                                        .foregroundColor(.gray)
+                                }
+                            }
+                        }
+                    } else {
+                        Text("No messages were saved this day")
+                            .foregroundColor(Color(red: 125 / 255, green: 133 / 255, blue: 191 / 255))
+                            .padding()
+                    }
                 } else {
-                    Text("No messages for this day")
+                    Text("Select a date to see messages")
+                        .foregroundColor(Color(red: 125 / 255, green: 133 / 255, blue: 191 / 255))
                         .padding()
                 }
-            } else {
-                Text("Select a date to see messages")
-                    .padding()
+                Spacer()
             }
         }
-        .navigationTitle("Messages Calendar")
+        .navigationBarBackButtonHidden(true)
     }
 
     // Toggle message selection in edit mode
@@ -206,10 +242,13 @@ struct CalendarView: View {
         VStack {
             // Month navigation bar
             HStack {
+                Spacer()
+                    .frame(width: 80)
                 Button(action: {
                     moveToPreviousMonth()
                 }) {
                     Image(systemName: "chevron.left")
+                        .foregroundColor(Color(red: 125 / 255, green: 133 / 255, blue: 191 / 255))
                 }
                 .disabled(!canMoveToPreviousMonth())
                 
@@ -217,6 +256,8 @@ struct CalendarView: View {
                 
                 Text("\(currentMonth, formatter: yearMonthFormatter)")
                     .font(.headline)
+                    .foregroundColor(Color(red: 125 / 255, green: 133 / 255, blue: 191 / 255))
+                    
                 
                 Spacer()
                 
@@ -224,10 +265,17 @@ struct CalendarView: View {
                     moveToNextMonth()
                 }) {
                     Image(systemName: "chevron.right")
+                        .foregroundColor(Color(red: 125 / 255, green: 133 / 255, blue: 191 / 255))
                 }
                 .disabled(!canMoveToNextMonth())
+                
+                Spacer()
+                    .frame(width: 80)
             }
             .padding(.horizontal)
+            
+            Spacer()
+                .frame(height: 20)
             
             // Days of the Week Header
             HStack {
@@ -235,6 +283,7 @@ struct CalendarView: View {
                     Text(day)
                         .font(.subheadline)
                         .frame(maxWidth: .infinity)
+                        .foregroundColor(.gray)
                 }
             }
             
@@ -246,9 +295,10 @@ struct CalendarView: View {
                             selectedDate = day
                         }) {
                             Text("\(calendar.component(.day, from: day))")
+                                .foregroundColor(Color(red: 125 / 255, green: 133 / 255, blue: 191 / 255))
                                 .frame(maxWidth: .infinity, minHeight: 40)
-                                .background(selectedDate == day ? Color.blue.opacity(0.3) : Color.clear)
-                                .cornerRadius(5)
+                                .background(selectedDate == day ? Color(red: 229 / 255, green: 232 / 255, blue: 254 / 255) : Color.clear)
+                                .cornerRadius(10)
                         }
                     } else {
                         Text("") // Empty placeholder for padding days

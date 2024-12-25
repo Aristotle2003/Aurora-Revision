@@ -10,7 +10,7 @@ class FriendGroupViewModel: ObservableObject {
     @Published var showResponseInput = false
     @Published var currentUserHasPosted = true
     @Published var isLoading = true
-
+    
     private var selectedUser: ChatUser
     private var listener: ListenerRegistration?
     
@@ -251,6 +251,10 @@ struct FriendGroupView: View {
     @State private var offset = CGSize.zero
     @State private var rotationDegrees = [Double]()
     let selectedUser: ChatUser
+    @AppStorage("SeenDailyAuroraTutorial") private var SeenDailyAuroraTutorial: Bool = false
+    @State private var tutorialIndex = 0
+    @GestureState private var dragOffset: CGFloat = 0
+    @State private var SeenDailyAuroraTutorialTemp = false
     
     init(selectedUser: ChatUser) {
         self.selectedUser = selectedUser
@@ -266,185 +270,249 @@ struct FriendGroupView: View {
     }
     
     var body: some View {
-        NavigationStack{
-            ZStack {
-                // Background Color
-                Color(red: 0.976, green: 0.980, blue: 1.0)
-                    .ignoresSafeArea()
-                if vm.isLoading {
-                    // 显示加载指示器
-                    ProgressView()
-                        .scaleEffect(2.0) // 将加载指示器放大到原来的2倍
-                } else {
-                    VStack(alignment: .leading, spacing: 16) {
-                        ZStack {
-                            Image("liuhaier")
-                                .resizable()
-                                .frame(width: UIScreen.main.bounds.width, height: UIScreen.main.bounds.height * 0.07 + safeAreaTopInset)
-                                .aspectRatio(nil, contentMode: .fill)
-                                .ignoresSafeArea()
-                            
-                            HStack {
-                                Spacer()
-                                Image("auroratext")
+        if SeenDailyAuroraTutorial{
+            NavigationStack{
+                ZStack {
+                    // Background Color
+                    Color(red: 0.976, green: 0.980, blue: 1.0)
+                        .ignoresSafeArea()
+                    if vm.isLoading {
+                        // 显示加载指示器
+                        ProgressView()
+                            .scaleEffect(2.0) // 将加载指示器放大到原来的2倍
+                    } else {
+                        VStack(alignment: .leading, spacing: 16) {
+                            ZStack {
+                                Image("liuhaier")
                                     .resizable()
-                                    .scaledToFill()
-                                    .frame(width: UIScreen.main.bounds.width * 0.1832,
-                                           height: UIScreen.main.bounds.height * 0.0198)
+                                    .frame(width: UIScreen.main.bounds.width, height: UIScreen.main.bounds.height * 0.07 + safeAreaTopInset)
+                                    .aspectRatio(nil, contentMode: .fill)
+                                    .ignoresSafeArea()
+                                
+                                HStack {
+                                    Spacer()
+                                    Image("auroratext")
+                                        .resizable()
+                                        .scaledToFill()
+                                        .frame(width: UIScreen.main.bounds.width * 0.1832,
+                                               height: UIScreen.main.bounds.height * 0.0198)
+                                    Spacer()
+                                }
+                            }
+                            .frame(maxHeight: UIScreen.main.bounds.height * 0.07)
+                            
+                            HStack{
+                                Text("Today's Prompt")
+                                    .font(.system(size: 14, weight: .bold))
+                                    .foregroundColor(Color(.gray))
+                                    .padding(.leading, 16)
                                 Spacer()
                             }
-                        }
-                        .frame(maxHeight: UIScreen.main.bounds.height * 0.07)
-                        
-                        HStack{
-                            Text("Today's Prompt")
-                                .font(.system(size: 14, weight: .bold))
-                                .foregroundColor(Color(.gray))
-                                .padding(.leading, 16)
-                            Spacer()
-                        }
-                        
-                        // Add padding to match design
-                        
-                        // Rounded rectangle containing the prompt text
-                        ZStack(alignment: .topLeading) {
-                            // Dynamic RoundedRectangle wrapping the content
-                            RoundedRectangle(cornerRadius: 24)
-                                .fill(Color(red: 0.898, green: 0.910, blue: 0.996)) // Color equivalent to #E5E8FE
                             
-                            HStack(spacing: 20) {
-                                // VStack for Date and Prompt
-                                VStack(alignment: .leading, spacing: 10) {
-                                    // Date Text
-                                    Text(Date(), style: .date)
-                                        .font(.subheadline)
-                                        .foregroundColor(.gray)
-                                        .padding(.top, 20) // Pinned 20 from the top
-                                        .padding(.leading, 20) // Pinned 20 from the left
-                                    
-                                    // Prompt Text
-                                    Text(vm.promptText)
-                                        .font(.headline)
-                                        .foregroundColor(.gray)
-                                        .fixedSize(horizontal: false, vertical: true) // Allows wrapping
-                                        .padding(.bottom, 20) // Padding to the bottom of the rectangle
-                                        .padding(.trailing, 20) // Ensure alignment
-                                        .padding(.leading, 20) // Align with date
-                                }
-                                .frame(maxWidth: UIScreen.main.bounds.width * 0.75, alignment: .leading) // Take up 3/4 of the rectangle
+                            // Add padding to match design
+                            
+                            // Rounded rectangle containing the prompt text
+                            ZStack(alignment: .topLeading) {
+                                // Dynamic RoundedRectangle wrapping the content
+                                RoundedRectangle(cornerRadius: 24)
+                                    .fill(Color(red: 0.898, green: 0.910, blue: 0.996)) // Color equivalent to #E5E8FE
                                 
-                                // Write Daily Aurora Button
-                                Button(action: {
-                                    vm.showResponseInput = true
-                                }) {
-                                    Image("writedailyaurorabutton") // Icon for the reply button
-                                        .resizable()
-                                        .frame(width: 24, height: 24) // Icon size
+                                HStack(spacing: 20) {
+                                    // VStack for Date and Prompt
+                                    VStack(alignment: .leading, spacing: 10) {
+                                        // Date Text
+                                        Text(Date(), style: .date)
+                                            .font(.subheadline)
+                                            .foregroundColor(.gray)
+                                            .padding(.top, 20) // Pinned 20 from the top
+                                            .padding(.leading, 20) // Pinned 20 from the left
+                                        
+                                        // Prompt Text
+                                        Text(vm.promptText)
+                                            .font(.headline)
+                                            .foregroundColor(.gray)
+                                            .fixedSize(horizontal: false, vertical: true) // Allows wrapping
+                                            .padding(.bottom, 20) // Padding to the bottom of the rectangle
+                                            .padding(.trailing, 20) // Ensure alignment
+                                            .padding(.leading, 20) // Align with date
+                                    }
+                                    .frame(maxWidth: UIScreen.main.bounds.width * 0.75, alignment: .leading) // Take up 3/4 of the rectangle
+                                    
+                                    // Write Daily Aurora Button
+                                    Button(action: {
+                                        vm.showResponseInput = true
+                                    }) {
+                                        Image("writedailyaurorabutton") // Icon for the reply button
+                                            .resizable()
+                                            .frame(width: 24, height: 24) // Icon size
+                                    }
+                                    .padding()
+                                    .padding(.trailing, 10)
                                 }
-                                .padding()
-                                .padding(.trailing, 10)
                             }
-                        }
-                        .padding([.leading, .trailing], 20) // Padding for the rectangle
-                        .fixedSize(horizontal: false, vertical: true) // Ensure ZStack tightly wraps its content
-                        .frame(maxWidth: .infinity, alignment: .top) // Pin the ZStack to the top
-                        
-                        HStack{
-                            Text("Responses by Friends")
-                                .font(.system(size: 14, weight: .bold))
-                                .foregroundColor(Color(.gray))
-                                .padding(.leading, 16)
-                            Spacer()
-                        }
-                        
-                        ZStack {
-                            if vm.currentUserHasPosted {
-                                ForEach(vm.responses.indices, id: \.self) { index in
-                                    if index >= topCardIndex {
-                                        ResponseCard(response: vm.responses[index], cardColor: getCardColor(index: index), likeAction: {
-                                            vm.toggleLike(for: vm.responses[index])
-                                        })
-                                        .offset(x: index == topCardIndex ? offset.width : 0, y: CGFloat(index - topCardIndex) * 10)
-                                        .rotationEffect(.degrees(index == topCardIndex ? Double(offset.width / 20) : rotationDegrees[index]), anchor: .center)
-                                        .scaleEffect(index == topCardIndex ? 1.0 : 0.95)
-                                        .animation(.spring(), value: offset)
-                                        .zIndex(Double(vm.responses.count - index))
-                                        .gesture(
-                                            DragGesture()
-                                                .onChanged { gesture in
-                                                    if index == topCardIndex {
-                                                        offset = gesture.translation
+                            .padding([.leading, .trailing], 20) // Padding for the rectangle
+                            .fixedSize(horizontal: false, vertical: true) // Ensure ZStack tightly wraps its content
+                            .frame(maxWidth: .infinity, alignment: .top) // Pin the ZStack to the top
+                            
+                            HStack{
+                                Text("Responses by Friends")
+                                    .font(.system(size: 14, weight: .bold))
+                                    .foregroundColor(Color(.gray))
+                                    .padding(.leading, 16)
+                                Spacer()
+                            }
+                            
+                            ZStack {
+                                if vm.currentUserHasPosted {
+                                    ForEach(vm.responses.indices, id: \.self) { index in
+                                        if index >= topCardIndex {
+                                            ResponseCard(response: vm.responses[index], cardColor: getCardColor(index: index), likeAction: {
+                                                vm.toggleLike(for: vm.responses[index])
+                                            })
+                                            .offset(x: index == topCardIndex ? offset.width : 0, y: CGFloat(index - topCardIndex) * 10)
+                                            .rotationEffect(.degrees(index == topCardIndex ? Double(offset.width / 20) : rotationDegrees[index]), anchor: .center)
+                                            .scaleEffect(index == topCardIndex ? 1.0 : 0.95)
+                                            .animation(.spring(), value: offset)
+                                            .zIndex(Double(vm.responses.count - index))
+                                            .gesture(
+                                                DragGesture()
+                                                    .onChanged { gesture in
+                                                        if index == topCardIndex {
+                                                            offset = gesture.translation
+                                                        }
                                                     }
-                                                }
-                                                .onEnded { _ in
-                                                    if abs(offset.width) > 150 {
-                                                        withAnimation {
-                                                            offset = CGSize(width: offset.width > 0 ? 500 : -500, height: 0)
-                                                            topCardIndex += 1
-                                                            if topCardIndex >= vm.responses.count {
-                                                                topCardIndex = 0
+                                                    .onEnded { _ in
+                                                        if abs(offset.width) > 150 {
+                                                            withAnimation {
+                                                                offset = CGSize(width: offset.width > 0 ? 500 : -500, height: 0)
+                                                                topCardIndex += 1
+                                                                if topCardIndex >= vm.responses.count {
+                                                                    topCardIndex = 0
+                                                                }
+                                                                offset = .zero
                                                             }
-                                                            offset = .zero
-                                                        }
-                                                    } else {
-                                                        withAnimation {
-                                                            offset = .zero
+                                                        } else {
+                                                            withAnimation {
+                                                                offset = .zero
+                                                            }
                                                         }
                                                     }
-                                                }
-                                        )
-                                        .padding(8)
+                                            )
+                                            .padding(8)
+                                        }
                                     }
                                 }
-                            }
-                            
-                            
-                            
-                            
-                            if !vm.currentUserHasPosted {
-                                ZStack {
-                                    Image("blurredbackgroundfordailyaurora") // Icon for the reply button
-                                        .resizable()// Icon size
-                                        .scaledToFit()
-                                        .scaleEffect(1.3)
-                                    VStack {
-                                        Spacer()
-                                        
-                                        Image("lockimage")
-                                            .resizable()
+                                
+                                
+                                
+                                
+                                if !vm.currentUserHasPosted {
+                                    ZStack {
+                                        Image("blurredbackgroundfordailyaurora") // Icon for the reply button
+                                            .resizable()// Icon size
                                             .scaledToFit()
-                                            .frame(width: 250, height: 130)
-                                        
-                                        Button(action: {
-                                            vm.showResponseInput = true
-                                        }) {
-                                            Image("writeyourownresponsebutton")
+                                            .scaleEffect(1.3)
+                                        VStack {
+                                            Spacer()
+                                            
+                                            Image("lockimage")
                                                 .resizable()
                                                 .scaledToFit()
-                                                .frame(width: 180, height: 100)
+                                                .frame(width: 250, height: 130)
+                                            
+                                            Button(action: {
+                                                vm.showResponseInput = true
+                                            }) {
+                                                Image("writeyourownresponsebutton")
+                                                    .resizable()
+                                                    .scaledToFit()
+                                                    .frame(width: 180, height: 100)
+                                            }
+                                            
+                                            Spacer()
                                         }
-                                        
-                                        Spacer()
+                                        .frame(maxWidth: .infinity, maxHeight: .infinity)
+                                        .opacity(0.8)
+                                        .zIndex(100)
                                     }
-                                    .frame(maxWidth: .infinity, maxHeight: .infinity)
-                                    .opacity(0.8)
-                                    .zIndex(100)
                                 }
                             }
+                            .frame(maxWidth: .infinity, maxHeight: 450)
+                            Spacer()
                         }
-                        .frame(maxWidth: .infinity, maxHeight: 450)
-                        Spacer()
-                    }
-                    .padding(.horizontal)
-                    .navigationBarHidden(true)
-                    .fullScreenCover(isPresented: $vm.showResponseInput) {
-                        FullScreenResponseInputView(vm: vm, selectedUser: selectedUser)
+                        .padding(.horizontal)
+                        .navigationBarHidden(true)
+                        .fullScreenCover(isPresented: $vm.showResponseInput) {
+                            FullScreenResponseInputView(vm: vm, selectedUser: selectedUser)
+                        }
                     }
                 }
             }
         }
+        else{
+            ZStack {
+                Color(red: 0.976, green: 0.980, blue: 1.0)
+                    .ignoresSafeArea()
+                
+                GeometryReader { geometry in
+                    HStack(spacing: 0) {
+                        ForEach(0..<4) { index in
+                            ZStack {
+                                Image("dailyauroratutorialp\(index + 1)")
+                                    .resizable()
+                                    .scaledToFill()
+                                    .edgesIgnoringSafeArea(.all)
+                                    .frame(width: UIScreen.main.bounds.width, height: UIScreen.main.bounds.height)
+                                    .clipped()
+                                
+                                if index == 3 {
+                                    VStack {
+                                        Spacer()
+                                        Button(action: {
+                                            withAnimation(.easeInOut) {
+                                                SeenDailyAuroraTutorial = true
+                                            }
+                                        }) {
+                                            Image("dailyauroratutoriallastbutton")
+                                                .resizable()
+                                                .scaledToFit()
+                                                .frame(width: UIScreen.main.bounds.width * 0.8)
+                                        }
+                                        .padding(.bottom, 50)
+                                    }
+                                }
+                            }
+                            .frame(width: UIScreen.main.bounds.width, height: UIScreen.main.bounds.height)
+                        }
+                    }
+                    .frame(width: UIScreen.main.bounds.width * 4, height: UIScreen.main.bounds.height)
+                    .offset(x: -CGFloat(tutorialIndex) * UIScreen.main.bounds.width + dragOffset)
+                    .animation(.interactiveSpring(response: 0.3, dampingFraction: 0.8, blendDuration: 0.5), value: dragOffset)
+                    .gesture(
+                        DragGesture()
+                            .updating($dragOffset) { value, state, _ in
+                                state = value.translation.width
+                            }
+                            .onEnded { value in
+                                let threshold = UIScreen.main.bounds.width * 0.25
+                                var newIndex = tutorialIndex
+                                
+                                if value.predictedEndTranslation.width < -threshold && tutorialIndex < 3 {
+                                    newIndex += 1
+                                } else if value.predictedEndTranslation.width > threshold && tutorialIndex > 0 {
+                                    newIndex -= 1
+                                }
+                                
+                                withAnimation(.spring(response: 0.3, dampingFraction: 0.8)) {
+                                    tutorialIndex = newIndex
+                                }
+                            }
+                    )
+                }
+                .ignoresSafeArea()
+            }
+        }
     }
-    
     
     func getCardColor(index: Int) -> Color {
         let colors = [Color.mint, Color.cyan, Color.pink]
@@ -534,7 +602,7 @@ struct ResponseCard: View {
                 Text(response.latestMessage)
                     .font(.system(size: 14, weight: .bold))
                     .foregroundColor(textColor)
-                    // Try giving it a fixed width or a max width to keep it aligned.
+                // Try giving it a fixed width or a max width to keep it aligned.
                     .frame(width: w * 0.7)
                     .multilineTextAlignment(.center)
                     .position(x: w/2, y: h/2)
@@ -554,28 +622,28 @@ struct ResponseCard: View {
                 // Adjust these coordinates as needed to place them to the right of the profile image.
                 let textLeftOffset: CGFloat = sidePadding + profileSize + 10
                 let textWidth: CGFloat = 100 // choose a suitable width
-
+                
                 Group {
                     Text(response.username)
                         .font(.system(size: 12, weight: .bold))
                         .foregroundColor(textColor)
                         .frame(width: textWidth, alignment: .leading)
-                        // The frame is left-aligned and 100 pts wide.
-                        // To position so that the left edge is at (textLeftOffset + 30),
-                        // set x to (textLeftOffset + 30) + (textWidth/2), since .position is from center.
+                    // The frame is left-aligned and 100 pts wide.
+                    // To position so that the left edge is at (textLeftOffset + 30),
+                    // set x to (textLeftOffset + 30) + (textWidth/2), since .position is from center.
                         .position(x: (textLeftOffset) + (textWidth / 2),
                                   y: h - bottomPadding - profileSize/2 - 8)
-                        
+                    
                     Text(response.timestamp, style: .time)
                         .font(.system(size: 10))
                         .foregroundColor(Color.gray)
                         .frame(width: textWidth, alignment: .leading)
-                        // Similarly, to position so that the left edge is at (textLeftOffset + 40),
-                        // add half the width.
+                    // Similarly, to position so that the left edge is at (textLeftOffset + 40),
+                    // add half the width.
                         .position(x: (textLeftOffset) + (textWidth / 2),
                                   y: h - bottomPadding - profileSize/2 + 8)
                 }
-
+                
                 
                 // MARK: - Like Button and Count (bottom-right area)
                 let likeButtonSize: CGFloat = 32.0

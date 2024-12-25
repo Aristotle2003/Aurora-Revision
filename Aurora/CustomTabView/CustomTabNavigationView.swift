@@ -236,76 +236,158 @@ struct CustomTabNavigationView: View {
 struct CustomNavBar: View {
     @Binding var currentView: String
     @StateObject private var vm = CustomTabNavigationViewModel()
-    
+    @AppStorage("SeenDailyAuroraTutorial") private var SeenDailyAuroraTutorial: Bool = false
+    @State private var showNavigationView = true
     
     var body: some View {
-        ZStack{
-            Image("navigationbar")
-                .resizable()
-                .scaledToFit()
-                .frame(maxWidth: .infinity)
-                .ignoresSafeArea(edges: .bottom)
-            
-            HStack(spacing: 60){
-                Button(action: {
-                    currentView = "DailyAurora"
-                    vm.hasNewPost = false
-                    vm.hasNewLike = false
-                    let currentDate = Date()
-                    vm.lastCheckedTimestamp = currentDate.timeIntervalSince1970
-                }) {
-                    
-                    ZStack{
-                        Image("dailyaurorabutton")
-                            .resizable()
-                            .scaledToFit()
-                            .frame(width: 36, height: 36)
-                        if ((vm.hasNewPost || vm.hasNewLike)/* && currentView != "DailyAurora" */) {
-                            Image("reddot")
+        if showNavigationView {
+            ZStack{
+                Image("navigationbar")
+                    .resizable()
+                    .scaledToFit()
+                    .frame(maxWidth: .infinity)
+                    .ignoresSafeArea(edges: .bottom)
+                
+                HStack(spacing: 60){
+                    Button(action: {
+                        currentView = "DailyAurora"
+                        vm.hasNewPost = false
+                        vm.hasNewLike = false
+                        let currentDate = Date()
+                        vm.lastCheckedTimestamp = currentDate.timeIntervalSince1970
+                        if !SeenDailyAuroraTutorial{
+                            self.showNavigationView = false
+                        }
+                    }) {
+                        
+                        ZStack{
+                            Image(currentView == "DailyAurora" ? "dailyaurorabuttonpressed" : "dailyaurorabuttonunpressed")
                                 .resizable()
                                 .scaledToFit()
-                                .frame(width: 12, height: 12)
-                                .offset(x: 14, y: -12)
+                                .frame(width: 32, height: 32)
+                            if ((vm.hasNewPost || vm.hasNewLike)/* && currentView != "DailyAurora" */) {
+                                Image("reddot")
+                                    .resizable()
+                                    .scaledToFit()
+                                    .frame(width: 12, height: 12)
+                                    .offset(x: 14, y: -12)
+                            }
+                        }
+                        .frame(width: 32, height: 32)
+                    }
+                    
+                    Button(action: {
+                        currentView = "MainMessages"
+                    }) {
+                        VStack {
+                            Image(currentView == "MainMessages" ? "messagesbuttonpressed" : "messagesbuttonunpressed")
+                                .resizable()
+                                .scaledToFit()
+                                .frame(width: 32, height: 32)
                         }
                     }
-                    .frame(width: 36, height: 36)
-                }
-                
-                Button(action: {
-                    currentView = "MainMessages"
-                }) {
-                    VStack {
-                        Image("messagesbutton")
-                            .resizable()
-                            .scaledToFit()
-                            .frame(width: 36, height: 36)
+                    
+                    Button(action: {
+                        currentView = "Contacts"
+                    }) {
+                        VStack {
+                            Image(currentView == "Contacts" ? "contactsbuttonpressed" : "contactsbuttonunpressed")
+                                .resizable()
+                                .scaledToFit()
+                                .frame(width: 32, height: 32)
+                        }
                     }
-                }
-                
-                Button(action: {
-                    currentView = "Contacts"
-                }) {
-                    VStack {
-                        Image("contactsbutton")
-                            .resizable()
-                            .scaledToFit()
-                            .frame(width: 36, height: 36)
+                    
+                    Button(action: {
+                        currentView = "Profile"
+                    }) {
+                        VStack {
+                            Image(currentView == "Profile" ? "profilebuttonpressed" : "profilebuttonunpressed")
+                                .resizable()
+                                .scaledToFit()
+                                .frame(width: 32, height: 32)
+                        }
                     }
+                    .foregroundColor(currentView == "Settings" ? .blue : .gray)
                 }
-                
-                Button(action: {
-                    currentView = "Profile"
-                }) {
-                    VStack {
-                        Image("profilebutton")
-                            .resizable()
-                            .scaledToFit()
-                            .frame(width: 36, height: 36)
-                    }
-                }
-                .foregroundColor(currentView == "Settings" ? .blue : .gray)
+                .padding(.bottom, 20)
             }
-            .padding(.bottom, 20)
+        }
+        else if SeenDailyAuroraTutorial && !showNavigationView{
+            ZStack{
+                Image("navigationbar")
+                    .resizable()
+                    .scaledToFit()
+                    .frame(maxWidth: .infinity)
+                    .ignoresSafeArea(edges: .bottom)
+                
+                HStack(spacing: 60){
+                    Button(action: {
+                        currentView = "DailyAurora"
+                        vm.hasNewPost = false
+                        vm.hasNewLike = false
+                        let currentDate = Date()
+                        vm.lastCheckedTimestamp = currentDate.timeIntervalSince1970
+                        if !SeenDailyAuroraTutorial{
+                            self.showNavigationView = false
+                        }
+                    }) {
+                        
+                        ZStack{
+                            Image(currentView == "DailyAurora" ? "dailyaurorabuttonpressed" : "dailyaurorabuttonunpressed")
+                                .resizable()
+                                .scaledToFit()
+                                .frame(width: 32, height: 32)
+                            if ((vm.hasNewPost || vm.hasNewLike)/* && currentView != "DailyAurora" */) {
+                                Image("reddot")
+                                    .resizable()
+                                    .scaledToFit()
+                                    .frame(width: 12, height: 12)
+                                    .offset(x: 14, y: -12)
+                            }
+                        }
+                        .frame(width: 32, height: 32)
+                    }
+                    
+                    Button(action: {
+                        currentView = "MainMessages"
+                    }) {
+                        VStack {
+                            Image(currentView == "MainMessages" ? "messagesbuttonpressed" : "messagesbuttonunpressed")
+                                .resizable()
+                                .scaledToFit()
+                                .frame(width: 32, height: 32)
+                        }
+                    }
+                    
+                    Button(action: {
+                        currentView = "Contacts"
+                    }) {
+                        VStack {
+                            Image(currentView == "Contacts" ? "contactsbuttonpressed" : "contactsbuttonunpressed")
+                                .resizable()
+                                .scaledToFit()
+                                .frame(width: 32, height: 32)
+                        }
+                    }
+                    
+                    Button(action: {
+                        currentView = "Profile"
+                    }) {
+                        VStack {
+                            Image(currentView == "Profile" ? "profilebuttonpressed" : "profilebuttonunpressed")
+                                .resizable()
+                                .scaledToFit()
+                                .frame(width: 32, height: 32)
+                        }
+                    }
+                    .foregroundColor(currentView == "Settings" ? .blue : .gray)
+                }
+                .padding(.bottom, 20)
+            }
+        }
+        else{
+            
         }
     }
 }
