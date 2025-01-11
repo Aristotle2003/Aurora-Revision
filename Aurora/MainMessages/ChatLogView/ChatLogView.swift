@@ -546,6 +546,18 @@ struct ChatLogView: View {
     @Environment(\.presentationMode) var presentationMode
     @State private var currentTime = Date()
     
+    func generateHapticFeedbackMedium() {
+        let generator = UIImpactFeedbackGenerator(style: .medium)
+        generator.prepare()
+        generator.impactOccurred()
+    }
+    
+    func generateHapticFeedbackHeavy() {
+        let generator = UIImpactFeedbackGenerator(style: .heavy)
+        generator.prepare()
+        generator.impactOccurred()
+    }
+    
     var body: some View {
         NavigationStack {
             ZStack{
@@ -559,6 +571,7 @@ struct ChatLogView: View {
                             presentationMode.wrappedValue.dismiss()
                             vm.stopAutoSend()
                             vm.stopListening()
+                            generateHapticFeedbackMedium()
                         }) {
                             Image("chatlogviewbackbutton")
                                 .resizable()
@@ -587,6 +600,9 @@ struct ChatLogView: View {
                                     .padding(.trailing, 20)
                                 //.padding(8)
                             }
+                            .simultaneousGesture(TapGesture().onEnded {
+                                generateHapticFeedbackMedium()
+                            })
                         }
                     }
                     //.background(Color.white)
@@ -708,6 +724,7 @@ struct ChatLogView: View {
                                         if let recipientMessage = vm.latestRecipientMessage, !recipientMessage.text.isEmpty {
                                             Button(action: {
                                                 vm.saveMessage(sender: vm.chatUser?.username ?? "", messageText: recipientMessage.text, timestamp: recipientMessage.timeStamp)
+                                                generateHapticFeedbackHeavy()
                                             }) {
                                                 if #available(iOS 18.0, *) {
                                                     // iOS 18.0 or newer: Only show the first frame of the Lottie file
@@ -851,6 +868,7 @@ struct ChatLogView: View {
                                         if !vm.chatText.isEmpty {
                                             Button(action: {
                                                 vm.saveMessageForSelf(sender: "Me", messageText: vm.chatText, timestamp: Timestamp())
+                                                generateHapticFeedbackHeavy()
                                             }) {
                                                 if #available(iOS 18.0, *) {
                                                     // iOS 18.0 or newer: Only show the first frame of the Lottie file
@@ -865,6 +883,7 @@ struct ChatLogView: View {
                                         }
                                         
                                         Button(action: {
+                                            generateHapticFeedbackHeavy()
                                             vm.chatText = ""
                                         }) {
                                             if #available(iOS 18.0, *) {

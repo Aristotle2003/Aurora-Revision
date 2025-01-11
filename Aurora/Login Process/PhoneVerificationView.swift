@@ -489,10 +489,6 @@ struct PhoneVerificationView: View {
                     SeenTutorial = false
                 }
             }
-    }
-    
-    
-    
-    
+    } 
 }
 

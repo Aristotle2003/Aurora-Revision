@@ -255,6 +255,7 @@ struct FriendGroupView: View {
     @State private var tutorialIndex = 0
     @GestureState private var dragOffset: CGFloat = 0
     @State private var SeenDailyAuroraTutorialTemp = false
+    @State private var showReportSheet = false
     
     init(selectedUser: ChatUser) {
         self.selectedUser = selectedUser
@@ -533,6 +534,27 @@ struct ResponseCard: View {
     var response: FriendResponse
     var cardColor: Color
     var likeAction: () -> Void
+    @State  private var showReportSheet = false
+    @State private var reportContent = ""
+    private func reportFriend() {
+        let reportData: [String: Any] = [
+            "uid": response.uid,
+            "timestamp": Timestamp(),
+            "content": response, // 用户输入的举报内容
+            "why": reportContent
+        ]
+        
+        FirebaseManager.shared.firestore
+            .collection("reports for friends in dailyaurora")
+            .document()
+            .setData(reportData) { error in
+                if let error = error {
+                    print("Failed to report friend: \(error)")
+                } else {
+                    print("Friend reported successfully")
+                }
+            }
+    }
     
     var body: some View {
         ZStack {
@@ -567,23 +589,35 @@ struct ResponseCard: View {
                 Group {
                     let buttonWidth: CGFloat = 24
                     if cardColor == .mint {
-                        Image("reportbuttongreencard")
-                            .resizable()
-                            .scaledToFit()
-                            .frame(width: buttonWidth, height: buttonWidth)
-                            .position(x: w - sidePadding-10, y: topPadding)
+                        
+                            Image("reportbuttongreencard")
+                                .resizable()
+                                .scaledToFit()
+                                .frame(width: buttonWidth, height: buttonWidth)
+                                .position(x: w - sidePadding-10, y: topPadding)
+                                .onTapGesture{ showReportSheet = true
+                                }
+                        
+                        
                     } else if cardColor == .cyan {
-                        Image("reportbuttonbluecard")
-                            .resizable()
-                            .scaledToFit()
-                            .frame(width: buttonWidth, height: buttonWidth)
-                            .position(x: w - sidePadding-10, y: topPadding)
+                       
+                            Image("reportbuttonbluecard")
+                                .resizable()
+                                .scaledToFit()
+                                .frame(width: buttonWidth, height: buttonWidth)
+                                .position(x: w - sidePadding-10, y: topPadding)
+                                .onTapGesture{ showReportSheet = true
+                                }
+                        
                     } else if cardColor == .pink {
-                        Image("reportbuttonpurplecard")
-                            .resizable()
-                            .scaledToFit()
-                            .frame(width: buttonWidth, height: buttonWidth)
-                            .position(x: w - sidePadding-10, y: topPadding)
+                            Image("reportbuttonpurplecard")
+                                .resizable()
+                                .scaledToFit()
+                                .frame(width: buttonWidth, height: buttonWidth)
+                                .position(x: w - sidePadding-10, y: topPadding)
+                                .onTapGesture{ showReportSheet = true
+                                }
+
                     }
                 }
                 
@@ -683,6 +717,41 @@ struct ResponseCard: View {
         .frame(width: UIScreen.main.bounds.width * 0.692111,
                height: UIScreen.main.bounds.height * 0.42253)
         .aspectRatio(contentMode: .fit)
+        .sheet(isPresented: $showReportSheet) {
+            VStack(spacing: 20) {
+                Text("Report this response")
+                    .font(.headline)
+                
+                TextField("Enter your report reason", text: $reportContent)
+                    .textFieldStyle(RoundedBorderTextFieldStyle())
+                    .padding()
+                
+                HStack {
+                    Button(action: {
+                        // 关闭报告视图
+                        showReportSheet = false
+                    }) {
+                        Text("Cancel")
+                            .padding()
+                            .background(Color.gray.opacity(0.3))
+                            .cornerRadius(8)
+                    }
+                    
+                    Button(action: {
+                        // 提交报告
+                        reportFriend()
+                        showReportSheet = false
+                    }) {
+                        Text("Submit")
+                            .padding()
+                            .background(Color.blue)
+                            .foregroundColor(.white)
+                            .cornerRadius(8)
+                    }
+                }
+            }
+            .padding()
+        }
     }
 }
 

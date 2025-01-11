@@ -17,6 +17,7 @@ class MainMessagesViewModel: ObservableObject {
     @Published var hasNewFriendRequest = false // 用于跟踪是否有新的好友申请
     @AppStorage("lastCheckedTimestamp") var lastCheckedTimestamp: Double = 0
     @AppStorage("lastLikesCount") var lastLikesCount: Int = 0
+    
 
     init() {
         
@@ -208,6 +209,19 @@ struct MainMessagesView: View {
     @StateObject private var chatLogViewModel = ChatLogViewModel(chatUser: nil)
     @State private var showFriendRequestsView = false
     @Binding var currentView: String
+    @AppStorage("lastCarouselClosedTime") private var lastCarouselClosedTime: Double = 0
+    
+    func generateHapticFeedbackMedium() {
+        let generator = UIImpactFeedbackGenerator(style: .medium)
+        generator.prepare()
+        generator.impactOccurred()
+    }
+    
+    func generateHapticFeedbackHeavy() {
+        let generator = UIImpactFeedbackGenerator(style: .heavy)
+        generator.prepare()
+        generator.impactOccurred()
+    }
     
     var safeAreaTopInset: CGFloat {
         UIApplication.shared.connectedScenes
@@ -228,6 +242,7 @@ struct MainMessagesView: View {
                         LazyVStack(spacing: 8) {
                             ForEach(vm.users) { user in
                                 Button {
+                                    generateHapticFeedbackMedium()
                                     if let chatUser = vm.chatUser {
                                         self.selectedUser = chatUser
                                         self.chatUser = user
@@ -296,6 +311,7 @@ struct MainMessagesView: View {
                         LazyVStack(spacing: 8) {
                             ForEach(vm.users) { user in
                                 Button {
+                                    generateHapticFeedbackMedium()
                                     if let chatUser = vm.chatUser {
                                         self.selectedUser = chatUser
                                         self.chatUser = user
@@ -381,6 +397,7 @@ struct MainMessagesView: View {
                             Spacer()
                             
                             Button(action: {
+                                generateHapticFeedbackMedium()
                                 if let chatUser = vm.chatUser {
                                     self.selectedUser = chatUser
                                     shouldShowFriendRequests.toggle()
@@ -416,7 +433,9 @@ struct MainMessagesView: View {
                             }
                             
                             Button{
+                                generateHapticFeedbackMedium()
                                 showCarouselView = false
+                                lastCarouselClosedTime = Date().timeIntervalSince1970
                             }label : {
                                 Image("CloseCarouselButton")
                                     .padding(.trailing, 20)
@@ -447,6 +466,17 @@ struct MainMessagesView: View {
             }
         }
         .onAppear {
+            let now = Date().timeIntervalSince1970
+            let elapsed = now - lastCarouselClosedTime
+            
+            // 100 minutes = 100 * 60 = 6000 seconds
+            if elapsed > 10 {
+                // more than 100 mins have passed since we last closed
+                showCarouselView = true
+            } else {
+                // haven't reached 100 mins yet
+                showCarouselView = false
+            }
             vm.setupFriendListListener()
             vm.setupFriendRequestListener()
         }

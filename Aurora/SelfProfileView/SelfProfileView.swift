@@ -213,7 +213,7 @@ struct SelfProfileView: View {
                                 Image("securitybuttonforselfprofileview")
                             }
                             Button(action: {
-                                print("reportbuttonpressed")
+                                showReportSheet = true
                             }) {
                                 Image("reportbuttonforselfprofileview")
                             }
@@ -290,6 +290,41 @@ struct SelfProfileView: View {
                             }
                         }
                 }
+                .sheet(isPresented: $showReportSheet) {
+                    VStack(spacing: 20) {
+                        Text("Report")
+                            .font(.headline)
+                        
+                        TextField("Enter your report reason", text: $reportContent)
+                            .textFieldStyle(RoundedBorderTextFieldStyle())
+                            .padding()
+                        
+                        HStack {
+                            Button(action: {
+                                // 关闭报告视图
+                                showReportSheet = false
+                            }) {
+                                Text("Cancel")
+                                    .padding()
+                                    .background(Color.gray.opacity(0.3))
+                                    .cornerRadius(8)
+                            }
+                            
+                            Button(action: {
+                                // 提交报告
+                                selfReport()
+                                showReportSheet = false
+                            }) {
+                                Text("Submit")
+                                    .padding()
+                                    .background(Color.blue)
+                                    .foregroundColor(.white)
+                                    .cornerRadius(8)
+                            }
+                        }
+                    }
+                    .padding()
+                }
                 .onDisappear{
                     self.showTemporaryImage = false
                 }
@@ -301,6 +336,26 @@ struct SelfProfileView: View {
         .onDisappear{
             self.showTemporaryImage = false
         }
+    }
+    
+    private func selfReport() {
+        let reportData: [String: Any] = [
+            "reporterUid": currentUser.uid,
+            "reporteeUid": chatUser.uid,
+            "timestamp": Timestamp(),
+            "content": reportContent // 用户输入的举报内容
+        ]
+        
+        FirebaseManager.shared.firestore
+            .collection("reports for self")
+            .document()
+            .setData(reportData) { error in
+                if let error = error {
+                    print("Failed to report friend: \(error)")
+                } else {
+                    print("Friend reported successfully")
+                }
+            }
     }
     
     private func updateProfilePhoto() {

@@ -1,6 +1,7 @@
 import SwiftUI
 import SDWebImageSwiftUI
 import Firebase
+import UIKit
 
 class TutorialManager: ObservableObject {
     @Published var showTutorial: Bool = !UserDefaults.standard.bool(forKey: "HasSeenTutorial")
@@ -25,6 +26,18 @@ struct TutorialView: View {
     @FocusState private var isInputFocused: Bool
     @State private var activeTimers: [Timer] = []
     
+    func generateHapticFeedbackLight() {
+        let generator = UIImpactFeedbackGenerator(style: .light)
+        generator.prepare()
+        generator.impactOccurred()
+    }
+    
+    func generateHapticFeedbackMedium() {
+        let generator = UIImpactFeedbackGenerator(style: .medium)
+        generator.prepare()
+        generator.impactOccurred()
+    }
+    
     var body: some View {
         NavigationStack {
             ZStack{
@@ -38,6 +51,7 @@ struct TutorialView: View {
                             saveTutorialSeenStatus()
                             SeenTutorial = true
                             navigateToMainMessageView = true
+                            generateHapticFeedbackLight()
                         }) {
                             Image("chatlogviewbackbutton")
                                 .resizable()
@@ -57,6 +71,7 @@ struct TutorialView: View {
                         
                         Button(action: {
                             print("Three dots button tapped")
+                            generateHapticFeedbackLight()
                         }) {
                             Image("chatlogviewthreedotsbutton")
                                 .resizable()
@@ -128,17 +143,25 @@ struct TutorialView: View {
                                     HStack {
                                         Spacer()
                                         if #available(iOS 18.0, *) {
+                                            
                                             // iOS 18.0 or newer: Only show the first frame of the Lottie file
                                             LottieAnimationViewContainer(filename: "Save Button", isInteractive: false)
                                                 .frame(width: 24, height: 24)
                                                 .padding(.trailing, 20)
                                                 .padding(.bottom, 24)
+                                                .onTapGesture {
+                                                    generateHapticFeedbackMedium()
+                                                }
                                         } else {
+                                        
                                             // iOS versions below 18.0: Use full Lottie animation with interactivity
                                             LottieAnimationViewContainer(filename: "Save Button", isInteractive: true)
                                                 .frame(width: 24, height: 24)
                                                 .padding(.trailing, 20)
                                                 .padding(.bottom, 24)
+                                                .onTapGesture {
+                                                    generateHapticFeedbackMedium()
+                                                }
                                         }
                                     }
                                 }
@@ -203,10 +226,16 @@ struct TutorialView: View {
                                             // iOS 18.0 or newer: Only show the first frame of the Lottie file
                                             LottieAnimationViewContainer(filename: "Save Button", isInteractive: false)
                                                 .frame(width: 24, height: 24)
+                                                .onTapGesture {
+                                                    generateHapticFeedbackMedium()
+                                                }
                                         } else {
                                             // iOS versions below 18.0: Use full Lottie animation with interactivity
                                             LottieAnimationViewContainer(filename: "Save Button", isInteractive: true)
                                                 .frame(width: 24, height: 24)
+                                                .onTapGesture {
+                                                    generateHapticFeedbackMedium()
+                                                }
                                             
                                         }
                                         
@@ -218,10 +247,16 @@ struct TutorialView: View {
                                                 // iOS 18.0 or newer: Only show the first frame of the Lottie file
                                                 LottieAnimationViewContainer(filename: "Clear Button", isInteractive: false)
                                                     .frame(width: 24, height: 24)
+                                                    .onTapGesture {
+                                                        generateHapticFeedbackMedium()
+                                                    }
                                             } else {
                                                 // iOS versions below 18.0: Use full Lottie animation with interactivity
                                                 LottieAnimationViewContainer(filename: "Clear Button", isInteractive: true)
                                                     .frame(width: 24, height: 24)
+                                                    .onTapGesture {
+                                                        generateHapticFeedbackMedium()
+                                                    }
                                             }
                                         }
                                     }
@@ -389,6 +424,3 @@ struct SlideInFromLeftModifier: ViewModifier {
     }
 }
 
-#Preview{
-    TutorialView()
-}

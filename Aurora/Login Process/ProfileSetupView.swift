@@ -172,9 +172,3 @@ struct ProfileSetupView: View {
         }
     }
 }
-
-
-
-#Preview {
-    LoginView()
-}

@@ -37,10 +37,10 @@ struct LoginView: View {
     
     
     var body: some View {
-        if isLogin && SeenTutorial{
+        if Auth.auth().currentUser != nil && isLoggedIn && SeenTutorial{
             CustomTabNavigationView()
         }
-        else if isLogin && !SeenTutorial{
+        else if Auth.auth().currentUser != nil && isLoggedIn && !SeenTutorial{
             TutorialView()
         }
         else{
@@ -351,11 +351,6 @@ struct LoginView: View {
             }
         }
     }
-    
-    
-    
-    
-    
     
     
     // Sign in using Apple account

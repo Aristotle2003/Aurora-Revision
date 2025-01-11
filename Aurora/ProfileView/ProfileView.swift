@@ -600,7 +600,7 @@ struct ProfileView: View {
         ]
         
         FirebaseManager.shared.firestore
-            .collection("reports")
+            .collection("reports for friends")
             .document()
             .setData(reportData) { error in
                 if let error = error {

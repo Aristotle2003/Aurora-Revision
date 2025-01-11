@@ -239,6 +239,18 @@ struct CustomNavBar: View {
     @AppStorage("SeenDailyAuroraTutorial") private var SeenDailyAuroraTutorial: Bool = false
     @State private var showNavigationView = true
     
+    func generateHapticFeedbackMedium() {
+        let generator = UIImpactFeedbackGenerator(style: .medium)
+        generator.prepare()
+        generator.impactOccurred()
+    }
+    
+    func generateHapticFeedbackHeavy() {
+        let generator = UIImpactFeedbackGenerator(style: .heavy)
+        generator.prepare()
+        generator.impactOccurred()
+    }
+    
     var body: some View {
         if showNavigationView {
             ZStack{
@@ -250,6 +262,7 @@ struct CustomNavBar: View {
                 
                 HStack(spacing: 60){
                     Button(action: {
+                        generateHapticFeedbackHeavy()
                         currentView = "DailyAurora"
                         vm.hasNewPost = false
                         vm.hasNewLike = false
@@ -277,6 +290,7 @@ struct CustomNavBar: View {
                     }
                     
                     Button(action: {
+                        generateHapticFeedbackHeavy()
                         currentView = "MainMessages"
                     }) {
                         VStack {
@@ -288,6 +302,7 @@ struct CustomNavBar: View {
                     }
                     
                     Button(action: {
+                        generateHapticFeedbackHeavy()
                         currentView = "Contacts"
                     }) {
                         VStack {
@@ -299,6 +314,7 @@ struct CustomNavBar: View {
                     }
                     
                     Button(action: {
+                        generateHapticFeedbackHeavy()
                         currentView = "Profile"
                     }) {
                         VStack {
@@ -323,6 +339,7 @@ struct CustomNavBar: View {
                 
                 HStack(spacing: 60){
                     Button(action: {
+                        generateHapticFeedbackHeavy()
                         currentView = "DailyAurora"
                         vm.hasNewPost = false
                         vm.hasNewLike = false
@@ -350,6 +367,7 @@ struct CustomNavBar: View {
                     }
                     
                     Button(action: {
+                        generateHapticFeedbackHeavy()
                         currentView = "MainMessages"
                     }) {
                         VStack {
@@ -361,6 +379,7 @@ struct CustomNavBar: View {
                     }
                     
                     Button(action: {
+                        generateHapticFeedbackHeavy()
                         currentView = "Contacts"
                     }) {
                         VStack {
@@ -372,6 +391,7 @@ struct CustomNavBar: View {
                     }
                     
                     Button(action: {
+                        generateHapticFeedbackHeavy()
                         currentView = "Profile"
                     }) {
                         VStack {
