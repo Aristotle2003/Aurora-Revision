@@ -92,6 +92,14 @@ struct FriendRequestsView: View {
             .onAppear{
                 fetchFriendRequests()
             }
+            .gesture(
+                DragGesture(minimumDistance: 10, coordinateSpace: .local)
+                    .onEnded { value in
+                        if value.translation.width > 100 {
+                            presentationMode.wrappedValue.dismiss()
+                        }
+                    }
+            )
             .navigationBarHidden(true)
             .navigationDestination(isPresented: $navigateToMainMessage) {
                 MainMessagesView(currentView: $currentView)

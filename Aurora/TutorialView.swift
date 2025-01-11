@@ -149,9 +149,7 @@ struct TutorialView: View {
                                                 .frame(width: 24, height: 24)
                                                 .padding(.trailing, 20)
                                                 .padding(.bottom, 24)
-                                                .onTapGesture {
-                                                    generateHapticFeedbackMedium()
-                                                }
+                                                
                                         } else {
                                         
                                             // iOS versions below 18.0: Use full Lottie animation with interactivity
@@ -159,9 +157,7 @@ struct TutorialView: View {
                                                 .frame(width: 24, height: 24)
                                                 .padding(.trailing, 20)
                                                 .padding(.bottom, 24)
-                                                .onTapGesture {
-                                                    generateHapticFeedbackMedium()
-                                                }
+                                
                                         }
                                     }
                                 }
@@ -242,21 +238,17 @@ struct TutorialView: View {
                                         
                                         Button(action: {
                                             tutorialtext = ""
+                                            generateHapticFeedbackMedium()
                                         }) {
                                             if #available(iOS 18.0, *) {
                                                 // iOS 18.0 or newer: Only show the first frame of the Lottie file
                                                 LottieAnimationViewContainer(filename: "Clear Button", isInteractive: false)
                                                     .frame(width: 24, height: 24)
-                                                    .onTapGesture {
-                                                        generateHapticFeedbackMedium()
-                                                    }
+                                        
                                             } else {
                                                 // iOS versions below 18.0: Use full Lottie animation with interactivity
                                                 LottieAnimationViewContainer(filename: "Clear Button", isInteractive: true)
                                                     .frame(width: 24, height: 24)
-                                                    .onTapGesture {
-                                                        generateHapticFeedbackMedium()
-                                                    }
                                             }
                                         }
                                     }

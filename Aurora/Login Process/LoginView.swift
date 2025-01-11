@@ -40,7 +40,7 @@ struct LoginView: View {
         if Auth.auth().currentUser != nil && isLoggedIn && SeenTutorial{
             CustomTabNavigationView()
         }
-        else if Auth.auth().currentUser != nil && isLoggedIn && !SeenTutorial{
+        else if isLoggedIn && !SeenTutorial{
             TutorialView()
         }
         else{

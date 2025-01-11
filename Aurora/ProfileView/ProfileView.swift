@@ -252,6 +252,14 @@ struct ProfileView: View {
                     chatLogViewModel.initializeMessages()
                 }
         }
+        .gesture(
+            DragGesture(minimumDistance: 10, coordinateSpace: .local)
+                .onEnded { value in
+                    if value.translation.width > 100 {
+                        presentationMode.wrappedValue.dismiss()
+                    }
+                }
+        )
 
         .navigationBarBackButtonHidden(true)
     }

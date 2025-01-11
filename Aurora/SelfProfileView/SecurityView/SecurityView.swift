@@ -35,7 +35,7 @@ struct SecurityView: View {
                     // Custom Navigation Header
                     HStack {
                         Button(action: {
-                            dismiss() // Dismiss the view when back button is pressed
+                            dismiss() 
                         }) {
                             Image("chatlogviewbackbutton") // Replace with your back button image
                                 .resizable()
@@ -188,6 +188,14 @@ struct SecurityView: View {
                 }
             }
         }
+        .gesture(
+            DragGesture(minimumDistance: 10, coordinateSpace: .local)
+                .onEnded { value in
+                    if value.translation.width > 100 {
+                        dismiss()
+                    }
+                }
+        )
         .navigationBarBackButtonHidden(true)
     }
     

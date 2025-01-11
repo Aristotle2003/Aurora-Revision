@@ -935,7 +935,15 @@ struct ChatLogView: View {
             vm.stopListeningForSavingTrigger()
             vm.stopListening()
         }
-        .navigationBarBackButtonHidden(true) // Hide the default back button
+        .gesture(
+            DragGesture(minimumDistance: 10, coordinateSpace: .local)
+                .onEnded { value in
+                    if value.translation.width > 100 {
+                        presentationMode.wrappedValue.dismiss()
+                    }
+                }
+        )
+        .navigationBarBackButtonHidden(true) 
     }
     
     @State private var backgroundObserver: NSObjectProtocol?

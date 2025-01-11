@@ -9,155 +9,155 @@ import SwiftUI
 
 struct PrivacyView: View {
     @Environment(\.dismiss) var dismiss
-
+    
     var body: some View {
         NavigationView {
-            ScrollView {
-                VStack(alignment: .leading, spacing: 30) {
-                    // Header Section
-                    VStack(alignment: .center, spacing: 10) {
-                        Text("Privacy Policy")
-                            .font(.largeTitle)
-                            .fontWeight(.bold)
-                            .foregroundColor(.blue)
+            ZStack {
+                // MARK: - BACKGROUND GRADIENT
+                LinearGradient(
+                    gradient: Gradient(colors: [Color.purple, Color.blue]),
+                    startPoint: .topLeading,
+                    endPoint: .bottomTrailing
+                )
+                .ignoresSafeArea()
+                
+                ScrollView(showsIndicators: false) {
+                    VStack(spacing: 24) {
                         
-                        Text("Your Privacy, Our Priority")
-                            .font(.headline)
-                            .foregroundColor(.gray)
+                        // MARK: - HEADER
+                        VStack(spacing: 4) {
+                            Text("Privacy Policy")
+                                .font(.system(size: 28, weight: .bold, design: .serif))
+                                .foregroundColor(.white)
+                            
+                            Text("Last Modified: 12/13/2024")
+                                .font(.system(size: 16, weight: .medium))
+                                .foregroundColor(.white.opacity(0.8))
+                        }
+                        .padding(.top, 16)
                         
-                        Divider()
-                            .background(Color.blue)
+                        // MARK: - INTRODUCTION
+                        FancyPrivacySectionView(
+                            iconName: "lock.shield.fill",
+                            sectionTitle: "Introduction",
+                            content: """
+Welcome to Aurora’s *fancified* Privacy Policy. We aim to clearly explain how we handle, protect, and utilize your personal data. By continuing to use Aurora, you acknowledge and accept these practices, empowering you with significant control over your own information.
+"""
+                        )
+                        
+                        // MARK: - CONTROL OVER YOUR INFORMATION
+                        FancyPrivacySectionView(
+                            iconName: "person.crop.circle.badge.checkmark",
+                            sectionTitle: "Control Over Your Information",
+                            content: """
+Access & Edits  
+Visit your in-app profile settings anytime to review or modify your account details.
+
+Deletion  
+Feel free to remove your account when you wish. Just follow the instructions under “Account Deletion” in our settings.
+
+Visibility  
+Our robust privacy controls let you decide who can view your content and personal details.
+
+Communication & Permissions  
+Manage contact options, block unwanted interactions, set device-level permissions, and unsubscribe from marketing messages whenever you like.
+
+Advertising Preferences  
+Tailor the ads you see through easy-to-use in-app settings.
+"""
+                        )
+                        
+                        // MARK: - INFORMATION WE COLLECT
+                        FancyPrivacySectionView(
+                            iconName: "tray.full.fill",
+                            sectionTitle: "Information We Collect",
+                            content: """
+1. User-Provisioned Data  
+   Name, email, phone number, profile details, media uploads, and any direct communications with our support. Payment info is stored when you engage with paid features.
+
+2. Usage-Generated Data  
+   We track usage stats, device attributes, and rely on technologies like cookies to enhance your Aurora experience.
+
+3. Third-Party Sources  
+   On occasion, we may receive info from partner platforms, advertisers, or other Aurora users—especially if it involves potential violations or relevant updates.
+"""
+                        )
+                        
+                        // MARK: - HOW YOUR INFO IS USED
+                        FancyPrivacySectionView(
+                            iconName: "gearshape.2.fill",
+                            sectionTitle: "How Your Info Is Used",
+                            content: """
+- Core Services: We rely on your data to keep Aurora functional, secure, and user-friendly.
+- Personalization: We refine your feed, suggestions, and interactions based on your content interests.
+- Service Enhancement: We analyze trends, fix bugs, and test features, prioritizing rigorous security safeguards.
+- Communications: Depending on your preferences, we may send essential service updates, promotional materials, or security alerts.
+
+We May Share With  
+- Other users, as your privacy settings allow  
+- Vetted third-party providers assisting Aurora’s operations  
+- Official authorities, if legally required  
+- Potential successors in case of a merger or acquisition  
+
+We Don’t Share  
+- Private messages without consent  
+- Sensitive personal data to advertisers  
+- Any confidential details with unauthorized parties
+"""
+                        )
+                        
+                        // MARK: - DATA RETENTION POLICY
+                        FancyPrivacySectionView(
+                            iconName: "externaldrive.fill.badge.person.crop",
+                            sectionTitle: "Data Retention Policy",
+                            content: """
+1. User-Managed Content  
+   You control how long your posts or other data stay visible on Aurora. Deletion typically removes content from active servers within 24 hours. Optional auto-deletion timers are available.
+
+2. System Essentials  
+   Basic credentials and security logs may be retained as needed to safeguard Aurora’s stability and integrity.
+
+3. Legal Compliance  
+   We may store specific info for a limited time to fulfill legal, regulatory, or dispute-resolution obligations.
+
+4. Account Deletion  
+   Once requested, we aim to fully remove personal data within 15 days. Residual traces may persist in encrypted backups, but we follow rigorous processes to ensure thorough compliance with deletion requests.
+"""
+                        )
+                        
+                        // MARK: - POLICY UPDATES
+                        FancyPrivacySectionView(
+                            iconName: "arrow.triangle.2.circlepath.circle.fill",
+                            sectionTitle: "Policy Updates",
+                            content: """
+Major Changes  
+- Prominent in-app notices  
+- Direct emails to registered users  
+- Visual alerts on key Aurora pages
+
+Minor Revisions  
+- Updated “Last Modified” date in this document  
+- Notices posted on relevant app sections or website banners  
+
+We encourage periodic reviews of this Policy to stay informed about how we continue to protect and manage your data. Where possible, we provide early notice of big changes, letting you evaluate and adapt accordingly.
+"""
+                        )
+                        
                     }
-                    .padding(.top, 20)
-                    
-                    // Section: Introduction
-                    VStack(alignment: .leading, spacing: 10) {
-                        Text("Introduction")
-                            .font(.title2)
-                            .fontWeight(.semibold)
-                            .foregroundColor(.blue)
-                        
-                        Text("""
-                        Welcome to **Your Social App**! At our core, we are committed to protecting your personal information and your right to privacy. This Privacy Policy explains how we collect, use, and protect your data when you use our app.
-                        
-                        Whether you're here to connect, share, or simply explore, your privacy matters to us.
-                        """)
-                    }
-                    
-                    // Section: Account Privacy
-                    VStack(alignment: .leading, spacing: 10) {
-                        Text("1. Account Privacy")
-                            .font(.title2)
-                            .fontWeight(.semibold)
-                            .foregroundColor(.blue)
-                        
-                        Text("""
-                        Your Social App provides two privacy settings for accounts:
-                        
-                        - **Public Accounts**: Anyone can follow you and view your profile, posts, and activity.
-                        - **Private Accounts**: Only approved followers can access your content. This gives you control over who can see your personal updates.
-                        
-                        You can switch between these settings anytime in your profile settings.
-                        """)
-                        .foregroundColor(.gray)
-                    }
-                    
-                    // Section: Data Security
-                    VStack(alignment: .leading, spacing: 10) {
-                        Text("2. Data Security")
-                            .font(.title2)
-                            .fontWeight(.semibold)
-                            .foregroundColor(.blue)
-                        
-                        Text("""
-                        We prioritize the security of your data by:
-                        
-                        - Using **end-to-end encryption** for all your private messages.
-                        - Storing your data securely with advanced encryption techniques.
-                        - Conducting regular security audits to safeguard our systems against breaches.
-                        
-                        **Rest assured**, your data is never sold to third parties or used without your consent.
-                        """)
-                        .foregroundColor(.gray)
-                    }
-                    
-                    // Section: Your Control
-                    VStack(alignment: .leading, spacing: 10) {
-                        Text("3. Your Control")
-                            .font(.title2)
-                            .fontWeight(.semibold)
-                            .foregroundColor(.blue)
-                        
-                        Text("""
-                        Our app empowers you with full control over your interactions:
-                        
-                        - **Tagging and Mentions**: Control who can tag or mention you in posts.
-                        - **Blocking**: Block specific users from interacting with you.
-                        - **Story Visibility**: Hide your stories from select users.
-                        
-                        Take charge of your online presence with easy-to-use privacy controls.
-                        """)
-                        .foregroundColor(.gray)
-                    }
-                    
-                    // Section: Cookies and Tracking
-                    VStack(alignment: .leading, spacing: 10) {
-                        Text("4. Cookies and Tracking")
-                            .font(.title2)
-                            .fontWeight(.semibold)
-                            .foregroundColor(.blue)
-                        
-                        Text("""
-                        We use cookies to:
-                        
-                        - Enhance your experience by personalizing content.
-                        - Analyze app usage to improve performance.
-                        
-                        You can manage or disable cookies anytime in your settings. Note that disabling cookies may affect certain functionalities.
-                        """)
-                        .foregroundColor(.gray)
-                    }
-                    
-                    // Section: Contact Us
-                    VStack(alignment: .leading, spacing: 10) {
-                        Text("5. Contact Us")
-                            .font(.title2)
-                            .fontWeight(.semibold)
-                            .foregroundColor(.blue)
-                        
-                        Text("""
-                        Questions or concerns about our Privacy Policy? Reach out to us at:
-                        
-                        **Email**: support@yourapp.com
-                        **Phone**: +1-234-567-890
-                        
-                        We’re here to ensure your experience with our app is safe and enjoyable.
-                        """)
-                        .foregroundColor(.gray)
-                    }
-                    
-                    // Footer Section
-                    VStack(alignment: .center, spacing: 10) {
-                        Divider()
-                            .background(Color.blue)
-                        
-                        Text("Thank you for trusting Your Social App!")
-                            .font(.headline)
-                            .foregroundColor(.blue)
-                        
-                        Text("Updated on: December 5, 2024")
-                            .font(.footnote)
-                            .foregroundColor(.gray)
-                    }
-                    .padding(.bottom, 20)
+                    .padding(.horizontal, 16)
+                    .padding(.bottom, 16)
                 }
-                .padding(.horizontal, 20)
             }
-            .background(LinearGradient(gradient: Gradient(colors: [.white, .blue.opacity(0.1)]), startPoint: .top, endPoint: .bottom))
-            .navigationBarBackButtonHidden(true)
-            .navigationBarItems(leading: Button("back") {
-                dismiss()
-            })
+            .navigationBarTitle("Privacy Policy", displayMode: .inline)
+            .toolbar {
+                ToolbarItem(placement: .cancellationAction) {
+                    Button("Close") {
+                        dismiss()
+                    }
+                }
+            }
         }
     }
 }
+
+
