@@ -28,6 +28,18 @@ struct ProfileView: View {
     @StateObject private var messagesViewModel = MessagesViewModel()
     @Environment(\.presentationMode) var presentationMode
     
+    func generateHapticFeedbackMedium() {
+        let generator = UIImpactFeedbackGenerator(style: .medium)
+        generator.prepare()
+        generator.impactOccurred()
+    }
+    
+    func generateHapticFeedbackHeavy() {
+        let generator = UIImpactFeedbackGenerator(style: .heavy)
+        generator.prepare()
+        generator.impactOccurred()
+    }
+    
     private func handleSignOut() {
         guard let currentUserID = FirebaseManager.shared.auth.currentUser?.uid else { return }
         
@@ -56,6 +68,7 @@ struct ProfileView: View {
                 HStack {
                     Button(action: {
                         presentationMode.wrappedValue.dismiss()
+                        generateHapticFeedbackMedium()
                     }) {
                         Image("chatlogviewbackbutton")
                             .resizable()
@@ -193,6 +206,7 @@ struct ProfileView: View {
                     Button(action: {
                         // 关闭报告视图
                         showReportSheet = false
+                        generateHapticFeedbackMedium()
                     }) {
                         Text("Cancel")
                             .padding()
@@ -204,6 +218,7 @@ struct ProfileView: View {
                         // 提交报告
                         reportFriend()
                         showReportSheet = false
+                        generateHapticFeedbackMedium()
                     }) {
                         Text("Submit")
                             .padding()
@@ -337,6 +352,7 @@ struct ProfileView: View {
         VStack(spacing: 20) {
             Button(action: {
                 showChatLogView = true
+                generateHapticFeedbackMedium()
                     
                 }) {
                     Image("messagebuttonforfriends")
@@ -389,6 +405,7 @@ struct ProfileView: View {
                     }
                     Button(action: {
                         showReportSheet = true
+                        generateHapticFeedbackMedium()
                     }) {
                         HStack {
                             Image("reportbutton")
@@ -397,6 +414,7 @@ struct ProfileView: View {
                     
                     Button(action: {
                         showDeleteConfirmation = true
+                        generateHapticFeedbackMedium()
                     }) {
                         HStack {
                             Image("deletefriendbutton")
@@ -424,6 +442,7 @@ struct ProfileView: View {
         VStack(spacing: 20) {
             Button(action: {
                 sendFriendRequest()
+                generateHapticFeedbackMedium()
             }) {
                 Image(friendRequestSent ? "requestedbuttonforstrangerprofile" : "addfriendbuttonforstrangerprofile")
                     .resizable()

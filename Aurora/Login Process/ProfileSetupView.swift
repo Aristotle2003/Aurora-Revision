@@ -17,6 +17,17 @@ struct ProfileSetupView: View {
     @State private var image: UIImage?
     @State private var username: String = ""
     
+    func generateHapticFeedbackMedium() {
+        let generator = UIImpactFeedbackGenerator(style: .medium)
+        generator.prepare()
+        generator.impactOccurred()
+    }
+    
+    func generateHapticFeedbackHeavy() {
+        let generator = UIImpactFeedbackGenerator(style: .heavy)
+        generator.prepare()
+        generator.impactOccurred()
+    }
     
     var body: some View {
         NavigationView {
@@ -32,6 +43,7 @@ struct ProfileSetupView: View {
                     
                     Button {
                         showImagePicker.toggle()
+                        generateHapticFeedbackMedium()
                     } label: {
                         VStack {
                             if let image = self.image {
@@ -58,6 +70,7 @@ struct ProfileSetupView: View {
                     
                     Button {
                         validateAndPersistUserProfile()
+                        generateHapticFeedbackMedium()
                     } label: {
                         HStack {
                             Spacer()

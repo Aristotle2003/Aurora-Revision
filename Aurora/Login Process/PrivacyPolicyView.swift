@@ -10,6 +10,18 @@ import SwiftUI
 struct PrivacyPolicyView: View {
     @Environment(\.dismiss) var dismiss
     
+    func generateHapticFeedbackMedium() {
+        let generator = UIImpactFeedbackGenerator(style: .medium)
+        generator.prepare()
+        generator.impactOccurred()
+    }
+    
+    func generateHapticFeedbackHeavy() {
+        let generator = UIImpactFeedbackGenerator(style: .heavy)
+        generator.prepare()
+        generator.impactOccurred()
+    }
+    
     var body: some View {
         NavigationView {
             ZStack {

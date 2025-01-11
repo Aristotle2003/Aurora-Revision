@@ -29,7 +29,18 @@ struct LoginView: View {
     @State var hasSeenTutorial = false
     @State private var showTermsOfService = false
     @State private var showPrivacyPolicy = false
-
+    
+    func generateHapticFeedbackMedium() {
+        let generator = UIImpactFeedbackGenerator(style: .medium)
+        generator.prepare()
+        generator.impactOccurred()
+    }
+    
+    func generateHapticFeedbackHeavy() {
+        let generator = UIImpactFeedbackGenerator(style: .heavy)
+        generator.prepare()
+        generator.impactOccurred()
+    }
     
     private var countryCodes: [(numericCode: String, isoCode: String, name: String)] {
         Formatter.getAllCountryCodes()
@@ -37,10 +48,10 @@ struct LoginView: View {
     
     
     var body: some View {
-        if Auth.auth().currentUser != nil && isLoggedIn && SeenTutorial{
+        if Auth.auth().currentUser != nil && isLoggedIn && hasSeenTutorial{
             CustomTabNavigationView()
         }
-        else if isLoggedIn && !SeenTutorial{
+        else if isLoggedIn && !hasSeenTutorial{
             TutorialView()
         }
         else{
@@ -77,7 +88,8 @@ struct LoginView: View {
                         
                         // Button for phone login
                         Button {
-                           verifyPhoneNumber()
+                            verifyPhoneNumber()
+                            generateHapticFeedbackMedium()
                         } label: {
                             HStack {
                                 Spacer()
@@ -105,6 +117,7 @@ struct LoginView: View {
                         // Button for google login
                         Button {
                             handleGoogleSignIn()
+                            generateHapticFeedbackMedium()
                         } label: {
                             HStack {
                                 Image("googlebutton")
@@ -122,6 +135,7 @@ struct LoginView: View {
                             self.nonce = nonce
                             request.requestedScopes = [.email, .fullName]
                             request.nonce = sha256(nonce)
+                            generateHapticFeedbackMedium()
                         } onCompletion: { result in
                             switch result {
                             case .success(let authorization):
@@ -146,6 +160,7 @@ struct LoginView: View {
                         HStack(spacing: 4) {
                             Button {
                                 showTermsOfService = true
+                                generateHapticFeedbackMedium()
                             } label: {
                                 Text("Terms of Service")
                                     .underline()
@@ -157,6 +172,7 @@ struct LoginView: View {
 
                             Button {
                                 showPrivacyPolicy = true
+                                generateHapticFeedbackMedium()
                             } label: {
                                 Text("Privacy Policy")
                                     .underline()
@@ -221,6 +237,7 @@ struct LoginView: View {
                 ForEach(countryCodes, id: \.numericCode) { code in
                     Button(action: {
                         countryCode = code.numericCode
+                        generateHapticFeedbackMedium()
                     }) {
                         Text("+\(code.numericCode) (\(code.name))")
                             .foregroundColor(Color(red: 86/255, green: 86/255, blue: 86/255))

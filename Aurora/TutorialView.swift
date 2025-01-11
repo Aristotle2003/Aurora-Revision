@@ -26,14 +26,14 @@ struct TutorialView: View {
     @FocusState private var isInputFocused: Bool
     @State private var activeTimers: [Timer] = []
     
-    func generateHapticFeedbackLight() {
-        let generator = UIImpactFeedbackGenerator(style: .light)
+    func generateHapticFeedbackMedium() {
+        let generator = UIImpactFeedbackGenerator(style: .medium)
         generator.prepare()
         generator.impactOccurred()
     }
     
-    func generateHapticFeedbackMedium() {
-        let generator = UIImpactFeedbackGenerator(style: .medium)
+    func generateHapticFeedbackHeavy() {
+        let generator = UIImpactFeedbackGenerator(style: .heavy)
         generator.prepare()
         generator.impactOccurred()
     }
@@ -51,7 +51,7 @@ struct TutorialView: View {
                             saveTutorialSeenStatus()
                             SeenTutorial = true
                             navigateToMainMessageView = true
-                            generateHapticFeedbackLight()
+                            generateHapticFeedbackMedium()
                         }) {
                             Image("chatlogviewbackbutton")
                                 .resizable()
@@ -71,7 +71,7 @@ struct TutorialView: View {
                         
                         Button(action: {
                             print("Three dots button tapped")
-                            generateHapticFeedbackLight()
+                            generateHapticFeedbackMedium()
                         }) {
                             Image("chatlogviewthreedotsbutton")
                                 .resizable()
@@ -149,6 +149,9 @@ struct TutorialView: View {
                                                 .frame(width: 24, height: 24)
                                                 .padding(.trailing, 20)
                                                 .padding(.bottom, 24)
+                                                .onTapGesture {
+                                                    generateHapticFeedbackHeavy()
+                                                }
                                                 
                                         } else {
                                         
@@ -157,6 +160,9 @@ struct TutorialView: View {
                                                 .frame(width: 24, height: 24)
                                                 .padding(.trailing, 20)
                                                 .padding(.bottom, 24)
+                                                .onTapGesture {
+                                                    generateHapticFeedbackHeavy()
+                                                }
                                 
                                         }
                                     }
@@ -190,23 +196,41 @@ struct TutorialView: View {
                                 // Centered Text Input
                                 VStack {
                                     Spacer() // Push TextEditor down
-                                    
-                                    ScrollView {
-                                        TextEditor(text: $tutorialtext)
-                                            .font(Font.system(size: 18))
-                                            .foregroundColor(Color(red: 0.553, green: 0.525, blue: 0.525))
-                                            .focused($isInputFocused)
-                                            .multilineTextAlignment(.center) // Center-align text inside TextEditor
-                                            .background(Color.clear) // Transparent background
-                                            .scrollContentBackground(.hidden) // Ensures scrollable area is transparent
-                                            .frame(maxWidth: .infinity, minHeight: 50) // Flexible width and minimum height
-                                            .padding(.horizontal, 20) // Add spacing from sides
+
+                                    ZStack {
+                                        VStack{
+                                            Spacer()
+                                                .frame(height: 12)
+                                            ScrollView {
+                                                TextEditor(text: $tutorialtext)
+                                                    .font(.system(size: 18))
+                                                    .foregroundColor(Color(red: 0.553, green: 0.525, blue: 0.525))
+                                                    .focused($isInputFocused)
+                                                    .multilineTextAlignment(.center)
+                                                    .background(Color.clear)
+                                                    .scrollContentBackground(.hidden) // Ensures scrollable area is transparent
+                                                    .frame(maxWidth: .infinity, minHeight: 50)
+                                                    .padding(.horizontal, 20)
+                                                    .tint(Color.gray)
+                                            }
+                                            .frame(height: 60)
+                                            .padding(.top, 5)
+                                            .padding(.horizontal, 20)
+                                        }
+
+                                        // Placeholder text, shown only when tutorialtext is empty
+                                        if tutorialtext.isEmpty {
+                                            Text("Type a message...")
+                                                .foregroundColor(Color.gray.opacity(0.5))
+                                                .font(Font.system(size: 18))
+                                                .multilineTextAlignment(.center)
+                                                .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .center)
+                                                .padding(.horizontal, 20)
+                                                .allowsHitTesting(false)  // Let taps pass through to TextEditor
+                                        }
                                     }
-                                    .frame(height: 60) // Set the height of the ScrollView
-                                    .padding(.top, 5)
-                                    .padding(.horizontal, 20)
-                                    
-                                    Spacer() // Push TextEditor
+
+                                    Spacer() // Push TextEditor up
                                 }
                                 .onAppear {
                                     isInputFocused = true // Auto-focus the TextEditor
@@ -223,14 +247,14 @@ struct TutorialView: View {
                                             LottieAnimationViewContainer(filename: "Save Button", isInteractive: false)
                                                 .frame(width: 24, height: 24)
                                                 .onTapGesture {
-                                                    generateHapticFeedbackMedium()
+                                                    generateHapticFeedbackHeavy()
                                                 }
                                         } else {
                                             // iOS versions below 18.0: Use full Lottie animation with interactivity
                                             LottieAnimationViewContainer(filename: "Save Button", isInteractive: true)
                                                 .frame(width: 24, height: 24)
                                                 .onTapGesture {
-                                                    generateHapticFeedbackMedium()
+                                                    generateHapticFeedbackHeavy()
                                                 }
                                             
                                         }
@@ -238,7 +262,7 @@ struct TutorialView: View {
                                         
                                         Button(action: {
                                             tutorialtext = ""
-                                            generateHapticFeedbackMedium()
+                                            generateHapticFeedbackHeavy()
                                         }) {
                                             if #available(iOS 18.0, *) {
                                                 // iOS 18.0 or newer: Only show the first frame of the Lottie file

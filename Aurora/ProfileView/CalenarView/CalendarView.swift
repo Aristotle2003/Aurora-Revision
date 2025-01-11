@@ -71,6 +71,18 @@ struct CalendarMessagesView: View {
     @State private var isEditing: Bool = false
     @State private var selectedMessages: Set<Message> = []
     @Environment(\.dismiss) var dismiss
+    
+    func generateHapticFeedbackMedium() {
+        let generator = UIImpactFeedbackGenerator(style: .medium)
+        generator.prepare()
+        generator.impactOccurred()
+    }
+    
+    func generateHapticFeedbackHeavy() {
+        let generator = UIImpactFeedbackGenerator(style: .heavy)
+        generator.prepare()
+        generator.impactOccurred()
+    }
 
     var body: some View {
         ZStack{
@@ -80,6 +92,7 @@ struct CalendarMessagesView: View {
                 HStack {
                     Button(action: {
                         dismiss()
+                        generateHapticFeedbackMedium()
                     }) {
                         Image("chatlogviewbackbutton") // Replace with your back button image
                             .resizable()
@@ -108,6 +121,7 @@ struct CalendarMessagesView: View {
                     if isEditing {
                         Button("Delete") {
                             deleteSelectedMessages()
+                            generateHapticFeedbackMedium()
                         }
                         .disabled(selectedMessages.isEmpty)
                         .foregroundColor(selectedMessages.isEmpty ? .gray : Color(red: 125/255, green: 133/255, blue: 191/255)) // Button color
@@ -121,6 +135,7 @@ struct CalendarMessagesView: View {
                         if !isEditing {
                             selectedMessages.removeAll()
                         }
+                        generateHapticFeedbackMedium()
                     }
                     .foregroundColor(Color(red: 125/255, green: 133/255, blue: 191/255)) // Button color
                     .padding()
@@ -135,6 +150,7 @@ struct CalendarMessagesView: View {
                                 if isEditing {
                                     Button(action: {
                                         toggleMessageSelection(message)
+                                        generateHapticFeedbackMedium()
                                     }) {
                                         Image(systemName: selectedMessages.contains(message) ? "checkmark.circle.fill" : "circle")
                                             .foregroundColor(Color(red: 125 / 255, green: 133 / 255, blue: 191 / 255))
@@ -215,6 +231,18 @@ struct CalendarMessagesView: View {
 struct CalendarView: View {
     @Binding public var selectedDate: Date?
     
+    func generateHapticFeedbackMedium() {
+        let generator = UIImpactFeedbackGenerator(style: .medium)
+        generator.prepare()
+        generator.impactOccurred()
+    }
+    
+    func generateHapticFeedbackHeavy() {
+        let generator = UIImpactFeedbackGenerator(style: .heavy)
+        generator.prepare()
+        generator.impactOccurred()
+    }
+    
     public init(selectedDate: Binding<Date?>) {
             self._selectedDate = selectedDate
         }
@@ -246,6 +274,7 @@ struct CalendarView: View {
                     .frame(width: 80)
                 Button(action: {
                     moveToPreviousMonth()
+                    generateHapticFeedbackMedium()
                 }) {
                     Image(systemName: "chevron.left")
                         .foregroundColor(Color(red: 125 / 255, green: 133 / 255, blue: 191 / 255))
@@ -263,6 +292,7 @@ struct CalendarView: View {
                 
                 Button(action: {
                     moveToNextMonth()
+                    generateHapticFeedbackMedium()
                 }) {
                     Image(systemName: "chevron.right")
                         .foregroundColor(Color(red: 125 / 255, green: 133 / 255, blue: 191 / 255))
@@ -293,6 +323,7 @@ struct CalendarView: View {
                     if let day = day {
                         Button(action: {
                             selectedDate = day
+                            generateHapticFeedbackMedium()
                         }) {
                             Text("\(calendar.component(.day, from: day))")
                                 .foregroundColor(Color(red: 125 / 255, green: 133 / 255, blue: 191 / 255))

@@ -27,6 +27,18 @@ struct ChangePhoneView: View {
 
     @State private var errorMessage: String = ""
     
+    func generateHapticFeedbackMedium() {
+        let generator = UIImpactFeedbackGenerator(style: .medium)
+        generator.prepare()
+        generator.impactOccurred()
+    }
+    
+    func generateHapticFeedbackHeavy() {
+        let generator = UIImpactFeedbackGenerator(style: .heavy)
+        generator.prepare()
+        generator.impactOccurred()
+    }
+    
     private var countryCodes: [(numericCode: String, isoCode: String, name: String)] {
         Formatter.getAllCountryCodes()
     }
@@ -145,6 +157,7 @@ struct ChangePhoneView: View {
     private var sendCodeButton: some View {
         // Button for sending code
         Button {
+            generateHapticFeedbackMedium()
             requestVerificationCode()
         } label: {
             Text("Send Code")
@@ -160,6 +173,7 @@ struct ChangePhoneView: View {
     
     private var verifyCodeButton: some View {
         Button {
+            generateHapticFeedbackMedium()
             verifyCode()
         } label: {
             Text("Verify")

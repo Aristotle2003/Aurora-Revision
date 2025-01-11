@@ -30,6 +30,18 @@ struct PhoneVerificationView: View {
     @State private var previousUser: User? = nil
     @State private var errorMessage: String = ""
     
+    func generateHapticFeedbackMedium() {
+        let generator = UIImpactFeedbackGenerator(style: .medium)
+        generator.prepare()
+        generator.impactOccurred()
+    }
+    
+    func generateHapticFeedbackHeavy() {
+        let generator = UIImpactFeedbackGenerator(style: .heavy)
+        generator.prepare()
+        generator.impactOccurred()
+    }
+    
     private var countryCodes: [(numericCode: String, isoCode: String, name: String)] {
         Formatter.getAllCountryCodes()
     }
@@ -160,6 +172,7 @@ struct PhoneVerificationView: View {
                 ForEach(countryCodes, id: \.numericCode) { code in
                     Button(action: {
                         countryCode = code.numericCode
+                        generateHapticFeedbackMedium()
                     }) {
                         Text("+\(code.numericCode) (\(code.name))")
                             .foregroundColor(Color(red: 86/255, green: 86/255, blue: 86/255))
@@ -196,6 +209,7 @@ struct PhoneVerificationView: View {
         // Button for sending code
         Button {
             requestVerificationCode()
+            generateHapticFeedbackMedium()
         } label: {
             Image("sendbutton")
                 .resizable()
@@ -209,6 +223,7 @@ struct PhoneVerificationView: View {
     private var verifyCodeButton: some View {
         Button {
             verifyCode()
+            generateHapticFeedbackMedium()
         } label: {
             Image("verifybutton")
                 .resizable()

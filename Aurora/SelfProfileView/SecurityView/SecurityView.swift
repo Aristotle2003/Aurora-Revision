@@ -26,6 +26,18 @@ struct SecurityView: View {
     @State private var confirmationInput = ""
     @State private var showManageAccount = false
     
+    func generateHapticFeedbackMedium() {
+        let generator = UIImpactFeedbackGenerator(style: .medium)
+        generator.prepare()
+        generator.impactOccurred()
+    }
+    
+    func generateHapticFeedbackHeavy() {
+        let generator = UIImpactFeedbackGenerator(style: .heavy)
+        generator.prepare()
+        generator.impactOccurred()
+    }
+    
     var body: some View {
         NavigationView {
             ZStack{
@@ -35,7 +47,8 @@ struct SecurityView: View {
                     // Custom Navigation Header
                     HStack {
                         Button(action: {
-                            dismiss() 
+                            dismiss()
+                            generateHapticFeedbackMedium()
                         }) {
                             Image("chatlogviewbackbutton") // Replace with your back button image
                                 .resizable()
@@ -108,6 +121,7 @@ struct SecurityView: View {
                         ) {
                             Button(action: {
                                 showManageAccount = true
+                                generateHapticFeedbackMedium()
                             }) {
                                 HStack {
                                     Text("Manage linked accounts")
@@ -131,6 +145,7 @@ struct SecurityView: View {
                         ) {
                             Button(action: {
                                 showConfirmationAlert = true
+                                generateHapticFeedbackMedium()
                             }) {
                                 HStack {
                                     Text("Delete Account")
@@ -313,6 +328,7 @@ struct SecurityView: View {
     private var googleSignInButton: some View {
         Button {
             handleGoogleSignIn()
+            generateHapticFeedbackMedium()
         } label: {
             HStack {
                 Image(systemName: "g.circle.fill")
@@ -336,6 +352,7 @@ struct SecurityView: View {
             self.nonce = nonce
             request.requestedScopes = [.email, .fullName]
             request.nonce = sha256(nonce)
+            generateHapticFeedbackMedium()
         } onCompletion: { result in
             switch result {
             case .success(let authorization):

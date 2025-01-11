@@ -197,6 +197,18 @@ struct AddFriendView: View {
     @State private var navigateToProfile = false
     @State private var sentRequests: Set<String> = [] // Tracks UIDs of users who have been sent requests
     
+    func generateHapticFeedbackMedium() {
+        let generator = UIImpactFeedbackGenerator(style: .medium)
+        generator.prepare()
+        generator.impactOccurred()
+    }
+    
+    func generateHapticFeedbackHeavy() {
+        let generator = UIImpactFeedbackGenerator(style: .heavy)
+        generator.prepare()
+        generator.impactOccurred()
+    }
+    
     var safeAreaTopInset: CGFloat {
         UIApplication.shared.connectedScenes
             .compactMap { ($0 as? UIWindowScene)?.keyWindow }
@@ -221,6 +233,7 @@ struct AddFriendView: View {
                             HStack {
                                 Button(action:{
                                     presentationMode.wrappedValue.dismiss()
+                                    generateHapticFeedbackMedium()
                                 }) {
                                     Image("chatlogviewbackbutton")
                                         .resizable()
@@ -253,6 +266,7 @@ struct AddFriendView: View {
                         
                         Button(action: {
                             isSharing = true
+                            generateHapticFeedbackMedium()
                         }) {
                             Image("invitefriendsbutton")
                                 .resizable()
@@ -393,6 +407,7 @@ struct AddFriendView: View {
                     Button(action: {
                         self.chatUser = user
                         navigateToProfile = true
+                        generateHapticFeedbackMedium()
                     }) {
                         WebImage(url: URL(string: user.profileImageUrl))
                             .resizable()
@@ -419,6 +434,7 @@ struct AddFriendView: View {
 
                 Button(action: {
                     sendFriendRequest(for: user)
+                    generateHapticFeedbackMedium()
                 }) {
                     Image(sentRequests.contains(user.uid) ? "friendrequestsentbutton2" : "requestnotsentbutton2")
                         .resizable()
@@ -446,6 +462,7 @@ struct AddFriendView: View {
                 Button(action: {
                     self.chatUser = user
                     navigateToProfile = true
+                    generateHapticFeedbackMedium()
                 }) {
                     WebImage(url: URL(string: user.profileImageUrl))
                         .resizable()
@@ -464,6 +481,7 @@ struct AddFriendView: View {
 
                 Button(action: {
                     sendFriendRequest(for: user)
+                    generateHapticFeedbackMedium()
                 }) {
                     Image(sentRequests.contains(user.uid) ? "friendrequestsentbutton1" : "requestnotsentbutton1")
                         .resizable()

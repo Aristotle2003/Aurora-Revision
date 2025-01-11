@@ -37,6 +37,18 @@ struct SelfProfileView: View {
     @StateObject private var messagesViewModel = MessagesViewModel()
     @Environment(\.presentationMode) var presentationMode
     
+    func generateHapticFeedbackMedium() {
+        let generator = UIImpactFeedbackGenerator(style: .medium)
+        generator.prepare()
+        generator.impactOccurred()
+    }
+    
+    func generateHapticFeedbackHeavy() {
+        let generator = UIImpactFeedbackGenerator(style: .heavy)
+        generator.prepare()
+        generator.impactOccurred()
+    }
+    
     private func fetchCurrentUser() {
         guard let uid = FirebaseManager.shared.auth.currentUser?.uid else {
             self.errorMessage = "Could not find firebase uid"
@@ -205,6 +217,7 @@ struct SelfProfileView: View {
                             
                             Button(action: {
                                 showPrivacyPage.toggle()
+                                generateHapticFeedbackMedium()
                             }) {
                                 Image("privacybuttonforselfprofileview")
                             }
@@ -214,6 +227,7 @@ struct SelfProfileView: View {
                             }
                             Button(action: {
                                 showReportSheet = true
+                                generateHapticFeedbackMedium()
                             }) {
                                 Image("reportbuttonforselfprofileview")
                             }
@@ -228,6 +242,7 @@ struct SelfProfileView: View {
                             }
                             Button(action: {
                                 shouldShowLogOutOptions.toggle()
+                                generateHapticFeedbackMedium()
                             }) {
                                 Image("switchaccountbuttonforselfprofileview")
                             }
@@ -235,6 +250,7 @@ struct SelfProfileView: View {
                             // Logout Button
                             Button(action: {
                                 shouldShowLogOutOptions.toggle()
+                                generateHapticFeedbackMedium()
                             }) {
                                 Image("logoutbuttonforselfprofileview")
                             }
@@ -303,6 +319,7 @@ struct SelfProfileView: View {
                             Button(action: {
                                 // 关闭报告视图
                                 showReportSheet = false
+                                generateHapticFeedbackMedium()
                             }) {
                                 Text("Cancel")
                                     .padding()
@@ -314,6 +331,7 @@ struct SelfProfileView: View {
                                 // 提交报告
                                 selfReport()
                                 showReportSheet = false
+                                generateHapticFeedbackMedium()
                             }) {
                                 Text("Submit")
                                     .padding()

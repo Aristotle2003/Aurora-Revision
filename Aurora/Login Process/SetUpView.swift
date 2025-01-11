@@ -13,6 +13,18 @@ struct SignUpView: View {
     @State private var showProfileSetup = false
     @State private var loginStatusMessage = ""
     
+    func generateHapticFeedbackMedium() {
+        let generator = UIImpactFeedbackGenerator(style: .medium)
+        generator.prepare()
+        generator.impactOccurred()
+    }
+    
+    func generateHapticFeedbackHeavy() {
+        let generator = UIImpactFeedbackGenerator(style: .heavy)
+        generator.prepare()
+        generator.impactOccurred()
+    }
+    
     var body: some View {
         NavigationView {
             ScrollView {
@@ -31,6 +43,7 @@ struct SignUpView: View {
                     
                     Button {
                         createNewAccount()
+                        generateHapticFeedbackMedium()
                     } label: {
                         HStack {
                             Spacer()

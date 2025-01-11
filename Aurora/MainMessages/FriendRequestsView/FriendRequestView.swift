@@ -11,6 +11,18 @@ struct FriendRequestsView: View {
     @Environment(\.presentationMode) var presentationMode
     @Binding var currentView: String
     
+    func generateHapticFeedbackMedium() {
+        let generator = UIImpactFeedbackGenerator(style: .medium)
+        generator.prepare()
+        generator.impactOccurred()
+    }
+    
+    func generateHapticFeedbackHeavy() {
+        let generator = UIImpactFeedbackGenerator(style: .heavy)
+        generator.prepare()
+        generator.impactOccurred()
+    }
+    
     var body: some View {
         NavigationStack{
             ZStack {
@@ -21,6 +33,7 @@ struct FriendRequestsView: View {
                     HStack {
                         Button(action: {
                             presentationMode.wrappedValue.dismiss()
+                            generateHapticFeedbackMedium()
                         }) {
                             Image("chatlogviewbackbutton")
                                 .resizable()
@@ -64,6 +77,7 @@ struct FriendRequestsView: View {
                                         // Accept Button with Custom Image
                                         Button(action: {
                                             acceptFriendRequest(request)
+                                            generateHapticFeedbackMedium()
                                         }) {
                                             Image("acceptbuttonforfriendrequestview")
                                                 .resizable()
@@ -73,6 +87,7 @@ struct FriendRequestsView: View {
                                         // Reject Button with Custom Image
                                         Button(action: {
                                             rejectFriendRequest(request)
+                                            generateHapticFeedbackMedium()
                                         }) {
                                             Image("crossbuttonforfriendrequestview")
                                                 .resizable()

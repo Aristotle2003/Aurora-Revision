@@ -111,6 +111,18 @@ struct CreateNewMessageView: View {
     @State private var chatUser: ChatUser? = nil
     @State private var currentUser: ChatUser? = nil
     @StateObject private var chatLogViewModel = ChatLogViewModel(chatUser: nil)
+    
+    func generateHapticFeedbackMedium() {
+        let generator = UIImpactFeedbackGenerator(style: .medium)
+        generator.prepare()
+        generator.impactOccurred()
+    }
+    
+    func generateHapticFeedbackHeavy() {
+        let generator = UIImpactFeedbackGenerator(style: .heavy)
+        generator.prepare()
+        generator.impactOccurred()
+    }
 
     var body: some View {
         NavigationStack {
@@ -177,7 +189,9 @@ struct CreateNewMessageView: View {
                     .scaledToFill()
                     .frame(width: UIScreen.main.bounds.width * 0.1832, height: UIScreen.main.bounds.height * 0.0198)
                 Spacer()
-                Button(action: { isShowingAddFriendView = true }) {
+                Button(action: { isShowingAddFriendView = true
+                    generateHapticFeedbackMedium()
+                }) {
                     Image("addfriendbutton")
                         .resizable()
                         .frame(width: 24, height: 24)
@@ -232,6 +246,7 @@ struct CreateNewMessageView: View {
             self.chatUser = user
             self.currentUser = vm.currentUser
             navigateToProfile = true
+            generateHapticFeedbackMedium()
         } label: {
             ZStack {
                 Image("contactsbubble")
@@ -290,6 +305,18 @@ struct SearchBar: View {
     @Binding var text: String
     var onSearch: () -> Void  // Callback for the search action
     
+    func generateHapticFeedbackMedium() {
+        let generator = UIImpactFeedbackGenerator(style: .medium)
+        generator.prepare()
+        generator.impactOccurred()
+    }
+    
+    func generateHapticFeedbackHeavy() {
+        let generator = UIImpactFeedbackGenerator(style: .heavy)
+        generator.prepare()
+        generator.impactOccurred()
+    }
+    
     var body: some View {
         HStack {
             Spacer()
@@ -311,6 +338,7 @@ struct SearchBar: View {
                 Button(action: {
                     text = ""  // Clear search text
                     onSearch()  // Trigger search after clearing
+                    generateHapticFeedbackMedium()
                 }) {
                     Image(systemName: "xmark.circle.fill")
                         .foregroundColor(.gray)

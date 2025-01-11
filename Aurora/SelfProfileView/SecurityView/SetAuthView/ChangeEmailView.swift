@@ -23,6 +23,18 @@ struct ChangeEmailView: View {
     
     @State private var errorMessage: String = ""
     
+    func generateHapticFeedbackMedium() {
+        let generator = UIImpactFeedbackGenerator(style: .medium)
+        generator.prepare()
+        generator.impactOccurred()
+    }
+    
+    func generateHapticFeedbackHeavy() {
+        let generator = UIImpactFeedbackGenerator(style: .heavy)
+        generator.prepare()
+        generator.impactOccurred()
+    }
+    
     
     var body: some View {
         NavigationView {
@@ -33,6 +45,7 @@ struct ChangeEmailView: View {
                     // Custom Navigation Header
                     HStack {
                         Button(action: {
+                            generateHapticFeedbackMedium()
                             dismiss() // Dismiss the view when back button is pressed
                         }) {
                             Image("chatlogviewbackbutton") // Replace with your back button image
@@ -91,6 +104,7 @@ struct ChangeEmailView: View {
     private var googleSignInButton: some View {
         Button {
             handleGoogleSignIn()
+            generateHapticFeedbackMedium()
         } label: {
             HStack {
                 Image(systemName: "g.circle.fill")
@@ -114,6 +128,7 @@ struct ChangeEmailView: View {
             self.nonce = nonce
             request.requestedScopes = [.email, .fullName]
             request.nonce = sha256(nonce)
+            generateHapticFeedbackMedium()
         } onCompletion: { result in
             switch result {
             case .success(let authorization):

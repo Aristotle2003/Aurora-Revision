@@ -285,6 +285,18 @@ struct NameInputView: View {
     // 1) Create a local state property
     @State private var tempValue: String
     
+    func generateHapticFeedbackMedium() {
+        let generator = UIImpactFeedbackGenerator(style: .medium)
+        generator.prepare()
+        generator.impactOccurred()
+    }
+    
+    func generateHapticFeedbackHeavy() {
+        let generator = UIImpactFeedbackGenerator(style: .heavy)
+        generator.prepare()
+        generator.impactOccurred()
+    }
+    
     init(title: String, value: Binding<String>) {
         self.title = title
         self._value = value
@@ -304,6 +316,7 @@ struct NameInputView: View {
                         Button(action: {
                             // 2) If the user taps Back, just dismiss without saving changes
                             dismiss()
+                            generateHapticFeedbackMedium()
                         }) {
                             Image("chatlogviewbackbutton")
                                 .resizable()
@@ -335,6 +348,7 @@ struct NameInputView: View {
                         if !tempValue.isEmpty {
                             Button(action: {
                                 tempValue = "" // Clear the textfield
+                                generateHapticFeedbackMedium()
                             }) {
                                 Image(systemName: "xmark.circle.fill")
                                     .foregroundColor(.gray)
@@ -357,6 +371,7 @@ struct NameInputView: View {
                     Button(action: {
                         value = tempValue   // This actually saves the change to the parent's binding
                         dismiss()
+                        generateHapticFeedbackMedium()
                     }) {
                         Image("donebutton")
                             .frame(maxWidth: .infinity, alignment: .center)
@@ -382,6 +397,18 @@ struct UsernameInputView: View {
     // Local copy of the binding text
     @State private var tempValue: String
     
+    func generateHapticFeedbackMedium() {
+        let generator = UIImpactFeedbackGenerator(style: .medium)
+        generator.prepare()
+        generator.impactOccurred()
+    }
+    
+    func generateHapticFeedbackHeavy() {
+        let generator = UIImpactFeedbackGenerator(style: .heavy)
+        generator.prepare()
+        generator.impactOccurred()
+    }
+    
     // We need a custom initializer so we can initialize `tempValue` with the parent's value
     init(title: String, value: Binding<String>) {
         self.title = title
@@ -400,6 +427,7 @@ struct UsernameInputView: View {
                     HStack {
                         // Back Button -> Discard changes and dismiss
                         Button(action: {
+                            generateHapticFeedbackMedium()
                             dismiss()
                         }) {
                             Image("chatlogviewbackbutton") // Replace with your back button image
@@ -436,6 +464,7 @@ struct UsernameInputView: View {
                         if !tempValue.isEmpty {
                             Button(action: {
                                 tempValue = "" // Clear the textfield
+                                generateHapticFeedbackMedium()
                             }) {
                                 Image(systemName: "xmark.circle.fill")
                                     .foregroundColor(.gray)
@@ -459,6 +488,7 @@ struct UsernameInputView: View {
                     Button(action: {
                         value = tempValue   // write the local changes back to the binding
                         dismiss()
+                        generateHapticFeedbackMedium()
                     }) {
                         Image("donebutton")
                             .frame(maxWidth: .infinity, alignment: .center)
@@ -484,6 +514,18 @@ struct AgeInputView: View {
     // Local copy of the binding text
     @State private var tempValue: String
     
+    func generateHapticFeedbackMedium() {
+        let generator = UIImpactFeedbackGenerator(style: .medium)
+        generator.prepare()
+        generator.impactOccurred()
+    }
+    
+    func generateHapticFeedbackHeavy() {
+        let generator = UIImpactFeedbackGenerator(style: .heavy)
+        generator.prepare()
+        generator.impactOccurred()
+    }
+    
     // Custom initializer to initialize `tempValue`
     init(title: String, value: Binding<String>) {
         self.title = title
@@ -502,6 +544,7 @@ struct AgeInputView: View {
                     HStack {
                         // Back button -> discard changes
                         Button(action: {
+                            generateHapticFeedbackMedium()
                             dismiss()
                         }) {
                             Image("chatlogviewbackbutton") // Replace with your back button image
@@ -537,6 +580,7 @@ struct AgeInputView: View {
                         if !tempValue.isEmpty {
                             Button(action: {
                                 tempValue = "" // Clear the textfield
+                                generateHapticFeedbackMedium()
                             }) {
                                 Image(systemName: "xmark.circle.fill")
                                     .foregroundColor(.gray)
@@ -560,6 +604,7 @@ struct AgeInputView: View {
                     Button(action: {
                         value = tempValue  // Save changes to parent
                         dismiss()
+                        generateHapticFeedbackMedium()
                     }) {
                         Image("donebutton")
                             .frame(maxWidth: .infinity, alignment: .center)
@@ -586,6 +631,18 @@ struct GenderInputView: View {
     @State private var localSelectedGender: String = ""
     @State private var localIsCustom: Bool = false
     @State private var localCustomValue: String = ""
+    
+    func generateHapticFeedbackMedium() {
+        let generator = UIImpactFeedbackGenerator(style: .medium)
+        generator.prepare()
+        generator.impactOccurred()
+    }
+    
+    func generateHapticFeedbackHeavy() {
+        let generator = UIImpactFeedbackGenerator(style: .heavy)
+        generator.prepare()
+        generator.impactOccurred()
+    }
     
     init(title: String, value: Binding<String>) {
         self.title = title
@@ -617,6 +674,7 @@ struct GenderInputView: View {
                         // Back button -> discard changes
                         Button(action: {
                             dismiss()
+                            generateHapticFeedbackMedium()
                         }) {
                             Image("chatlogviewbackbutton")
                                 .resizable()
@@ -660,6 +718,7 @@ struct GenderInputView: View {
                             localIsCustom = true
                             localSelectedGender = ""
                             localCustomValue = ""  // Clear any previous custom text
+                            generateHapticFeedbackMedium()
                         }) {
                             HStack {
                                 ZStack {
@@ -701,6 +760,7 @@ struct GenderInputView: View {
                             if !localCustomValue.isEmpty {
                                 Button(action: {
                                     localCustomValue = ""
+                                    generateHapticFeedbackMedium()
                                 }) {
                                     Image(systemName: "xmark.circle.fill")
                                         .foregroundColor(.gray)
@@ -720,6 +780,7 @@ struct GenderInputView: View {
                             value = localSelectedGender
                         }
                         dismiss()
+                        generateHapticFeedbackMedium()
                     }) {
                         Image("donebutton")
                             .scaledToFit()
@@ -742,11 +803,24 @@ struct GenderOptionButton: View {
     @Binding var isCustom: Bool
     @Binding var localCustomValue: String  // helps in clearing custom data if needed
     
+    func generateHapticFeedbackMedium() {
+        let generator = UIImpactFeedbackGenerator(style: .medium)
+        generator.prepare()
+        generator.impactOccurred()
+    }
+    
+    func generateHapticFeedbackHeavy() {
+        let generator = UIImpactFeedbackGenerator(style: .heavy)
+        generator.prepare()
+        generator.impactOccurred()
+    }
+    
     var body: some View {
         Button(action: {
             selectedGender = title
             isCustom = false
             localCustomValue = ""  // clear out any custom text
+            generateHapticFeedbackMedium()
         }) {
             HStack {
                 ZStack {
@@ -784,6 +858,18 @@ struct PronounsInputView: View {
     // Local state to hold the text while editing
     @State private var tempValue: String
     
+    func generateHapticFeedbackMedium() {
+        let generator = UIImpactFeedbackGenerator(style: .medium)
+        generator.prepare()
+        generator.impactOccurred()
+    }
+    
+    func generateHapticFeedbackHeavy() {
+        let generator = UIImpactFeedbackGenerator(style: .heavy)
+        generator.prepare()
+        generator.impactOccurred()
+    }
+    
     init(title: String, value: Binding<String>) {
         self.title = title
         self._value = value
@@ -803,6 +889,7 @@ struct PronounsInputView: View {
                         // Back button -> discard changes
                         Button(action: {
                             dismiss()
+                            generateHapticFeedbackMedium()
                         }) {
                             Image("chatlogviewbackbutton") // Replace with your back button image
                                 .resizable()
@@ -837,6 +924,7 @@ struct PronounsInputView: View {
                         if !tempValue.isEmpty {
                             Button(action: {
                                 tempValue = "" // Clear the textfield
+                                generateHapticFeedbackMedium()
                             }) {
                                 Image(systemName: "xmark.circle.fill")
                                     .foregroundColor(.gray)
@@ -859,6 +947,7 @@ struct PronounsInputView: View {
                     Button(action: {
                         value = tempValue
                         dismiss()
+                        generateHapticFeedbackMedium()
                     }) {
                         Image("donebutton")
                             .frame(maxWidth: .infinity, alignment: .center)
@@ -883,6 +972,18 @@ struct BioInputView: View {
     // Local copy of the bio text
     @State private var tempValue: String
     
+    func generateHapticFeedbackMedium() {
+        let generator = UIImpactFeedbackGenerator(style: .medium)
+        generator.prepare()
+        generator.impactOccurred()
+    }
+    
+    func generateHapticFeedbackHeavy() {
+        let generator = UIImpactFeedbackGenerator(style: .heavy)
+        generator.prepare()
+        generator.impactOccurred()
+    }
+    
     init(title: String, value: Binding<String>) {
         self.title = title
         self._value = value
@@ -902,6 +1003,7 @@ struct BioInputView: View {
                         // Back button -> discard changes
                         Button(action: {
                             dismiss()
+                            generateHapticFeedbackMedium()
                         }) {
                             Image("chatlogviewbackbutton")
                                 .resizable()
@@ -958,6 +1060,7 @@ struct BioInputView: View {
                     Button(action: {
                         value = tempValue
                         dismiss()
+                        generateHapticFeedbackMedium()
                     }) {
                         Image("donebutton")
                             .resizable()
@@ -984,6 +1087,18 @@ struct LocationInputView: View {
     // Local copy of the location text
     @State private var tempValue: String
     
+    func generateHapticFeedbackMedium() {
+        let generator = UIImpactFeedbackGenerator(style: .medium)
+        generator.prepare()
+        generator.impactOccurred()
+    }
+    
+    func generateHapticFeedbackHeavy() {
+        let generator = UIImpactFeedbackGenerator(style: .heavy)
+        generator.prepare()
+        generator.impactOccurred()
+    }
+    
     init(title: String, value: Binding<String>) {
         self.title = title
         self._value = value
@@ -1003,6 +1118,7 @@ struct LocationInputView: View {
                         // Back button -> discard changes
                         Button(action: {
                             dismiss()
+                            generateHapticFeedbackMedium()
                         }) {
                             Image("chatlogviewbackbutton")
                                 .resizable()
@@ -1037,6 +1153,7 @@ struct LocationInputView: View {
                         if !tempValue.isEmpty {
                             Button(action: {
                                 tempValue = "" // Clear the textfield
+                                generateHapticFeedbackMedium()
                             }) {
                                 Image(systemName: "xmark.circle.fill")
                                     .foregroundColor(.gray)
@@ -1059,6 +1176,7 @@ struct LocationInputView: View {
                     Button(action: {
                         value = tempValue
                         dismiss()
+                        generateHapticFeedbackMedium()
                     }) {
                         Image("donebutton")
                             .frame(maxWidth: .infinity, alignment: .center)

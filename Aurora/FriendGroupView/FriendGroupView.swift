@@ -257,6 +257,18 @@ struct FriendGroupView: View {
     @State private var SeenDailyAuroraTutorialTemp = false
     @State private var showReportSheet = false
     
+    func generateHapticFeedbackMedium() {
+        let generator = UIImpactFeedbackGenerator(style: .medium)
+        generator.prepare()
+        generator.impactOccurred()
+    }
+    
+    func generateHapticFeedbackHeavy() {
+        let generator = UIImpactFeedbackGenerator(style: .heavy)
+        generator.prepare()
+        generator.impactOccurred()
+    }
+    
     init(selectedUser: ChatUser) {
         self.selectedUser = selectedUser
         _vm = StateObject(wrappedValue: FriendGroupViewModel(selectedUser: selectedUser))
@@ -342,6 +354,7 @@ struct FriendGroupView: View {
                                     // Write Daily Aurora Button
                                     Button(action: {
                                         vm.showResponseInput = true
+                                        generateHapticFeedbackMedium()
                                     }) {
                                         Image("writedailyaurorabutton") // Icon for the reply button
                                             .resizable()
@@ -423,6 +436,7 @@ struct FriendGroupView: View {
                                             
                                             Button(action: {
                                                 vm.showResponseInput = true
+                                                generateHapticFeedbackMedium()
                                             }) {
                                                 Image("writeyourownresponsebutton")
                                                     .resizable()
@@ -473,6 +487,7 @@ struct FriendGroupView: View {
                                             withAnimation(.easeInOut) {
                                                 SeenDailyAuroraTutorial = true
                                             }
+                                            generateHapticFeedbackMedium()
                                         }) {
                                             Image("dailyauroratutoriallastbutton")
                                                 .resizable()
@@ -536,6 +551,19 @@ struct ResponseCard: View {
     var likeAction: () -> Void
     @State  private var showReportSheet = false
     @State private var reportContent = ""
+    
+    func generateHapticFeedbackMedium() {
+        let generator = UIImpactFeedbackGenerator(style: .medium)
+        generator.prepare()
+        generator.impactOccurred()
+    }
+    
+    func generateHapticFeedbackHeavy() {
+        let generator = UIImpactFeedbackGenerator(style: .heavy)
+        generator.prepare()
+        generator.impactOccurred()
+    }
+    
     private func reportFriend() {
         let reportData: [String: Any] = [
             "uid": response.uid,
@@ -686,6 +714,7 @@ struct ResponseCard: View {
                 
                 Button(action: {
                     likeAction()
+                    generateHapticFeedbackHeavy()
                 }) {
                     if cardColor == Color.mint {
                         Image(response.likedByCurrentUser ? "likegivengreen" : "likenotgivengreen")
@@ -730,6 +759,7 @@ struct ResponseCard: View {
                     Button(action: {
                         // 关闭报告视图
                         showReportSheet = false
+                        generateHapticFeedbackMedium()
                     }) {
                         Text("Cancel")
                             .padding()
@@ -741,6 +771,7 @@ struct ResponseCard: View {
                         // 提交报告
                         reportFriend()
                         showReportSheet = false
+                        generateHapticFeedbackMedium()
                     }) {
                         Text("Submit")
                             .padding()
