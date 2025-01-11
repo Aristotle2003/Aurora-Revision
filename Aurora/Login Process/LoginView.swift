@@ -27,6 +27,9 @@ struct LoginView: View {
     
     @State private var loginStatusMessage = ""
     @State var hasSeenTutorial = false
+    @State private var showTermsOfService = false
+    @State private var showPrivacyPolicy = false
+
     
     private var countryCodes: [(numericCode: String, isoCode: String, name: String)] {
         Formatter.getAllCountryCodes()
@@ -134,13 +137,35 @@ struct LoginView: View {
                         .padding(.horizontal, 20) // Adjust horizontal padding
                         
                         Spacer()
-                            .frame(height: 130)
+                            .frame(height: 40)
                         
-                        Text("By continuing, you accept Aurora’s\nTerm of Service and Privacy Policy.")
+                        Text("By continuing, you accept Aurora’s")
                             .font(.system(size: 14))
                             .foregroundColor(Color(red: 86/255, green: 86/255, blue: 86/255))
-                            .multilineTextAlignment(.center)
-                            .padding(.bottom, 40)
+
+                        HStack(spacing: 4) {
+                            Button {
+                                showTermsOfService = true
+                            } label: {
+                                Text("Terms of Service")
+                                    .underline()
+                                    .foregroundColor(.blue)
+                            }
+
+                            Text("and")
+                                .foregroundColor(Color(red: 86/255, green: 86/255, blue: 86/255))
+
+                            Button {
+                                showPrivacyPolicy = true
+                            } label: {
+                                Text("Privacy Policy")
+                                    .underline()
+                                    .foregroundColor(.blue)
+                            }
+                        }
+                        .font(.system(size: 14))
+                        .multilineTextAlignment(.center)
+                        .padding(.bottom, 40)
 
                         
                         
@@ -178,6 +203,13 @@ struct LoginView: View {
                     )
                 }
             }
+            .fullScreenCover(isPresented: $showTermsOfService) {
+                TermsOfServiceView()
+            }
+            .fullScreenCover(isPresented: $showPrivacyPolicy) {
+                PrivacyPolicyView()
+            }
+
         }
     }
     

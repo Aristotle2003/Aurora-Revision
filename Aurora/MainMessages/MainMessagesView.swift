@@ -569,8 +569,7 @@ struct MainMessagesView: View {
 
 struct CarouselView: View {
     let items = [
-        "CarouselPicture1",
-        "CarouselPicture2"
+        "CarouselPicture1"
     ]
 
     let currentUser: ChatUser  // Ensure you pass the current user if needed

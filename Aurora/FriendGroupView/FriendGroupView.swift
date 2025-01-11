@@ -478,7 +478,7 @@ struct FriendGroupView: View {
                                                 .scaledToFit()
                                                 .frame(width: UIScreen.main.bounds.width * 0.8)
                                         }
-                                        .padding(.bottom, 50)
+                                        .padding(.bottom, 100)
                                     }
                                 }
                             }
