@@ -273,6 +273,14 @@ struct EditProfileView: View {
                 }
             }
         }
+        .gesture(
+            DragGesture(minimumDistance: 10, coordinateSpace: .local)
+                .onEnded { value in
+                    if value.translation.width > 100 {
+                        dismiss()
+                    }
+                }
+        )
         .navigationBarBackButtonHidden(true)
     }
 }
@@ -383,6 +391,14 @@ struct NameInputView: View {
                 }
             }
         }
+        .gesture(
+            DragGesture(minimumDistance: 10, coordinateSpace: .local)
+                .onEnded { value in
+                    if value.translation.width > 100 {
+                        dismiss()
+                    }
+                }
+        )
         .navigationBarBackButtonHidden(true)
     }
 }
@@ -500,6 +516,14 @@ struct UsernameInputView: View {
                 }
             }
         }
+        .gesture(
+            DragGesture(minimumDistance: 10, coordinateSpace: .local)
+                .onEnded { value in
+                    if value.translation.width > 100 {
+                        dismiss()
+                    }
+                }
+        )
         .navigationBarBackButtonHidden(true)
     }
 }
@@ -616,6 +640,14 @@ struct AgeInputView: View {
                 }
             }
         }
+        .gesture(
+            DragGesture(minimumDistance: 10, coordinateSpace: .local)
+                .onEnded { value in
+                    if value.translation.width > 100 {
+                        dismiss()
+                    }
+                }
+        )
         .navigationBarBackButtonHidden(true)
     }
 }
@@ -791,6 +823,14 @@ struct GenderInputView: View {
                 }
             }
         }
+        .gesture(
+            DragGesture(minimumDistance: 10, coordinateSpace: .local)
+                .onEnded { value in
+                    if value.translation.width > 100 {
+                        dismiss()
+                    }
+                }
+        )
         .navigationBarBackButtonHidden(true)
     }
 }
@@ -959,6 +999,14 @@ struct PronounsInputView: View {
                 }
             }
         }
+        .gesture(
+            DragGesture(minimumDistance: 10, coordinateSpace: .local)
+                .onEnded { value in
+                    if value.translation.width > 100 {
+                        dismiss()
+                    }
+                }
+        )
         .navigationBarBackButtonHidden(true)
     }
 }
@@ -1072,6 +1120,14 @@ struct BioInputView: View {
                 }
             }
         }
+        .gesture(
+            DragGesture(minimumDistance: 10, coordinateSpace: .local)
+                .onEnded { value in
+                    if value.translation.width > 100 {
+                        dismiss()
+                    }
+                }
+        )
         .navigationBarBackButtonHidden(true)
     }
 }
@@ -1188,6 +1244,14 @@ struct LocationInputView: View {
                 }
             }
         }
+        .gesture(
+            DragGesture(minimumDistance: 10, coordinateSpace: .local)
+                .onEnded { value in
+                    if value.translation.width > 100 {
+                        dismiss()
+                    }
+                }
+        )
         .navigationBarBackButtonHidden(true)
     }
 }
