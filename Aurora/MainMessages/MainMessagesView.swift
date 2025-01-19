@@ -236,6 +236,9 @@ struct MainMessagesView: View {
                 // Background Color
                 Color(red: 0.976, green: 0.980, blue: 1.0)
                     .ignoresSafeArea()
+                if vm.users.isEmpty{
+                    Image("lonelyimageformainmessageview")
+                }
                 if showCarouselView{
                     // ScrollView with users
                     ScrollView {
@@ -425,23 +428,20 @@ struct MainMessagesView: View {
                         ZStack(alignment: .topTrailing){
                             if let chatUser = vm.chatUser {
                                 CarouselView(currentUser: chatUser, currentView: $currentView)
-                                    
+                                Button{
+                                    generateHapticFeedbackMedium()
+                                    showCarouselView = false
+                                    lastCarouselClosedTime = Date().timeIntervalSince1970
+                                }label : {
+                                    Image("CloseCarouselButton")
+                                        .padding(.trailing, 20)
+                                        .padding(.top, 20)
+                                }
                             } else {
                                 // Handle the case where chatUser is nil, possibly show a placeholder or an empty view
                                 Text("Loading...")
                                     .frame(height: 180) // Ensure the placeholder takes up space
                             }
-                            
-                            Button{
-                                generateHapticFeedbackMedium()
-                                showCarouselView = false
-                                lastCarouselClosedTime = Date().timeIntervalSince1970
-                            }label : {
-                                Image("CloseCarouselButton")
-                                    .padding(.trailing, 20)
-                                    .padding(.top, 20)
-                            }
-                            
                         }
                         .padding(.top, 0)
                         .padding(.bottom, 0)
@@ -470,7 +470,7 @@ struct MainMessagesView: View {
             let elapsed = now - lastCarouselClosedTime
             
             // 100 minutes = 100 * 60 = 6000 seconds
-            if elapsed > 10 {
+            if elapsed > 1000 {
                 // more than 100 mins have passed since we last closed
                 showCarouselView = true
             } else {
@@ -636,6 +636,5 @@ struct CarouselView: View {
             .background(Color.clear) // Ensures the background is clear
         }
         .frame(width: UIScreen.main.bounds.width - 40)
-
     }
 }

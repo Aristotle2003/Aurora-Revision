@@ -3,14 +3,13 @@ import Firebase
 import FirebaseAuth
 
 
-
-
 struct PhoneVerificationView: View {
     @Environment(\.dismiss) var dismiss
     @AppStorage("isLoggedIn") private var isLoggedIn: Bool = false
     @AppStorage("SeenTutorial") private var SeenTutorial: Bool = false
     @Binding var isLogin: Bool
     @Binding var hasSeenTutorial: Bool
+    @State private var isLoading: Bool = false
     let isPreEmailVerification: Bool
     
     let oldPhone: String?
@@ -105,6 +104,10 @@ struct PhoneVerificationView: View {
                         }
                         .foregroundColor(.blue)
                         
+                    }
+                    
+                    if isLoading{
+                        ProgressView()
                     }
                     
                     if !errorMessage.isEmpty {
@@ -248,12 +251,15 @@ struct PhoneVerificationView: View {
     
     private func requestVerificationCode() {
         errorMessage = ""
+        isLoading = true
+        
         let formattedPhone = isPreEmailVerification
         ? oldPhone
         : Formatter.formatPhoneNumber(newPhone, numericCode: countryCode)
         
         guard let formattedPhone = formattedPhone else {
             errorMessage = "Please enter a valid phone number"
+            self.isLoading = false
             return
         }
         self.newPhone = formattedPhone
@@ -263,6 +269,7 @@ struct PhoneVerificationView: View {
             checkIfPhoneNumberExists(phoneNumber: newPhone) { exists in
                 if exists {
                     self.errorMessage = "This phone number is already in use. Log in or choose another one"
+                    self.isLoading = false
                 } else {
                     self.sendVerificationCode(to: newPhone)
                 }
@@ -277,6 +284,7 @@ struct PhoneVerificationView: View {
     private func sendVerificationCode(to phoneNumber: String) {
         // Phone verification flow
         PhoneAuthProvider.provider().verifyPhoneNumber(phoneNumber, uiDelegate: nil) { verificationID, error in
+            self.isLoading = false
             if let error = error {
                 self.errorMessage = error.localizedDescription
                 return
@@ -294,9 +302,11 @@ struct PhoneVerificationView: View {
     
     private func verifyCode() {
         errorMessage = ""
+        isLoading = true
         
         guard let verificationID = UserDefaults.standard.string(forKey: "authVerificationID") else {
             errorMessage = "Verification ID not found"
+            self.isLoading = false
             return
         }
         

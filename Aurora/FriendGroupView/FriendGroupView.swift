@@ -549,7 +549,7 @@ struct ResponseCard: View {
     var response: FriendResponse
     var cardColor: Color
     var likeAction: () -> Void
-    @State  private var showReportSheet = false
+    @State private var showReportSheet = false
     @State private var reportContent = ""
     
     func generateHapticFeedbackMedium() {
@@ -568,12 +568,12 @@ struct ResponseCard: View {
         let reportData: [String: Any] = [
             "uid": response.uid,
             "timestamp": Timestamp(),
-            "content": response, // 用户输入的举报内容
+            "content": response.latestMessage,
             "why": reportContent
         ]
         
         FirebaseManager.shared.firestore
-            .collection("reports for friends in dailyaurora")
+            .collection("reports_for_friends_in_dailyaurora")
             .document()
             .setData(reportData) { error in
                 if let error = error {

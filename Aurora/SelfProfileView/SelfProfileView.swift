@@ -365,7 +365,7 @@ struct SelfProfileView: View {
         ]
         
         FirebaseManager.shared.firestore
-            .collection("reports for self")
+            .collection("reports_for_self")
             .document()
             .setData(reportData) { error in
                 if let error = error {

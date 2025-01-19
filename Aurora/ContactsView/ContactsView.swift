@@ -210,9 +210,7 @@ struct CreateNewMessageView: View {
                     .foregroundColor(.red)
                     .padding()
             } else if vm.filteredUsers.isEmpty {
-                Text("No friends found.")
-                    .foregroundColor(.gray)
-                    .padding()
+                Image("lonelyimageforcontactspage")
             } else {
                 LazyVStack(spacing: 8) {
                     ForEach(vm.groupedUsers().keys.sorted(), id: \.self) { key in
