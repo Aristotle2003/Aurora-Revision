@@ -33,5 +33,7 @@
     </array>
     <key>NSContactsUsageDescription</key>
     <string>We need access to your contacts to recommend friends you may know.</string>
+    <key>UIUserInterfaceStyle</key>
+    <string>Light</string>
 </dict>
 </plist>

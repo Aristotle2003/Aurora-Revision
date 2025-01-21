@@ -54,6 +54,58 @@ class ChatLogViewModel: ObservableObject {
         self.chatUser = chatUser
     }
     
+    func reset(withNewUser chatUser: ChatUser?) {
+        // Stop all existing listeners
+        stopListening()
+        stopListeningForActiveStatus()
+        stopListeningForSavingTrigger()
+        stopAutoSend()
+        
+        // Reset all properties
+        self.chatText = ""
+        self.errorMessage = ""
+        self.latestSenderMessage = nil
+        self.latestRecipientMessage = nil
+        self.chatUser = chatUser
+        self.showSavedMessagesWindow = false
+        self.savedMessages = []
+        self.isChatUserActive = false
+        self.chatUserLastSeen = nil
+        self.savingTrigger = true
+        self.lastState = false
+        
+        // Initialize with new user
+        if chatUser != nil {
+            initializeMessages()
+            startListeningForActiveStatus()
+            startListeningForSavingTrigger()
+            fetchLatestMessages()
+        }
+    }
+    
+    func reset() {
+        // Reset all state variables
+        chatText = ""
+        errorMessage = ""
+        latestSenderMessage = nil
+        latestRecipientMessage = nil
+        savingTrigger = true
+        isChatUserActive = false
+        chatUserLastSeen = nil
+        
+        // Stop all listeners
+        stopListening()
+        stopListeningForActiveStatus()
+        stopListeningForSavingTrigger()
+        stopAutoSend()
+        
+        // Clear timers
+        timer?.invalidate()
+        timer = nil
+        seenCheckTimer?.invalidate()
+        seenCheckTimer = nil
+    }
+    
     func startListeningForSavingTrigger() {
         guard let currentUserId = FirebaseManager.shared.auth.currentUser?.uid else { return }
         guard let chatUserId = chatUser?.uid else { return }
@@ -152,6 +204,8 @@ class ChatLogViewModel: ObservableObject {
     }
     
     func initializeMessages() {
+        
+        reset()
         guard let fromId = FirebaseManager.shared.auth.currentUser?.uid else { return }
         guard let toId = chatUser?.uid else { return }
         
@@ -535,6 +589,12 @@ class ChatLogViewModel: ObservableObject {
             }
     }
     
+    deinit {
+        stopAutoSend()
+        stopListening()
+        stopListeningForActiveStatus()
+        stopListeningForSavingTrigger()
+    }
     
 }
 
@@ -568,6 +628,7 @@ struct ChatLogView: View {
                     let topbarheight = UIScreen.main.bounds.height * 0.07
                     HStack{
                         Button(action: {
+                            navigateToMainMessageView = true
                             presentationMode.wrappedValue.dismiss()
                             vm.stopAutoSend()
                             vm.stopListening()
@@ -940,10 +1001,11 @@ struct ChatLogView: View {
                 .onEnded { value in
                     if value.translation.width > 100 {
                         presentationMode.wrappedValue.dismiss()
+                        navigateToMainMessageView = true
                     }
                 }
         )
-        .navigationBarBackButtonHidden(true) 
+        .navigationBarBackButtonHidden(true)
     }
     
     @State private var backgroundObserver: NSObjectProtocol?

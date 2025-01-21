@@ -249,6 +249,7 @@ struct MainMessagesView: View {
                                     if let chatUser = vm.chatUser {
                                         self.selectedUser = chatUser
                                         self.chatUser = user
+                                        chatLogViewModel.reset(withNewUser: user)
                                         self.shouldNavigateToChatLogView.toggle()
                                         vm.markMessageAsSeen(for: user.uid)
                                     }
@@ -457,6 +458,15 @@ struct MainMessagesView: View {
                     .onAppear {
                         chatLogViewModel.chatUser = self.chatUser
                         chatLogViewModel.initializeMessages()
+                        chatLogViewModel.startAutoSend()
+                        chatLogViewModel.setActiveStatusToTrue()
+                        chatLogViewModel.markLatestMessageAsSeen()
+                        chatLogViewModel.startListeningForActiveStatus()
+                        chatLogViewModel.startListeningForSavingTrigger()
+                        chatLogViewModel.fetchLatestMessages()
+                    }
+                    .onDisappear{
+                        chatLogViewModel.reset()
                     }
             }
             .navigationDestination(isPresented: $shouldShowFriendRequests) {
