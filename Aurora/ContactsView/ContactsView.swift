@@ -222,6 +222,7 @@ struct CreateNewMessageView: View {
                     }
                 }
                 .padding(.top, 8)
+                Spacer(minLength: UIScreen.main.bounds.height * 0.1)
             }
         }
     }

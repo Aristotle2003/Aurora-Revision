@@ -119,7 +119,7 @@ class MainMessagesViewModel: ObservableObject {
         friendRequestListener = nil
     }
 
-    private func fetchCurrentUser() {
+    func fetchCurrentUser() {
         
         
         guard let uid = FirebaseManager.shared.auth.currentUser?.uid else {
@@ -306,6 +306,7 @@ struct MainMessagesView: View {
                             }
                         }
                         .padding(.top, UIScreen.main.bounds.height * 0.07 + 171) // Start 8 points below the header
+                        Spacer(minLength: UIScreen.main.bounds.height * 0.1)
                     }
                 }
                 
@@ -319,6 +320,7 @@ struct MainMessagesView: View {
                                     if let chatUser = vm.chatUser {
                                         self.selectedUser = chatUser
                                         self.chatUser = user
+                                        chatLogViewModel.reset(withNewUser: chatUser)
                                         self.shouldNavigateToChatLogView.toggle()
                                         vm.markMessageAsSeen(for: user.uid)
                                     }
@@ -375,6 +377,7 @@ struct MainMessagesView: View {
                             }
                         }
                         .padding(.top, UIScreen.main.bounds.height * 0.07 + 8) // Start 8 points below the header
+                        Spacer(minLength: UIScreen.main.bounds.height * 0.1)
                     }
                 }
                 
@@ -433,6 +436,7 @@ struct MainMessagesView: View {
                                     generateHapticFeedbackMedium()
                                     showCarouselView = false
                                     lastCarouselClosedTime = Date().timeIntervalSince1970
+                                    chatLogViewModel.reset(withNewUser: chatUser)
                                 }label : {
                                     Image("CloseCarouselButton")
                                         .padding(.trailing, 20)
@@ -487,8 +491,10 @@ struct MainMessagesView: View {
                 // haven't reached 100 mins yet
                 showCarouselView = false
             }
+            vm.fetchCurrentUser()
             vm.setupFriendListListener()
             vm.setupFriendRequestListener()
+            chatLogViewModel.reset(withNewUser: vm.chatUser)
         }
         .onDisappear {
             vm.stopListening()
@@ -555,28 +561,6 @@ struct MainMessagesView: View {
         }
     }
     
-//    private var newMessageButton: some View {
-//        Button {
-//            shouldNavigateToAddFriendView.toggle()
-//        } label: {
-//            HStack {
-//                Spacer()
-//                Text("Contacts")
-//                    .font(.system(size: 16, weight: .bold))
-//                Spacer()
-//            }
-//            .foregroundColor(.white)
-//            .padding(.vertical)
-//            .background(Color.blue)
-//            .cornerRadius(32)
-//            .padding(.horizontal)
-//            .shadow(radius: 15)
-//        }
-//        .fullScreenCover(isPresented: $shouldNavigateToAddFriendView) {
-//            CreateNewMessageView()
-//        }
-//    }
-
     func formatTimestamp(_ timestamp: Timestamp) -> String {
         let date = timestamp.dateValue()
         let formatter = DateFormatter()
