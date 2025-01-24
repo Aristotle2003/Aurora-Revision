@@ -265,6 +265,15 @@ struct ProfileView: View {
                 .onAppear {
                     chatLogViewModel.chatUser = self.chatUser
                     chatLogViewModel.initializeMessages()
+                    chatLogViewModel.startAutoSend()
+                    chatLogViewModel.setActiveStatusToTrue()
+                    chatLogViewModel.markLatestMessageAsSeen()
+                    chatLogViewModel.startListeningForActiveStatus()
+                    chatLogViewModel.startListeningForSavingTrigger()
+                    chatLogViewModel.fetchLatestMessages()
+                }
+                .onDisappear{
+                    chatLogViewModel.reset()
                 }
         }
         .gesture(
@@ -351,6 +360,7 @@ struct ProfileView: View {
     private var friendOptions: some View {
         VStack(spacing: 20) {
             Button(action: {
+                chatLogViewModel.reset(withNewUser: self.chatUser)
                 showChatLogView = true
                 generateHapticFeedbackMedium()
                     

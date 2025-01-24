@@ -39,7 +39,8 @@ class Formatter {
             "IN", "BR", "RU", "MX", "KR", "ID", "TR", "SA", "ZA", "NG",
             "EG", "PK", "BD", "VN", "PH", "TH", "MY", "SG", "AE", "IL",
             "CH", "SE", "NO", "DK", "FI", "NL", "BE", "IE", "PT", "GR",
-            "PL", "CZ", "HU", "AT", "RO", "UA", "BY", "KZ", "UZ", "NZ"
+            "PL", "CZ", "HU", "AT", "RO", "UA", "BY", "KZ", "UZ", "NZ",
+            "HK", "MO", "TW"
         ]
         
         for region in regions {
