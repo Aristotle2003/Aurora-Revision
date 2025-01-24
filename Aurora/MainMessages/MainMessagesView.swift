@@ -467,6 +467,7 @@ struct MainMessagesView: View {
                         chatLogViewModel.markLatestMessageAsSeen()
                         chatLogViewModel.startListeningForActiveStatus()
                         chatLogViewModel.startListeningForSavingTrigger()
+                        //chatLogViewModel.startListeningForImages()
                         chatLogViewModel.fetchLatestMessages()
                     }
                     .onDisappear{
@@ -485,10 +486,8 @@ struct MainMessagesView: View {
             
             // 100 minutes = 100 * 60 = 6000 seconds
             if elapsed > 1000 {
-                // more than 100 mins have passed since we last closed
                 showCarouselView = true
             } else {
-                // haven't reached 100 mins yet
                 showCarouselView = false
             }
             vm.fetchCurrentUser()

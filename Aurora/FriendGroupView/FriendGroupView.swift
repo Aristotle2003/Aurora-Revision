@@ -545,29 +545,428 @@ struct FriendGroupView: View {
     }
 }
 
+struct Comment: Identifiable {
+    let id = UUID()
+    let uid: String
+    let userName: String
+    let profileImageUrl: String
+    let content: String
+    let timestamp: Date // 添加时间戳字段
+}
+
+
 struct ResponseCard: View {
     var response: FriendResponse
     var cardColor: Color
     var likeAction: () -> Void
+    
+    @State private var isFlipped = false
     @State private var showReportSheet = false
     @State private var reportContent = ""
+    @State private var comments: [Comment] = []
+    @State private var newCommentText = "" // 新增用于输入评论的文本状态
     
-    func generateHapticFeedbackMedium() {
-        let generator = UIImpactFeedbackGenerator(style: .medium)
-        generator.prepare()
-        generator.impactOccurred()
+    var body: some View {
+        ZStack {
+            if isFlipped {
+                // 卡片背面（显示评论）
+                cardBackView
+            } else {
+                // 卡片正面（显示帖子内容）
+                cardFrontView
+            }
+        }
+        .onTapGesture {
+            // 点击时翻面
+            if !isFlipped {
+                // 在翻到背面时拉取评论
+                fetchComments()
+            }
+            withAnimation {
+                isFlipped.toggle()
+            }
+        }
+        .frame(width: UIScreen.main.bounds.width * 0.692111,
+               height: UIScreen.main.bounds.height * 0.42253)
+        .aspectRatio(contentMode: .fit)
+        .sheet(isPresented: $showReportSheet) {
+            VStack(spacing: 20) {
+                Text("Report this response").font(.headline)
+                
+                TextField("Enter your report reason", text: $reportContent)
+                    .textFieldStyle(RoundedBorderTextFieldStyle())
+                    .padding()
+                
+                HStack {
+                    Button(action: {
+                        // 关闭报告视图
+                        showReportSheet = false
+                    }) {
+                        Text("Cancel")
+                            .padding()
+                            .background(Color.gray.opacity(0.3))
+                            .cornerRadius(8)
+                    }
+                    
+                    Button(action: {
+                        // 提交报告
+                        reportFriend()
+                        showReportSheet = false
+                    }) {
+                        Text("Submit")
+                            .padding()
+                            .background(Color.blue)
+                            .foregroundColor(.white)
+                            .cornerRadius(8)
+                    }
+                }
+            }
+            .padding()
+        }
     }
     
-    func generateHapticFeedbackHeavy() {
-        let generator = UIImpactFeedbackGenerator(style: .heavy)
-        generator.prepare()
-        generator.impactOccurred()
+    // 卡片正面视图
+    private var cardFrontView: some View {
+        ZStack {
+            cardBackground
+            
+            GeometryReader { geo in
+                let w = geo.size.width
+                let h = geo.size.height
+                let topPadding: CGFloat = 35
+                let sidePadding: CGFloat = 20
+                let bottomPadding: CGFloat = 20
+                let buttonWidth: CGFloat = 24
+                let profileSize: CGFloat = 45.0
+                let textWidth: CGFloat = 100
+                let likeButtonSize: CGFloat = 32.0
+                
+                let textColor: Color = {
+                    if cardColor == .mint {
+                        return Color(red: 0.357, green: 0.635, blue: 0.451)
+                    } else if cardColor == .cyan {
+                        return Color(red: 0.388, green: 0.655, blue: 0.835)
+                    } else {
+                        return Color(red: 0.49, green: 0.52, blue: 0.75)
+                    }
+                }()
+                
+                // 报告按钮
+                Group {
+                    if cardColor == .mint {
+                        Image("reportbuttongreencard")
+                            .resizable()
+                            .scaledToFit()
+                            .frame(width: buttonWidth, height: buttonWidth)
+                            .position(x: w - sidePadding - 10, y: topPadding)
+                            .onTapGesture {
+                                showReportSheet = true
+                            }
+                    } else if cardColor == .cyan {
+                        Image("reportbuttonbluecard")
+                            .resizable()
+                            .scaledToFit()
+                            .frame(width: buttonWidth, height: buttonWidth)
+                            .position(x: w - sidePadding - 10, y: topPadding)
+                            .onTapGesture {
+                                showReportSheet = true
+                            }
+                    } else if cardColor == .pink {
+                        Image("reportbuttonpurplecard")
+                            .resizable()
+                            .scaledToFit()
+                            .frame(width: buttonWidth, height: buttonWidth)
+                            .position(x: w - sidePadding - 10, y: topPadding)
+                            .onTapGesture {
+                                showReportSheet = true
+                            }
+                    }
+                }
+                
+                // 帖子文本
+                Text(response.latestMessage)
+                    .font(.system(size: 14, weight: .bold))
+                    .foregroundColor(textColor)
+                    .frame(width: w * 0.7)
+                    .multilineTextAlignment(.center)
+                    .position(x: w / 2, y: h / 2)
+                
+                // 头像
+                WebImage(url: URL(string: response.profileImageUrl))
+                    .resizable()
+                    .scaledToFill()
+                    .frame(width: profileSize, height: profileSize)
+                    .clipShape(Circle())
+                    .position(x: sidePadding + profileSize / 2,
+                              y: h - bottomPadding - profileSize / 2)
+                
+                // 用户名和时间
+                let textLeftOffset: CGFloat = sidePadding + profileSize + 10
+                Group {
+                    Text(response.username)
+                        .font(.system(size: 12, weight: .bold))
+                        .foregroundColor(textColor)
+                        .frame(width: textWidth, alignment: .leading)
+                        .position(x: textLeftOffset + textWidth / 2,
+                                  y: h - bottomPadding - profileSize / 2 - 8)
+                    
+                    Text(response.timestamp, style: .time)
+                        .font(.system(size: 10))
+                        .foregroundColor(.gray)
+                        .frame(width: textWidth, alignment: .leading)
+                        .position(x: textLeftOffset + textWidth / 2,
+                                  y: h - bottomPadding - profileSize / 2 + 8)
+                }
+                
+                // 点赞按钮和点赞数
+                let likeSectionX = w - sidePadding - likeButtonSize / 2
+                let likeSectionY = h - bottomPadding - profileSize / 2
+                Button(action: {
+                    likeAction()
+                }) {
+                    if cardColor == .mint {
+                        Image(response.likedByCurrentUser ? "likegivengreen" : "likenotgivengreen")
+                            .resizable()
+                            .scaledToFit()
+                            .frame(width: likeButtonSize, height: likeButtonSize)
+                    } else if cardColor == .cyan {
+                        Image(response.likedByCurrentUser ? "likegivenblue" : "likenotgivenblue")
+                            .resizable()
+                            .scaledToFit()
+                            .frame(width: likeButtonSize, height: likeButtonSize)
+                    } else if cardColor == .pink {
+                        Image(response.likedByCurrentUser ? "likegivenpurple" : "likenotgivenpurple")
+                            .resizable()
+                            .scaledToFit()
+                            .frame(width: likeButtonSize, height: likeButtonSize)
+                    }
+                }
+                .position(x: likeSectionX, y: likeSectionY)
+                
+                Text("\(response.likes)")
+                    .font(.system(size: 16, weight: .bold))
+                    .foregroundColor(textColor)
+                    .position(x: likeSectionX - 30, y: likeSectionY)
+            }
+        }
+    }
+    
+    // 卡片背面视图（评论）
+    private var cardBackView: some View {
+        ZStack {
+            cardBackground
+            
+            VStack {
+                ScrollView {
+                    VStack(spacing: 10) {
+                        ForEach(comments) { comment in
+                            HStack(alignment: .top, spacing: 10) {
+                                if comment.uid != getCurrentUser().uid {
+                                    NavigationLink(destination: ProfileView(
+                                        chatUser: ChatUser(data: [
+                                            "uid": comment.uid, // 插个眼
+                                            "userName": comment.userName,
+                                            "profileImageUrl": comment.profileImageUrl
+                                        ]),
+                                        currentUser: getCurrentUser(),
+                                        isCurrentUser: false)) {
+                                            WebImage(url: URL(string: comment.profileImageUrl))
+                                                .resizable()
+                                                .scaledToFill()
+                                                .frame(width: 32, height: 32)
+                                                .clipShape(Circle())
+                                        }
+                                }
+                                else{
+                                    WebImage(url: URL(string: comment.profileImageUrl))
+                                        .resizable()
+                                        .scaledToFill()
+                                        .frame(width: 32, height: 32)
+                                        .clipShape(Circle())
+                                }
+                                if cardColor == .mint{
+                                    VStack(alignment: .leading) {
+                                        Text(comment.userName)
+                                            .font(.subheadline)
+                                            .fontWeight(.bold)
+                                            .foregroundColor(Color(red: 0.357, green: 0.635, blue: 0.451))
+                                        Text(comment.content)
+                                            .font(.subheadline)
+                                            .fontWeight(.medium)
+                                            .foregroundColor(.gray)
+                                    }
+                                } else if cardColor == .cyan{
+                                    VStack(alignment: .leading) {
+                                        Text(comment.userName)
+                                            .font(.subheadline)
+                                            .fontWeight(.bold)
+                                            .foregroundColor(Color(red: 0.388, green: 0.655, blue: 0.835))
+                                        Text(comment.content)
+                                            .font(.subheadline)
+                                            .fontWeight(.medium)
+                                            .foregroundColor(.gray)
+                                    }
+                                }else{
+                                    VStack(alignment: .leading) {
+                                        Text(comment.userName)
+                                            .font(.subheadline)
+                                            .fontWeight(.bold)
+                                            .foregroundColor(Color(red: 0.49, green: 0.52, blue: 0.75))
+                                        Text(comment.content)
+                                            .font(.subheadline)
+                                            .fontWeight(.medium)
+                                            .foregroundColor(.gray)
+                                    }
+                                }
+                                Spacer()
+                                Text(comment.timestamp, style: .time)
+                                    .font(.caption)
+                                    .foregroundColor(.gray)
+                                    .padding(.top, 2.5)
+                            }
+                            .padding(.horizontal)
+                        }
+                    }
+                }
+                .padding(.top, 70)
+                
+                // 评论输入框和发送按钮固定在底部
+                HStack {
+                    TextField("Add a comment...", text: $newCommentText)
+                        .textFieldStyle(RoundedBorderTextFieldStyle())
+                        .padding(.leading, 8)
+                        .cornerRadius(25)
+                        .keyboardAdaptive()
+                    
+                    Button(action: {
+                        submitNewComment()
+                        UIApplication.shared.sendAction(#selector(UIResponder.resignFirstResponder),
+                                                        to: nil,
+                                                        from: nil,
+                                                        for: nil)
+                    }) {
+                        if cardColor == .mint {
+                            Image(systemName: "paperplane.fill")
+                                .foregroundColor(Color(red: 0.357, green: 0.635, blue: 0.451))
+                        } else if cardColor == .cyan {
+                            Image(systemName: "paperplane.fill")
+                                .foregroundColor(Color(red: 0.388, green: 0.655, blue: 0.835))
+                        } else if cardColor == .pink {
+                            Image(systemName: "paperplane.fill")
+                                .foregroundColor(Color(red: 0.49, green: 0.52, blue: 0.75))
+                        }
+                    }
+                    .padding(.trailing, 8)
+                }
+                .padding()
+            }
+        }
+    }
+
+        // 为正反面提供相同的卡片背景
+    private var cardBackground: some View {
+        ZStack {
+            if cardColor == .mint {
+                Image("greencard")
+                    .resizable()
+                    .scaledToFit()
+                    .cornerRadius(25)
+            } else if cardColor == .cyan {
+                Image("bluecard")
+                    .resizable()
+                    .scaledToFit()
+                    .cornerRadius(25)
+            } else if cardColor == .pink {
+                Image("purplecard")
+                    .resizable()
+                    .scaledToFit()
+                    .cornerRadius(25)
+            } else {
+                RoundedRectangle(cornerRadius: 25)
+                    .fill(Color.white)
+            }
+        }
+    }
+    
+    private func submitNewComment() {
+        guard let currentUser = FirebaseManager.shared.auth.currentUser else { return }
+        guard !newCommentText.isEmpty else { return }
+        let commentRef = FirebaseManager.shared.firestore
+            .collection("response_to_prompt")
+            .document(response.documentId)
+            .collection("comments")
+            .document()
+
+        let userId = currentUser.uid
+        FirebaseManager.shared.firestore.collection("users").document(userId).getDocument { snapshot, error in
+            guard let data = snapshot?.data(), error == nil else {
+                print("Failed to fetch user data: \(error?.localizedDescription ?? "Unknown error")")
+                return
+            }
+
+            let userName = data["username"] as? String ?? "Unknown"
+            let profileImageUrl = data["profileImageUrl"] as? String ?? ""
+            
+            let commentData: [String: Any] = [
+                "uid": userId,
+                "userName": userName,
+                "profileImageUrl": profileImageUrl,
+                "content": newCommentText,
+                "timestamp": FieldValue.serverTimestamp() // 添加时间戳字段
+            ]
+        
+            commentRef.setData(commentData) { error in
+                if let error = error {
+                    print("Failed to submit comment:", error.localizedDescription)
+                    return
+                }
+                DispatchQueue.main.async {
+                    self.newCommentText = ""
+                    self.fetchComments()
+                }
+            }
+        }
+    }
+    
+    private func getCurrentUser() -> ChatUser {
+        guard let currentUser = FirebaseManager.shared.auth.currentUser else {
+            return ChatUser(data: ["uid": "", "email": "", "profileImageUrl": ""])
+        }
+        return ChatUser(data: [
+            "uid": currentUser.uid,
+            "email": currentUser.email ?? "",
+            "profileImageUrl": currentUser.photoURL?.absoluteString ?? ""
+        ])
+    }
+
+    // 拉取评论方法
+    private func fetchComments() {
+        FirebaseManager.shared.firestore
+            .collection("response_to_prompt")
+            .document(response.documentId)
+            .collection("comments")
+            .order(by: "timestamp", descending: true) // 根据时间戳排序
+            .getDocuments { snapshot, error in
+                guard let docs = snapshot?.documents, error == nil else { return }
+                DispatchQueue.main.async {
+                    self.comments = docs.map { doc in
+                        let data = doc.data()
+                        return Comment(
+                            uid: data["uid"] as? String ?? "Unknown",
+                            userName: data["userName"] as? String ?? "Unknown",
+                            profileImageUrl: data["profileImageUrl"] as? String ?? "",
+                            content: data["content"] as? String ?? "",
+                            timestamp: (data["timestamp"] as? Timestamp)?.dateValue() ?? Date() // 获取时间戳
+                        )
+                    }
+                }
+            }
     }
     
     private func reportFriend() {
         let reportData: [String: Any] = [
             "uid": response.uid,
-            "timestamp": Timestamp(),
+            "timestamp": FieldValue.serverTimestamp(),
             "content": response.latestMessage,
             "why": reportContent
         ]
@@ -582,207 +981,6 @@ struct ResponseCard: View {
                     print("Friend reported successfully")
                 }
             }
-    }
-    
-    var body: some View {
-        ZStack {
-            // Background image based on the card color
-            if cardColor == Color.mint {
-                Image("greencard")
-                    .resizable()
-                    .scaledToFit()
-                    .cornerRadius(25)
-            } else if cardColor == Color.cyan {
-                Image("bluecard")
-                    .resizable()
-                    .scaledToFit()
-                    .cornerRadius(25)
-            } else if cardColor == Color.pink {
-                Image("purplecard")
-                    .resizable()
-                    .scaledToFit()
-                    .cornerRadius(25)
-            }
-            
-            GeometryReader { geo in
-                let w = geo.size.width
-                let h = geo.size.height
-                
-                // Positioning constants
-                let topPadding: CGFloat = 35
-                let sidePadding: CGFloat = 20
-                let bottomPadding: CGFloat = 20
-                
-                // MARK: - Report Button (top-right corner)
-                Group {
-                    let buttonWidth: CGFloat = 24
-                    if cardColor == .mint {
-                        
-                            Image("reportbuttongreencard")
-                                .resizable()
-                                .scaledToFit()
-                                .frame(width: buttonWidth, height: buttonWidth)
-                                .position(x: w - sidePadding-10, y: topPadding)
-                                .onTapGesture{ showReportSheet = true
-                                }
-                        
-                        
-                    } else if cardColor == .cyan {
-                       
-                            Image("reportbuttonbluecard")
-                                .resizable()
-                                .scaledToFit()
-                                .frame(width: buttonWidth, height: buttonWidth)
-                                .position(x: w - sidePadding-10, y: topPadding)
-                                .onTapGesture{ showReportSheet = true
-                                }
-                        
-                    } else if cardColor == .pink {
-                            Image("reportbuttonpurplecard")
-                                .resizable()
-                                .scaledToFit()
-                                .frame(width: buttonWidth, height: buttonWidth)
-                                .position(x: w - sidePadding-10, y: topPadding)
-                                .onTapGesture{ showReportSheet = true
-                                }
-
-                    }
-                }
-                
-                // MARK: - Latest Message Text (Center)
-                // Adjust the position and padding as needed.
-                let textColor: Color = {
-                    if cardColor == .mint {
-                        return Color(red: 0.357, green: 0.635, blue: 0.451)
-                    } else if cardColor == .cyan {
-                        return Color(red: 0.388, green: 0.655, blue: 0.835)
-                    } else {
-                        return Color(red: 0.49, green: 0.52, blue: 0.75)
-                    }
-                }()
-                
-                Text(response.latestMessage)
-                    .font(.system(size: 14, weight: .bold))
-                    .foregroundColor(textColor)
-                // Try giving it a fixed width or a max width to keep it aligned.
-                    .frame(width: w * 0.7)
-                    .multilineTextAlignment(.center)
-                    .position(x: w/2, y: h/2)
-                
-                // MARK: - Profile Image (bottom-left area)
-                let profileSize: CGFloat = 45.0
-                WebImage(url: URL(string: response.profileImageUrl))
-                    .resizable()
-                    .scaledToFill()
-                    .frame(width: profileSize, height: profileSize)
-                    .clipShape(Circle())
-                    .position(x: sidePadding + profileSize/2,
-                              y: h - bottomPadding - profileSize/2)
-                
-                // MARK: - Username and Timestamp
-                // Position them next to the profile image
-                // Adjust these coordinates as needed to place them to the right of the profile image.
-                let textLeftOffset: CGFloat = sidePadding + profileSize + 10
-                let textWidth: CGFloat = 100 // choose a suitable width
-                
-                Group {
-                    Text(response.username)
-                        .font(.system(size: 12, weight: .bold))
-                        .foregroundColor(textColor)
-                        .frame(width: textWidth, alignment: .leading)
-                    // The frame is left-aligned and 100 pts wide.
-                    // To position so that the left edge is at (textLeftOffset + 30),
-                    // set x to (textLeftOffset + 30) + (textWidth/2), since .position is from center.
-                        .position(x: (textLeftOffset) + (textWidth / 2),
-                                  y: h - bottomPadding - profileSize/2 - 8)
-                    
-                    Text(response.timestamp, style: .time)
-                        .font(.system(size: 10))
-                        .foregroundColor(Color.gray)
-                        .frame(width: textWidth, alignment: .leading)
-                    // Similarly, to position so that the left edge is at (textLeftOffset + 40),
-                    // add half the width.
-                        .position(x: (textLeftOffset) + (textWidth / 2),
-                                  y: h - bottomPadding - profileSize/2 + 8)
-                }
-                
-                
-                // MARK: - Like Button and Count (bottom-right area)
-                let likeButtonSize: CGFloat = 32.0
-                let likeSectionX = w - sidePadding - likeButtonSize/2
-                let likeSectionY = h - bottomPadding - profileSize/2
-                
-                Button(action: {
-                    likeAction()
-                    generateHapticFeedbackHeavy()
-                }) {
-                    if cardColor == Color.mint {
-                        Image(response.likedByCurrentUser ? "likegivengreen" : "likenotgivengreen")
-                            .resizable()
-                            .scaledToFit()
-                            .frame(width: likeButtonSize, height: likeButtonSize)
-                    } else if cardColor == Color.cyan {
-                        Image(response.likedByCurrentUser ? "likegivenblue" : "likenotgivenblue")
-                            .resizable()
-                            .scaledToFit()
-                            .frame(width: likeButtonSize, height: likeButtonSize)
-                    } else if cardColor == Color.pink {
-                        Image(response.likedByCurrentUser ? "likegivenpurple" : "likenotgivenpurple")
-                            .resizable()
-                            .scaledToFit()
-                            .frame(width: likeButtonSize, height: likeButtonSize)
-                    }
-                }
-                .position(x: likeSectionX, y: likeSectionY)
-                
-                // Like count slightly to the left of the button
-                Text("\(response.likes)")
-                    .font(.system(size: 16, weight: .bold))
-                    .foregroundColor(textColor)
-                    .position(x: likeSectionX - 30, y: likeSectionY)
-            }
-            .padding(0) // No extra padding, we're positioning absolutely
-        }
-        .frame(width: UIScreen.main.bounds.width * 0.692111,
-               height: UIScreen.main.bounds.height * 0.42253)
-        .aspectRatio(contentMode: .fit)
-        .sheet(isPresented: $showReportSheet) {
-            VStack(spacing: 20) {
-                Text("Report this response")
-                    .font(.headline)
-                
-                TextField("Enter your report reason", text: $reportContent)
-                    .textFieldStyle(RoundedBorderTextFieldStyle())
-                    .padding()
-                
-                HStack {
-                    Button(action: {
-                        // 关闭报告视图
-                        showReportSheet = false
-                        generateHapticFeedbackMedium()
-                    }) {
-                        Text("Cancel")
-                            .padding()
-                            .background(Color.gray.opacity(0.3))
-                            .cornerRadius(8)
-                    }
-                    
-                    Button(action: {
-                        // 提交报告
-                        reportFriend()
-                        showReportSheet = false
-                        generateHapticFeedbackMedium()
-                    }) {
-                        Text("Submit")
-                            .padding()
-                            .background(Color.blue)
-                            .foregroundColor(.white)
-                            .cornerRadius(8)
-                    }
-                }
-            }
-            .padding()
-        }
     }
 }
 
@@ -922,5 +1120,31 @@ struct FullScreenResponseInputView: View {
                 .ignoresSafeArea(.keyboard)
             }
         }
+    }
+}
+
+extension View {
+    func keyboardAdaptive() -> some View {
+        self.modifier(KeyboardAdaptive())
+    }
+}
+
+struct KeyboardAdaptive: ViewModifier {
+    @State private var keyboardHeight: CGFloat = 0
+
+    func body(content: Content) -> some View {
+        content
+            .padding(.bottom, keyboardHeight)
+            .onAppear {
+                NotificationCenter.default.addObserver(forName: UIResponder.keyboardWillShowNotification, object: nil, queue: .main) { notification in
+                    if let keyboardFrame = notification.userInfo?[UIResponder.keyboardFrameEndUserInfoKey] as? CGRect {
+                        keyboardHeight = keyboardFrame.height
+                    }
+                }
+                
+                NotificationCenter.default.addObserver(forName: UIResponder.keyboardWillHideNotification, object: nil, queue: .main) { _ in
+                    keyboardHeight = 0
+                }
+            }
     }
 }
