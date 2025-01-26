@@ -33,6 +33,8 @@
     </array>
     <key>NSContactsUsageDescription</key>
     <string>We need access to your contacts to recommend friends you may know.</string>
+    <key>NSCameraUsageDescription</key>
+    <string>We need to access to your camera to get photo.</string>
     <key>UIUserInterfaceStyle</key>
     <string>Light</string>
 </dict>

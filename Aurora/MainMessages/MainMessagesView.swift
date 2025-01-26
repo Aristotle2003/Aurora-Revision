@@ -467,7 +467,7 @@ struct MainMessagesView: View {
                         chatLogViewModel.markLatestMessageAsSeen()
                         chatLogViewModel.startListeningForActiveStatus()
                         chatLogViewModel.startListeningForSavingTrigger()
-                        //chatLogViewModel.startListeningForImages()
+                        chatLogViewModel.startListeningForImages()
                         chatLogViewModel.fetchLatestMessages()
                     }
                     .onDisappear{

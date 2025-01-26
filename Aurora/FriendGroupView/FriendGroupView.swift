@@ -22,7 +22,6 @@ class FriendGroupViewModel: ObservableObject {
     }
     
     deinit {
-        // 移除监听器以防止内存泄漏
         listener?.remove()
     }
     
@@ -259,12 +258,6 @@ struct FriendGroupView: View {
     
     func generateHapticFeedbackMedium() {
         let generator = UIImpactFeedbackGenerator(style: .medium)
-        generator.prepare()
-        generator.impactOccurred()
-    }
-    
-    func generateHapticFeedbackHeavy() {
-        let generator = UIImpactFeedbackGenerator(style: .heavy)
         generator.prepare()
         generator.impactOccurred()
     }
@@ -565,6 +558,8 @@ struct ResponseCard: View {
     @State private var reportContent = ""
     @State private var comments: [Comment] = []
     @State private var newCommentText = "" // 新增用于输入评论的文本状态
+    @FocusState private var isFocused: Bool
+    @State private var isShowingCommentSheet = false
     
     var body: some View {
         ZStack {
@@ -753,6 +748,7 @@ struct ResponseCard: View {
     
     // 卡片背面视图（评论）
     private var cardBackView: some View {
+        
         ZStack {
             cardBackground
             
@@ -829,39 +825,96 @@ struct ResponseCard: View {
                     }
                 }
                 .padding(.top, 70)
-                
-                // 评论输入框和发送按钮固定在底部
                 HStack {
-                    TextField("Add a comment...", text: $newCommentText)
-                        .textFieldStyle(RoundedBorderTextFieldStyle())
-                        .padding(.leading, 8)
-                        .cornerRadius(25)
-                        .keyboardAdaptive()
-                    
                     Button(action: {
-                        submitNewComment()
-                        UIApplication.shared.sendAction(#selector(UIResponder.resignFirstResponder),
-                                                        to: nil,
-                                                        from: nil,
-                                                        for: nil)
+                        isShowingCommentSheet = true
                     }) {
-                        if cardColor == .mint {
-                            Image(systemName: "paperplane.fill")
-                                .foregroundColor(Color(red: 0.357, green: 0.635, blue: 0.451))
-                        } else if cardColor == .cyan {
-                            Image(systemName: "paperplane.fill")
-                                .foregroundColor(Color(red: 0.388, green: 0.655, blue: 0.835))
-                        } else if cardColor == .pink {
-                            Image(systemName: "paperplane.fill")
-                                .foregroundColor(Color(red: 0.49, green: 0.52, blue: 0.75))
+                        HStack {
+                            Image(systemName: "bubble.left")
+                            Text("Add a comment...")
+                                .foregroundColor(.gray)
                         }
+                        .padding()
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                        .background(Color(.systemGray6))
+                        .cornerRadius(25)
                     }
-                    .padding(.trailing, 8)
                 }
                 .padding()
+                .sheet(isPresented: $isShowingCommentSheet) {
+                    NavigationView {
+                        VStack {
+                            TextField("Add a comment...", text: $newCommentText)
+                                .textFieldStyle(RoundedBorderTextFieldStyle())
+                                .padding()
+                            
+                            Spacer()
+                        }
+                        .navigationTitle("Add Comment")
+                        .navigationBarTitleDisplayMode(.inline)
+                        .toolbar {
+                            ToolbarItem(placement: .cancellationAction) {
+                                Button("Cancel") {
+                                    isShowingCommentSheet = false
+                                }
+                            }
+                            
+                            ToolbarItem(placement: .confirmationAction) {
+                                Button(action: {
+                                    submitNewComment()
+                                    isShowingCommentSheet = false
+                                }) {
+                                    Image(systemName: "paperplane.fill")
+                                        .foregroundColor(getButtonColor())
+                                }
+                            }
+                        }
+                    }
+                }
+                
+                // 评论输入框和发送按钮固定在底部
+//                HStack {
+//                    TextField("Add a comment...", text: $newCommentText)
+//                        .focused($isFocused)
+//                        .textFieldStyle(RoundedBorderTextFieldStyle())
+//                        .padding(.leading, 8)
+//                        .cornerRadius(25)
+//                        .keyboardAdaptive()
+//                    
+//                    Button(action: {
+//                        submitNewComment()
+//                        isFocused = false
+//                    }) {
+//                        if cardColor == .mint {
+//                            Image(systemName: "paperplane.fill")
+//                                .foregroundColor(Color(red: 0.357, green: 0.635, blue: 0.451))
+//                        } else if cardColor == .cyan {
+//                            Image(systemName: "paperplane.fill")
+//                                .foregroundColor(Color(red: 0.388, green: 0.655, blue: 0.835))
+//                        } else if cardColor == .pink {
+//                            Image(systemName: "paperplane.fill")
+//                                .foregroundColor(Color(red: 0.49, green: 0.52, blue: 0.75))
+//                        }
+//                    }
+//                    .padding(.trailing, 8)
+//                }
+//                .padding()
             }
         }
     }
+    
+    private func getButtonColor() -> Color {
+            switch cardColor {
+            case .mint:
+                return Color(red: 0.357, green: 0.635, blue: 0.451)
+            case .cyan:
+                return Color(red: 0.388, green: 0.655, blue: 0.835)
+            case .pink:
+                return Color(red: 0.49, green: 0.52, blue: 0.75)
+            default:
+                return .blue
+            }
+        }
 
         // 为正反面提供相同的卡片背景
     private var cardBackground: some View {

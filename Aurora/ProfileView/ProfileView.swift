@@ -270,6 +270,7 @@ struct ProfileView: View {
                     chatLogViewModel.markLatestMessageAsSeen()
                     chatLogViewModel.startListeningForActiveStatus()
                     chatLogViewModel.startListeningForSavingTrigger()
+                    chatLogViewModel.startListeningForImages()
                     chatLogViewModel.fetchLatestMessages()
                 }
                 .onDisappear{
