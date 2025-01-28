@@ -363,13 +363,7 @@ struct PhoneVerificationView: View {
         FirebaseManager.shared.auth.signIn(with: credential) { authResult, error in
             DispatchQueue.main.async {
                 if let error = error as NSError? {
-                    // Handle MFA if required
-                    if error.code == AuthErrorCode.secondFactorRequired.rawValue {
-                        self.handleMultiFactorAuthentication(error: error)
-                    } else {
-                        self.errorMessage = error.localizedDescription
-                        return
-                    }
+                    self.errorMessage = error.localizedDescription
                     return
                 }
                 
@@ -444,11 +438,6 @@ struct PhoneVerificationView: View {
                 case AuthErrorCode.credentialAlreadyInUse.rawValue:
                     print("[Log]: Unexpected credentialAlreadyInUse error. This shouldn't happen as phone number existence is pre-checked.")
                     self.errorMessage = "Unexpected error. Please retry or contact support."
-                    
-                case AuthErrorCode.secondFactorRequired.rawValue:
-                    print("[Log]: Multi-factor authentication required.")
-                    self.handleMultiFactorAuthentication(error: error)
-                    
                 default:
                     self.errorMessage = "Linking failed: \(error.localizedDescription)"
                     print("[Error]: \(self.errorMessage)")
