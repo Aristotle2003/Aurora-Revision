@@ -122,7 +122,7 @@ struct LoginView: View {
                                 Image("googleicon")
                                     .resizable()
                                     .scaledToFit()
-                                    .frame(width: 14, height: 14)
+                                    .frame(width: 12, height: 12)
                                     .padding(.leading, 70)
                                     .padding(.trailing, -4)
                                 

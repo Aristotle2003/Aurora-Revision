@@ -42,7 +42,7 @@ struct PrivacyPolicyView: View {
                                 .font(.system(size: 28, weight: .bold, design: .serif))
                                 .foregroundColor(.white)
                             
-                            Text("Last Modified: 12/13/2024")
+                            Text("Last Modified: 01/29/2024")
                                 .font(.system(size: 16, weight: .medium))
                                 .foregroundColor(.white.opacity(0.8))
                         }
