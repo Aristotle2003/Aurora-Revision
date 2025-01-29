@@ -20,6 +20,7 @@ struct LoginView: View {
     
     @State private var countryCode: String = "1"
     @State private var phoneNumber = ""
+    @FocusState private var focusItem: Bool
     // Apple nonce
     @State private var nonce: String?
     
@@ -74,7 +75,7 @@ struct LoginView: View {
                                 .padding(.bottom, 4)
                             
                             Spacer()
-                                .frame(height: 90)
+                                .frame(height: 80)
                             
                             
                             phoneInputView
@@ -91,7 +92,7 @@ struct LoginView: View {
                         } label: {
                             HStack {
                                 Spacer()
-                                Image("continuebutton")
+                                Image(phoneNumber.isEmpty ? "continuebuttonunpressed" : "continuebutton")
                                     .resizable()
                                     .scaledToFit()
                                     .frame(width: UIScreen.main.bounds.width - 80)
@@ -118,11 +119,23 @@ struct LoginView: View {
                             generateHapticFeedbackMedium()
                         } label: {
                             HStack {
-                                Image("googlebutton")
+                                Image("googleicon")
                                     .resizable()
                                     .scaledToFit()
-                                    .frame(width: UIScreen.main.bounds.width - 80)
+                                    .frame(width: 14, height: 14)
+                                    .padding(.leading, 70)
+                                    .padding(.trailing, -4)
+                                
+                                Text("Continue with Google")
+                                    .font(.system(size: 16.5, weight: .medium))
+                                    .foregroundColor(Color(red: 0.231, green: 0.231, blue: 0.231))
+                                    .frame(maxWidth: .infinity, alignment: .leading)
                             }
+                            .frame(maxWidth: .infinity)
+                            .frame(height: 44)
+                            .background(Color.white)
+                            .cornerRadius(23)
+                            .padding(.horizontal, 20)
                         }
                         
                         
@@ -191,6 +204,10 @@ struct LoginView: View {
                     .padding(.horizontal, 20)
                     
                 }
+                // Edited here
+                .onTapGesture{
+                    focusItem = false
+                }
                 .background(Color(red: 0.976, green: 0.980, blue: 1.0))
                     .ignoresSafeArea()
             }
@@ -256,6 +273,7 @@ struct LoginView: View {
             // Phone Number Input Field
             TextField("Phone Number", text: $phoneNumber)
                 .keyboardType(.phonePad)
+                .focused($focusItem)
                 .textContentType(.telephoneNumber)
                 .foregroundColor(Color(red: 86/255, green: 86/255, blue: 86/255))
                 .padding(.horizontal, 16)

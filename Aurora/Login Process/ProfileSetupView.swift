@@ -18,6 +18,7 @@ struct ProfileSetupView: View {
     @State private var username: String = ""
     @AppStorage("SeenTutorial") private var SeenTutorial: Bool = false
     @AppStorage("isLoggedIn") private var isLoggedIn: Bool = false
+    @FocusState private var focusItem: Bool
     
     func generateHapticFeedbackMedium() {
         let generator = UIImpactFeedbackGenerator(style: .medium)
@@ -50,6 +51,9 @@ struct ProfileSetupView: View {
                         .foregroundColor(Color(red: 86/255, green: 86/255, blue: 86/255))
                         .padding(.bottom, 4)
                 }
+                .onTapGesture{
+                    focusItem = false
+                }
                 .padding()
                 
                 VStack{
@@ -77,6 +81,7 @@ struct ProfileSetupView: View {
                     TextField("Enter your username", text: $username)
                         .foregroundColor(Color(red: 86/255, green: 86/255, blue: 86/255))
                         .padding(.horizontal, 16)
+                        .focused($focusItem)
                         .frame(height: 48)
                         .background(Color.white)
                         .cornerRadius(100)
@@ -87,7 +92,7 @@ struct ProfileSetupView: View {
                     } label: {
                         HStack {
                             Spacer()
-                            Image("continuebutton")
+                            Image(image == nil || username.isEmpty ? "continuebuttonunpressed" : "continuebutton")
                                 .resizable()
                                 .scaledToFit()
                                 .frame(width: UIScreen.main.bounds.width - 80)
@@ -138,17 +143,17 @@ struct ProfileSetupView: View {
         
         ref.putData(imageData, metadata: nil) { metadata, err in
             if let err = err {
-                self.statusMessage = "Failed to upload profile picture: \(err.localizedDescription)"
+                self.statusMessage = "We couldn't upload your profile picture. Please check your internet connection and try again."
                 return
             }
             
             ref.downloadURL { url, err in
                 if let err = err {
-                    self.statusMessage = "Failed to process profile picture: \(err.localizedDescription)"
+                    self.statusMessage = "We couldn't process your profile picture. Please try again or choose a different image."
                     return
                 }
                 
-                self.statusMessage = "Successfully stored image with url: \(url?.absoluteString ?? "")"
+                self.statusMessage = "Your profile picture was successfully updated!"
                 guard let url = url else { return }
                 self.storeUserInformation(imageProfileUrl: url)
             }
@@ -168,7 +173,7 @@ struct ProfileSetupView: View {
         FirebaseManager.shared.firestore.collection("users")
             .document(uid).setData(userData) { err in
                 if let err = err {
-                    self.statusMessage = "Failed to save user data: \(err.localizedDescription)"
+                    self.statusMessage = "We couldn't save your profile information. Please check your internet connection."
                     return
                 }
                 
@@ -189,7 +194,7 @@ struct ProfileSetupView: View {
         
         userRef.setData(["username": username], merge: true) { error in
             if let error = error {
-                self.statusMessage = "Failed to save username to basic information: \(error.localizedDescription)"
+                self.statusMessage = "We couldn't save your profile information. Please check your internet connection."
             } else {
                 print("Saving username to basic information successfully")
             }
