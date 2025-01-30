@@ -123,6 +123,7 @@ struct LoginView: View {
                             // Button for google login
                             Button {
                                 handleGoogleSignIn()
+                                LoadingManager.shared.show()
                                 generateHapticFeedbackMedium()
                             } label: {
                                 HStack {
@@ -160,6 +161,7 @@ struct LoginView: View {
                                 case .success(let authorization):
                                     handleAppleSignIn(authorization)
                                 case .failure(let error):
+                                    LoadingManager.shared.hide()
                                     loginStatusMessage = "Error signing in with Apple: \(error.localizedDescription)"
                                 }
                             }
@@ -206,10 +208,6 @@ struct LoginView: View {
                             
                             
                             
-                            
-                            // Status Message
-                            Text(self.loginStatusMessage)
-                                .foregroundColor(.red)
                         }
                         .padding(.horizontal, 20)
                         
@@ -328,8 +326,8 @@ struct LoginView: View {
     
     // Sign in using Google sign in
     private func handleGoogleSignIn() {
-        LoadingManager.shared.show()
         guard let clientID = FirebaseManager.shared.auth.app?.options.clientID else {
+            LoadingManager.shared.hide()
             self.loginStatusMessage = "Error getting client ID"
             return
         }
@@ -341,6 +339,7 @@ struct LoginView: View {
 
         guard let windowScene = UIApplication.shared.connectedScenes.first as? UIWindowScene,
               let rootViewController = windowScene.windows.first?.rootViewController else {
+            LoadingManager.shared.hide()
             self.loginStatusMessage = "Error getting root view controller"
             return
         }
@@ -351,6 +350,7 @@ struct LoginView: View {
             // User cancel the google UI
             LoadingManager.shared.hide()
             if let error = error {
+                LoadingManager.shared.hide()
                 self.loginStatusMessage = "Error signing in with Google: \(error.localizedDescription)"
                 return
             }
@@ -359,6 +359,7 @@ struct LoginView: View {
             guard let user = result?.user,
                   let idToken = user.idToken?.tokenString
             else {
+                LoadingManager.shared.hide()
                 self.loginStatusMessage = "Error getting user data"
                 return
             }
@@ -372,7 +373,9 @@ struct LoginView: View {
             
             // Sign in google user!!
             FirebaseManager.shared.auth.signIn(with: credential) { result, error in
+                LoadingManager.shared.hide()
                 if let error = error {
+                    LoadingManager.shared.hide()
                     self.loginStatusMessage = "Firebase sign in error: \(error.localizedDescription)"
                     return
                 }
@@ -405,13 +408,17 @@ struct LoginView: View {
         if let appleIDCredential = authorization.credential as? ASAuthorizationAppleIDCredential {
             
             guard let nonce else {
+                LoadingManager.shared.hide()
                 fatalError("Invalid state: A login callback was received, but no login request was sent.")
+                
             }
             guard let appleIDToken = appleIDCredential.identityToken else {
+                LoadingManager.shared.hide()
                 print("Unable to fetch identity token")
                 return
             }
             guard let idTokenString = String(data: appleIDToken, encoding: .utf8) else {
+                LoadingManager.shared.hide()
                 print("Unable to serialize token string from data: \(appleIDToken.debugDescription)")
                 return
             }
@@ -421,10 +428,12 @@ struct LoginView: View {
                                                            fullName: appleIDCredential.fullName)
             // Sign in with Firebase.
             FirebaseManager.shared.auth.signIn(with: credential) { (authResult, error) in
+                LoadingManager.shared.hide()
                 if let error {
                     // Error. If error.code == .MissingOrInvalidNonce, make sure
                     // you're sending the SHA256-hashed nonce as a hex string with
                     // your request to Apple.
+                    LoadingManager.shared.hide()
                     self.loginStatusMessage = "Apple sign in error: \(error.localizedDescription)"
                     return
                 }
