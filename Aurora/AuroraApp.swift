@@ -41,6 +41,7 @@ struct AuroraApp: App {
         WindowGroup {
             LoginView()
                 .preferredColorScheme(.light)
+                .loadingOverlay()
         }
     }
 }

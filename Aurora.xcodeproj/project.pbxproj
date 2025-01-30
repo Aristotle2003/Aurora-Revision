@@ -7,6 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		B5B4E74C2D4B134300CCA113 /* LoadingView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B5B4E74B2D4B134300CCA113 /* LoadingView.swift */; };
 		FB0F8AFB2CF52ABE00A37CED /* TutorialView.swift in Sources */ = {isa = PBXBuildFile; fileRef = FB0F8AFA2CF52ABE00A37CED /* TutorialView.swift */; };
 		FB0F8AFF2CF653E200A37CED /* CustomTabNavigationView.swift in Sources */ = {isa = PBXBuildFile; fileRef = FB0F8AFE2CF653E200A37CED /* CustomTabNavigationView.swift */; };
 		FB23D5592CF6B20D003C245A /* SelfProfileView.swift in Sources */ = {isa = PBXBuildFile; fileRef = FB23D5582CF6B20D003C245A /* SelfProfileView.swift */; };
@@ -76,6 +77,7 @@
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXFileReference section */
+		B5B4E74B2D4B134300CCA113 /* LoadingView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LoadingView.swift; sourceTree = "<group>"; };
 		FB0F8AFA2CF52ABE00A37CED /* TutorialView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TutorialView.swift; sourceTree = "<group>"; };
 		FB0F8AFE2CF653E200A37CED /* CustomTabNavigationView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CustomTabNavigationView.swift; sourceTree = "<group>"; };
 		FB23D5582CF6B20D003C245A /* SelfProfileView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SelfProfileView.swift; sourceTree = "<group>"; };
@@ -376,6 +378,7 @@
 				FB83BDA32CDACB7500A7BE4E /* ProfileSetupView.swift */,
 				FB2CBDE42D32081400619A1A /* TermsOfServiceView.swift */,
 				FB2CBDE62D32083D00619A1A /* PrivacyPolicyView.swift */,
+				B5B4E74B2D4B134300CCA113 /* LoadingView.swift */,
 			);
 			path = "Login Process";
 			sourceTree = "<group>";
@@ -562,6 +565,7 @@
 				FB7E20BE2CC15CAB00209582 /* ContactsView.swift in Sources */,
 				FB42CB832CD66D9E00283244 /* EditProfileView.swift in Sources */,
 				FB7E207B2CBCC6E900209582 /* LoginView.swift in Sources */,
+				B5B4E74C2D4B134300CCA113 /* LoadingView.swift in Sources */,
 				FB23D5752CFE51C8003C245A /* ChangePhoneView.swift in Sources */,
 				FB83BDA22CDACB5400A7BE4E /* PhoneVerificationView.swift in Sources */,
 				FB7E20792CBCC6E900209582 /* AuroraApp.swift in Sources */,

@@ -29,6 +29,12 @@ struct LoginView: View {
     @State private var showTermsOfService = false
     @State private var showPrivacyPolicy = false
     
+    
+    
+    
+    
+    
+    
     func generateHapticFeedbackMedium() {
         let generator = UIImpactFeedbackGenerator(style: .medium)
         generator.prepare()
@@ -55,161 +61,167 @@ struct LoginView: View {
         }
         else{
             NavigationView {
-                ScrollView {
-                    VStack(spacing: 20) {
-                        VStack(alignment: .leading, spacing: 8) {
-                            Spacer()
-                                .frame(height: 139)
-                            
-                            Text("Welcome to AURORA!")
-                                .font(.system(size: 32, weight: .bold))
-                                .foregroundColor(Color(red: 125/255, green: 133/255, blue: 191/255))
-                            
-                            Text("One-step Sign In")
-                                .font(.system(size: 24, weight: .bold))
-                                .foregroundColor(Color(red: 86/255, green: 86/255, blue: 86/255))
-                            
-                            Text("Enter your number to instantly login or create a new account.")
-                                .font(.system(size: 14))
-                                .foregroundColor(Color(red: 86/255, green: 86/255, blue: 86/255))
-                                .padding(.bottom, 4)
-                            
-                            Spacer()
-                                .frame(height: 80)
-                            
-                            
-                            phoneInputView
-                        }
-                        .padding(.horizontal, 20)
-                        .padding(.bottom, 10)
-                        
-                        
-                        
-                        // Button for phone login
-                        Button {
-                            verifyPhoneNumber()
-                            generateHapticFeedbackMedium()
-                        } label: {
-                            HStack {
+                ZStack {
+                    ScrollView {
+                        VStack(spacing: 20) {
+                            VStack(alignment: .leading, spacing: 8) {
                                 Spacer()
-                                Image(phoneNumber.isEmpty ? "continuebuttonunpressed" : "continuebutton")
-                                    .resizable()
-                                    .scaledToFit()
-                                    .frame(width: UIScreen.main.bounds.width - 80)
-                                Spacer()
-                            }
-                        }
-                        .disabled(phoneNumber.isEmpty)
-                        .opacity(phoneNumber.isEmpty ? 0.6 : 1)
-                        
-                        
-                        
-                        // Divider
-                        HStack {
-                            VStack { Divider() }.padding(.horizontal, 8)
-                            Text("OR").foregroundColor(.gray)
-                            VStack { Divider() }.padding(.horizontal, 8)
-                        }
-                        
-                        
-                        
-                        // Button for google login
-                        Button {
-                            handleGoogleSignIn()
-                            generateHapticFeedbackMedium()
-                        } label: {
-                            HStack {
-                                Image("googleicon")
-                                    .resizable()
-                                    .scaledToFit()
-                                    .frame(width: 12, height: 12)
-                                    .padding(.leading, 70)
-                                    .padding(.trailing, -4)
+                                    .frame(height: 139)
                                 
-                                Text("Continue with Google")
-                                    .font(.system(size: 16.5, weight: .medium))
-                                    .foregroundColor(Color(red: 0.231, green: 0.231, blue: 0.231))
-                                    .frame(maxWidth: .infinity, alignment: .leading)
+                                Text("Welcome to AURORA!")
+                                    .font(.system(size: 32, weight: .bold))
+                                    .foregroundColor(Color(red: 125/255, green: 133/255, blue: 191/255))
+                                
+                                Text("One-step Sign In")
+                                    .font(.system(size: 24, weight: .bold))
+                                    .foregroundColor(Color(red: 86/255, green: 86/255, blue: 86/255))
+                                
+                                Text("Enter your number to instantly login or create a new account.")
+                                    .font(.system(size: 14))
+                                    .foregroundColor(Color(red: 86/255, green: 86/255, blue: 86/255))
+                                    .padding(.bottom, 4)
+                                
+                                Spacer()
+                                    .frame(height: 80)
+                                
+                                
+                                phoneInputView
                             }
+                            .padding(.horizontal, 20)
+                            .padding(.bottom, 10)
+                            
+                            
+                            
+                            // Button for phone login
+                            Button {
+                                verifyPhoneNumber()
+                                generateHapticFeedbackMedium()
+                            } label: {
+                                HStack {
+                                    Spacer()
+                                    Image(phoneNumber.isEmpty ? "continuebuttonunpressed" : "continuebutton")
+                                        .resizable()
+                                        .scaledToFit()
+                                        .frame(width: UIScreen.main.bounds.width - 80)
+                                    Spacer()
+                                }
+                            }
+                            .disabled(phoneNumber.isEmpty)
+                            .opacity(phoneNumber.isEmpty ? 0.6 : 1)
+                            
+                            
+                            
+                            // Divider
+                            HStack {
+                                VStack { Divider() }.padding(.horizontal, 8)
+                                Text("OR").foregroundColor(.gray)
+                                VStack { Divider() }.padding(.horizontal, 8)
+                            }
+                            
+                            
+                            
+                            // Button for google login
+                            Button {
+                                handleGoogleSignIn()
+                                generateHapticFeedbackMedium()
+                            } label: {
+                                HStack {
+                                    Image("googleicon")
+                                        .resizable()
+                                        .scaledToFit()
+                                        .frame(width: 12, height: 12)
+                                        .padding(.leading, 70)
+                                        .padding(.trailing, -4)
+                                    
+                                    Text("Continue with Google")
+                                        .font(.system(size: 16.5, weight: .medium))
+                                        .foregroundColor(Color(red: 0.231, green: 0.231, blue: 0.231))
+                                        .frame(maxWidth: .infinity, alignment: .leading)
+                                }
+                                .frame(maxWidth: .infinity)
+                                .frame(height: 44)
+                                .background(Color.white)
+                                .cornerRadius(23)
+                                .padding(.horizontal, 20)
+                            }
+                            
+                            
+                            
+                            // Button for apple login
+                            SignInWithAppleButton(.continue) { request in
+                                LoadingManager.shared.show() 
+                                let nonce = randomNonceString()
+                                self.nonce = nonce
+                                request.requestedScopes = [.email, .fullName]
+                                request.nonce = sha256(nonce)
+                                generateHapticFeedbackMedium()
+                            } onCompletion: { result in
+                                switch result {
+                                case .success(let authorization):
+                                    handleAppleSignIn(authorization)
+                                case .failure(let error):
+                                    loginStatusMessage = "Error signing in with Apple: \(error.localizedDescription)"
+                                }
+                            }
+                            .signInWithAppleButtonStyle(.black) // Choose black, white, or whiteOutline
                             .frame(maxWidth: .infinity)
                             .frame(height: 44)
-                            .background(Color.white)
-                            .cornerRadius(23)
-                            .padding(.horizontal, 20)
-                        }
-                        
-                        
-                        
-                        // Button for apple login
-                        SignInWithAppleButton(.continue) { request in
-                            let nonce = randomNonceString()
-                            self.nonce = nonce
-                            request.requestedScopes = [.email, .fullName]
-                            request.nonce = sha256(nonce)
-                            generateHapticFeedbackMedium()
-                        } onCompletion: { result in
-                            switch result {
-                            case .success(let authorization):
-                                handleAppleSignIn(authorization)
-                            case .failure(let error):
-                                loginStatusMessage = "Error signing in with Apple: \(error.localizedDescription)"
-                            }
-                        }
-                        .signInWithAppleButtonStyle(.black) // Choose black, white, or whiteOutline
-                        .frame(maxWidth: .infinity)
-                        .frame(height: 44)
-                        .cornerRadius(23)       // Adjust the corner radius here
-                        .padding(.horizontal, 20) // Adjust horizontal padding
-                        
-                        Spacer()
-                            .frame(height: 40)
-                        
-                        Text("By continuing, you accept Aurora’s")
-                            .font(.system(size: 14))
-                            .foregroundColor(Color(red: 86/255, green: 86/255, blue: 86/255))
-
-                        HStack(spacing: 4) {
-                            Button {
-                                showTermsOfService = true
-                                generateHapticFeedbackMedium()
-                            } label: {
-                                Text("Terms of Service")
-                                    .underline()
-                                    .foregroundColor(.blue)
-                            }
-
-                            Text("and")
+                            .cornerRadius(23)       // Adjust the corner radius here
+                            .padding(.horizontal, 20) // Adjust horizontal padding
+                            
+                            
+                            
+                            Spacer()
+                                .frame(height: 40)
+                            
+                            Text("By continuing, you accept Aurora’s")
+                                .font(.system(size: 14))
                                 .foregroundColor(Color(red: 86/255, green: 86/255, blue: 86/255))
-
-                            Button {
-                                showPrivacyPolicy = true
-                                generateHapticFeedbackMedium()
-                            } label: {
-                                Text("Privacy Policy")
-                                    .underline()
-                                    .foregroundColor(.blue)
+                            
+                            HStack(spacing: 4) {
+                                Button {
+                                    showTermsOfService = true
+                                    generateHapticFeedbackMedium()
+                                } label: {
+                                    Text("Terms of Service")
+                                        .underline()
+                                        .foregroundColor(.blue)
+                                }
+                                
+                                Text("and")
+                                    .foregroundColor(Color(red: 86/255, green: 86/255, blue: 86/255))
+                                
+                                Button {
+                                    showPrivacyPolicy = true
+                                    generateHapticFeedbackMedium()
+                                } label: {
+                                    Text("Privacy Policy")
+                                        .underline()
+                                        .foregroundColor(.blue)
+                                }
                             }
+                            .font(.system(size: 14))
+                            .multilineTextAlignment(.center)
+                            .padding(.bottom, 40)
+                            
+                            
+                            
+                            
+                            // Status Message
+                            Text(self.loginStatusMessage)
+                                .foregroundColor(.red)
                         }
-                        .font(.system(size: 14))
-                        .multilineTextAlignment(.center)
-                        .padding(.bottom, 40)
-
+                        .padding(.horizontal, 20)
                         
-                        
-                        
-                        // Status Message
-                        Text(self.loginStatusMessage)
-                            .foregroundColor(.red)
                     }
-                    .padding(.horizontal, 20)
-                    
-                }
-                // Edited here
-                .onTapGesture{
-                    focusItem = false
-                }
-                .background(Color(red: 0.976, green: 0.980, blue: 1.0))
+                    // Edited here
+                    .onTapGesture{
+                        focusItem = false
+                    }
+                    .background(Color(red: 0.976, green: 0.980, blue: 1.0))
                     .ignoresSafeArea()
+                    
+                } // ZStack ends here
             }
             .navigationViewStyle(StackNavigationViewStyle())
             // Phone verification with no email
@@ -316,6 +328,7 @@ struct LoginView: View {
     
     // Sign in using Google sign in
     private func handleGoogleSignIn() {
+        LoadingManager.shared.show()
         guard let clientID = FirebaseManager.shared.auth.app?.options.clientID else {
             self.loginStatusMessage = "Error getting client ID"
             return
@@ -335,6 +348,8 @@ struct LoginView: View {
         
         // Start the sign in flow!
         GIDSignIn.sharedInstance.signIn(withPresenting: rootViewController) { result, error in
+            // User cancel the google UI
+            LoadingManager.shared.hide()
             if let error = error {
                 self.loginStatusMessage = "Error signing in with Google: \(error.localizedDescription)"
                 return
@@ -370,7 +385,6 @@ struct LoginView: View {
                             self.loginStatusMessage = "\(error)"
                             return
                         }
-                        
                         // User exists
                         if (snapshot?.data()) != nil {
                             checkTutorialStatus()
@@ -389,7 +403,6 @@ struct LoginView: View {
     // Sign in using Apple account
     func handleAppleSignIn(_ authorization: ASAuthorization) {
         if let appleIDCredential = authorization.credential as? ASAuthorizationAppleIDCredential {
-            // Showing loading screen later
             
             guard let nonce else {
                 fatalError("Invalid state: A login callback was received, but no login request was sent.")
@@ -506,6 +519,7 @@ extension EnvironmentValues {
         return scene.windows.first
     }
 }
+
 
 
 
