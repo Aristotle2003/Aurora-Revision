@@ -127,24 +127,54 @@ struct LoginView: View {
                                 generateHapticFeedbackMedium()
                             } label: {
                                 HStack {
-                                    Image("googleicon")
-                                        .resizable()
-                                        .scaledToFit()
-                                        .frame(width: 12, height: 12)
-                                        .padding(.leading, 70)
-                                        .padding(.trailing, -4)
+                                    Spacer()
+
+                                    HStack(spacing: 4) {
+                                        Image("googleicon")
+                                            .resizable()
+                                            .scaledToFit()
+                                            .frame(width: 12, height: 12)
+                                        
+                                        Text("Continue with Google")
+                                            .font(.system(size: 16.5, weight: .medium))
+                                            .foregroundColor(Color(red: 0.231, green: 0.231, blue: 0.231))
+                                    }
                                     
-                                    Text("Continue with Google")
-                                        .font(.system(size: 16.5, weight: .medium))
-                                        .foregroundColor(Color(red: 0.231, green: 0.231, blue: 0.231))
-                                        .frame(maxWidth: .infinity, alignment: .leading)
+                                    Spacer()
                                 }
-                                .frame(maxWidth: .infinity)
                                 .frame(height: 44)
                                 .background(Color.white)
                                 .cornerRadius(23)
                                 .padding(.horizontal, 20)
                             }
+//                            Button {
+//                                handleGoogleSignIn()
+//                                LoadingManager.shared.show()
+//                                generateHapticFeedbackMedium()
+//                            } label: {
+//                                HStack {
+//                                    Image("googleicon")
+//                                        .resizable()
+//                                        .scaledToFit()
+//                                        .frame(width: 12, height: 12)
+//                                        .padding(.leading, 70)
+//                                        .padding(.trailing, -4)
+//                                    
+//                                    Text("Continue with Google")
+//                                        .font(.system(size: 16.5, weight: .medium))
+//                                        .foregroundColor(Color(red: 0.231, green: 0.231, blue: 0.231))
+//                                        .frame(maxWidth: .infinity, alignment: .leading)
+//                                }
+//                                .frame(maxWidth: .infinity)
+//                                .frame(height: 44)
+//                                .background(Color.white)
+//                                .cornerRadius(23)
+//                                .padding(.horizontal, 20)
+//                                .frame(height: 44)
+//                                .background(Color.white)
+//                                .cornerRadius(23)
+//                                .padding(.horizontal, 20)
+//                            }
                             
                             
                             
