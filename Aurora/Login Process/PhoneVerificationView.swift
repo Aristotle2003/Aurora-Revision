@@ -92,6 +92,21 @@ struct PhoneVerificationView: View {
                         TextField("Enter verification code", text: $verificationCode)
                             .keyboardType(.numberPad)
                             .focused($focusItem)
+                            .toolbar {
+                                if focusItem {  // Only show when keyboard is visible
+                                    ToolbarItemGroup(placement: .confirmationAction) {
+                                        Spacer()
+                                        Button {
+                                            focusItem = false
+                                        } label: {
+                                            Text("Done")
+                                                .fontWeight(.bold)
+                                                .foregroundColor(Color(red: 125/255, green: 133/255, blue: 191/255))
+                                                .font(.system(size: 17))
+                                        }
+                                    }
+                                }
+                            }
                             .multilineTextAlignment(.center)
                             .padding(.horizontal, 16)    // Horizontal padding for spacing inside the bubble
                             .frame(height: 48)
@@ -118,9 +133,6 @@ struct PhoneVerificationView: View {
                             .font(.caption)
                             .multilineTextAlignment(.center)
                     }
-                }
-                .onTapGesture{
-                    focusItem = false
                 }
                 .padding(.horizontal, 20)
             }
@@ -203,6 +215,21 @@ struct PhoneVerificationView: View {
                 .keyboardType(.phonePad)
                 .textContentType(.telephoneNumber)
                 .focused($focusItem)
+                .toolbar {
+                    if focusItem {  // Only show when keyboard is visible
+                        ToolbarItemGroup(placement: .confirmationAction) {
+                            Spacer()
+                            Button {
+                                focusItem = false
+                            } label: {
+                                Text("Done")
+                                    .fontWeight(.bold)
+                                    .foregroundColor(Color(red: 125/255, green: 133/255, blue: 191/255))
+                                    .font(.system(size: 17))
+                            }
+                        }
+                    }
+                }
                 .foregroundColor(Color(red: 86/255, green: 86/255, blue: 86/255))
                 .padding(.horizontal, 16)
                 .frame(height: 48)

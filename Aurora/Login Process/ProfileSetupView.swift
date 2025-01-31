@@ -51,9 +51,6 @@ struct ProfileSetupView: View {
                         .foregroundColor(Color(red: 86/255, green: 86/255, blue: 86/255))
                         .padding(.bottom, 4)
                 }
-                .onTapGesture{
-                    focusItem = false
-                }
                 .padding()
                 
                 VStack{
@@ -82,13 +79,29 @@ struct ProfileSetupView: View {
                         .foregroundColor(Color(red: 86/255, green: 86/255, blue: 86/255))
                         .padding(.horizontal, 16)
                         .focused($focusItem)
+                        .toolbar {
+                            if focusItem {  // Only show when keyboard is visible
+                                ToolbarItemGroup(placement: .confirmationAction) {
+                                    Spacer()
+                                    Button {
+                                        focusItem = false
+                                    } label: {
+                                        Text("Done")
+                                            .fontWeight(.bold)
+                                            .foregroundColor(Color(red: 125/255, green: 133/255, blue: 191/255))
+                                            .font(.system(size: 17))
+                                    }
+                                }
+                            }
+                        }
                         .frame(height: 48)
                         .background(Color.white)
                         .cornerRadius(100)
                     
                     Button {
+                        // Cover
+                        LoadingManager.shared.show()
                         validateAndPersistUserProfile()
-                        
                     } label: {
                         HStack {
                             Spacer()
@@ -102,7 +115,7 @@ struct ProfileSetupView: View {
                     .disabled(image == nil || username.isEmpty)
                     .opacity((image == nil || username.isEmpty) ? 0.6 : 1)
                     
-                    
+                    // StatusMessages
                     if !statusMessage.isEmpty {
                         Text(statusMessage)
                             .foregroundColor(.red)
@@ -112,8 +125,14 @@ struct ProfileSetupView: View {
                 }
                 .padding()
             }
-            .navigationBarItems(leading: Button("Cancel") {
+            .navigationBarItems(leading:
+                                    Button {
                 dismiss()
+            } label: {
+                Text("Cancel")
+                    .fontWeight(.bold)  // Changed from .bold since it's a cancel button
+                    .foregroundColor(Color(red: 125/255, green: 133/255, blue: 191/255))
+                    .font(.system(size: 17))
             })
             .background(Color(.init(white: 0, alpha: 0.05)).ignoresSafeArea())
         }
@@ -125,6 +144,8 @@ struct ProfileSetupView: View {
     
     private func validateAndPersistUserProfile() {
         guard !username.isEmpty else {
+            // Cover
+            LoadingManager.shared.hide()
             statusMessage = "Username cannot be empty"
             return
         }
@@ -134,6 +155,8 @@ struct ProfileSetupView: View {
     
     private func handleImage() {
         guard let image = self.image else {
+            // Cover
+            LoadingManager.shared.hide()
             statusMessage = "Please select a profile picture"
             return
         }
@@ -143,12 +166,16 @@ struct ProfileSetupView: View {
         
         ref.putData(imageData, metadata: nil) { metadata, err in
             if let err = err {
+                // Cover
+                LoadingManager.shared.hide()
                 self.statusMessage = "We couldn't upload your profile picture. Please check your internet connection and try again."
                 return
             }
             
             ref.downloadURL { url, err in
                 if let err = err {
+                    // Cover
+                    LoadingManager.shared.hide()
                     self.statusMessage = "We couldn't process your profile picture. Please try again or choose a different image."
                     return
                 }
@@ -169,10 +196,10 @@ struct ProfileSetupView: View {
             "profileImageUrl": imageProfileUrl.absoluteString,
             "username": username
         ]
-        
         FirebaseManager.shared.firestore.collection("users")
             .document(uid).setData(userData) { err in
                 if let err = err {
+                    LoadingManager.shared.hide()
                     self.statusMessage = "We couldn't save your profile information. Please check your internet connection."
                     return
                 }
@@ -181,7 +208,7 @@ struct ProfileSetupView: View {
                 
                 self.isLogin = true
                 isLoggedIn = true
-                dismiss()
+                LoadingManager.shared.show()
             }
     }
     
@@ -194,6 +221,7 @@ struct ProfileSetupView: View {
         
         userRef.setData(["username": username], merge: true) { error in
             if let error = error {
+                LoadingManager.shared.hide()
                 self.statusMessage = "We couldn't save your profile information. Please check your internet connection."
             } else {
                 print("Saving username to basic information successfully")

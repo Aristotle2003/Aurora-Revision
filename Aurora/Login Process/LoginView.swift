@@ -150,7 +150,7 @@ struct LoginView: View {
                             
                             // Button for apple login
                             SignInWithAppleButton(.continue) { request in
-                                LoadingManager.shared.show() 
+                                LoadingManager.shared.show()
                                 let nonce = randomNonceString()
                                 self.nonce = nonce
                                 request.requestedScopes = [.email, .fullName]
@@ -165,11 +165,12 @@ struct LoginView: View {
                                     loginStatusMessage = "Error signing in with Apple: \(error.localizedDescription)"
                                 }
                             }
-                            .signInWithAppleButtonStyle(.black) // Choose black, white, or whiteOutline
+                            .signInWithAppleButtonStyle(.black)
                             .frame(maxWidth: .infinity)
                             .frame(height: 44)
-                            .cornerRadius(23)       // Adjust the corner radius here
-                            .padding(.horizontal, 20) // Adjust horizontal padding
+                            .cornerRadius(23)
+                            .padding(.horizontal, 20)
+                            
                             
                             
                             
@@ -211,15 +212,14 @@ struct LoginView: View {
                         }
                         .padding(.horizontal, 20)
                         
-                    }
-                    // Edited here
-                    .onTapGesture{
-                        focusItem = false
-                    }
-                    .background(Color(red: 0.976, green: 0.980, blue: 1.0))
+                    } // Scroll View ends here
+                    .background(
+                        Color(red: 0.976, green: 0.980, blue: 1.0)
+                    )
                     .ignoresSafeArea()
                     
                 } // ZStack ends here
+                
             }
             .navigationViewStyle(StackNavigationViewStyle())
             // Phone verification with no email
@@ -284,6 +284,21 @@ struct LoginView: View {
             TextField("Phone Number", text: $phoneNumber)
                 .keyboardType(.phonePad)
                 .focused($focusItem)
+                .toolbar {
+                    if focusItem {  // Only show when keyboard is visible
+                        ToolbarItemGroup(placement: .confirmationAction) {
+                            Spacer()
+                            Button {
+                                focusItem = false
+                            } label: {
+                                Text("Done")
+                                    .fontWeight(.bold)
+                                    .foregroundColor(Color(red: 125/255, green: 133/255, blue: 191/255))
+                                    .font(.system(size: 17))
+                            }
+                        }
+                    }
+                }
                 .textContentType(.telephoneNumber)
                 .foregroundColor(Color(red: 86/255, green: 86/255, blue: 86/255))
                 .padding(.horizontal, 16)

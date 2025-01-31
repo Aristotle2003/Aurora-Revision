@@ -27,12 +27,8 @@ struct LoadingOverlay: ViewModifier {
     func body(content: Content) -> some View {
         ZStack {
             content
-                .disabled(manager.isLoading)
             
             if manager.isLoading {
-                Color.black.opacity(0.4)
-                    .ignoresSafeArea()
-                
                 Image("splashscreen")
                     .resizable()
                     .ignoresSafeArea()
