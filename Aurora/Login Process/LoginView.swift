@@ -14,6 +14,7 @@ struct LoginView: View {
     
     @State private var isPostEmailVerification = false
     @State private var isPreEmailVerification = false
+    @State private var showProfileSetup = false
     
     @State private var uid = ""
     @State private var email = ""
@@ -56,7 +57,7 @@ struct LoginView: View {
         if Auth.auth().currentUser != nil && isLoggedIn && SeenTutorial{
             CustomTabNavigationView()
         }
-        else if isLoggedIn && !SeenTutorial{
+        else if Auth.auth().currentUser != nil && isLoggedIn && !SeenTutorial{
             TutorialView()
         }
         else{
@@ -119,11 +120,8 @@ struct LoginView: View {
                             }
                             
                             
-                            
-                            // Button for google login
                             Button {
                                 handleGoogleSignIn()
-                                LoadingManager.shared.show()
                                 generateHapticFeedbackMedium()
                             } label: {
                                 HStack {
@@ -147,40 +145,12 @@ struct LoginView: View {
                                 .cornerRadius(23)
                                 .padding(.horizontal, 20)
                             }
-//                            Button {
-//                                handleGoogleSignIn()
-//                                LoadingManager.shared.show()
-//                                generateHapticFeedbackMedium()
-//                            } label: {
-//                                HStack {
-//                                    Image("googleicon")
-//                                        .resizable()
-//                                        .scaledToFit()
-//                                        .frame(width: 12, height: 12)
-//                                        .padding(.leading, 70)
-//                                        .padding(.trailing, -4)
-//                                    
-//                                    Text("Continue with Google")
-//                                        .font(.system(size: 16.5, weight: .medium))
-//                                        .foregroundColor(Color(red: 0.231, green: 0.231, blue: 0.231))
-//                                        .frame(maxWidth: .infinity, alignment: .leading)
-//                                }
-//                                .frame(maxWidth: .infinity)
-//                                .frame(height: 44)
-//                                .background(Color.white)
-//                                .cornerRadius(23)
-//                                .padding(.horizontal, 20)
-//                                .frame(height: 44)
-//                                .background(Color.white)
-//                                .cornerRadius(23)
-//                                .padding(.horizontal, 20)
-//                            }
+
                             
                             
                             
                             // Button for apple login
                             SignInWithAppleButton(.continue) { request in
-                                LoadingManager.shared.show()
                                 let nonce = randomNonceString()
                                 self.nonce = nonce
                                 request.requestedScopes = [.email, .fullName]
@@ -191,7 +161,6 @@ struct LoginView: View {
                                 case .success(let authorization):
                                     handleAppleSignIn(authorization)
                                 case .failure(let error):
-                                    LoadingManager.shared.hide()
                                     loginStatusMessage = "Error signing in with Apple: \(error.localizedDescription)"
                                 }
                             }
@@ -262,18 +231,29 @@ struct LoginView: View {
                     email: ""
                 )
             }
-            // Phone verification after google or apple
-            .fullScreenCover(isPresented: $isPostEmailVerification) {
+            .fullScreenCover(isPresented: $showProfileSetup) {
                 if let user = FirebaseManager.shared.auth.currentUser {
-                    PhoneVerificationView(
+                    ProfileSetupView(
                         isLogin: $isLogin,
-                        hasSeenTutorial: $hasSeenTutorial,
-                        isPreEmailVerification: false,
-                        oldPhone: "",
-                        email: user.email
+                        uid: user.uid,
+                        phone: "",
+                        email: user.email ?? ""
                     )
                 }
             }
+//
+//            // Phone verification after google or apple
+//            .fullScreenCover(isPresented: $isPostEmailVerification) {
+//                if let user = FirebaseManager.shared.auth.currentUser {
+//                    PhoneVerificationView(
+//                        isLogin: $isLogin,
+//                        hasSeenTutorial: $hasSeenTutorial,
+//                        isPreEmailVerification: false,
+//                        oldPhone: "",
+//                        email: user.email
+//                    )
+//                }
+//            }
             .fullScreenCover(isPresented: $showTermsOfService) {
                 TermsOfServiceView()
             }
@@ -372,7 +352,6 @@ struct LoginView: View {
     // Sign in using Google sign in
     private func handleGoogleSignIn() {
         guard let clientID = FirebaseManager.shared.auth.app?.options.clientID else {
-            LoadingManager.shared.hide()
             self.loginStatusMessage = "Error getting client ID"
             return
         }
@@ -384,7 +363,6 @@ struct LoginView: View {
 
         guard let windowScene = UIApplication.shared.connectedScenes.first as? UIWindowScene,
               let rootViewController = windowScene.windows.first?.rootViewController else {
-            LoadingManager.shared.hide()
             self.loginStatusMessage = "Error getting root view controller"
             return
         }
@@ -393,9 +371,7 @@ struct LoginView: View {
         // Start the sign in flow!
         GIDSignIn.sharedInstance.signIn(withPresenting: rootViewController) { result, error in
             // User cancel the google UI
-            LoadingManager.shared.hide()
             if let error = error {
-                LoadingManager.shared.hide()
                 self.loginStatusMessage = "Error signing in with Google: \(error.localizedDescription)"
                 return
             }
@@ -404,7 +380,6 @@ struct LoginView: View {
             guard let user = result?.user,
                   let idToken = user.idToken?.tokenString
             else {
-                LoadingManager.shared.hide()
                 self.loginStatusMessage = "Error getting user data"
                 return
             }
@@ -418,9 +393,7 @@ struct LoginView: View {
             
             // Sign in google user!!
             FirebaseManager.shared.auth.signIn(with: credential) { result, error in
-                LoadingManager.shared.hide()
                 if let error = error {
-                    LoadingManager.shared.hide()
                     self.loginStatusMessage = "Firebase sign in error: \(error.localizedDescription)"
                     return
                 }
@@ -440,7 +413,7 @@ struct LoginView: View {
                             self.isLoggedIn = true
                         // New user set up profile
                         } else {
-                            self.isPostEmailVerification = true
+                            self.showProfileSetup = true
                         }
                     }
             }
@@ -453,17 +426,14 @@ struct LoginView: View {
         if let appleIDCredential = authorization.credential as? ASAuthorizationAppleIDCredential {
             
             guard let nonce else {
-                LoadingManager.shared.hide()
                 fatalError("Invalid state: A login callback was received, but no login request was sent.")
                 
             }
             guard let appleIDToken = appleIDCredential.identityToken else {
-                LoadingManager.shared.hide()
                 print("Unable to fetch identity token")
                 return
             }
             guard let idTokenString = String(data: appleIDToken, encoding: .utf8) else {
-                LoadingManager.shared.hide()
                 print("Unable to serialize token string from data: \(appleIDToken.debugDescription)")
                 return
             }
@@ -473,12 +443,7 @@ struct LoginView: View {
                                                            fullName: appleIDCredential.fullName)
             // Sign in with Firebase.
             FirebaseManager.shared.auth.signIn(with: credential) { (authResult, error) in
-                LoadingManager.shared.hide()
                 if let error {
-                    // Error. If error.code == .MissingOrInvalidNonce, make sure
-                    // you're sending the SHA256-hashed nonce as a hex string with
-                    // your request to Apple.
-                    LoadingManager.shared.hide()
                     self.loginStatusMessage = "Apple sign in error: \(error.localizedDescription)"
                     return
                 }
@@ -499,7 +464,7 @@ struct LoginView: View {
                             self.isLoggedIn = true
                         // New user set up profile
                         } else {
-                            self.isPostEmailVerification = true
+                            self.showProfileSetup = true
                         }
                     }
             }
@@ -573,8 +538,6 @@ extension EnvironmentValues {
         return scene.windows.first
     }
 }
-
-
 
 
 #Preview {
