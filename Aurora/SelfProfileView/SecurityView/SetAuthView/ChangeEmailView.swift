@@ -85,8 +85,8 @@ struct ChangeEmailView: View {
                     
                     if !errorMessage.isEmpty {
                         Text(errorMessage)
-                            .font(.caption)
-                            .foregroundColor(.red)
+                            .font(.system(size: 14, weight: .bold))
+                            .foregroundColor(Color(red: 125/255, green: 133/255, blue: 191/255))
                             .padding(.top)
                     }
                     Spacer()
