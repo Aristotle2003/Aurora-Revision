@@ -144,7 +144,9 @@ struct ChangeEmailView: View {
     
     // Change Phone Number Button
     private var changePhoneNavigationLink: some View {
-        NavigationLink(destination: ChangePhoneView()) {
+        NavigationLink(destination: ChangePhoneView { message in
+            self.errorMessage = message
+        }) {
             HStack {
                 Image(systemName: "phone")
                     .foregroundColor(.blue)

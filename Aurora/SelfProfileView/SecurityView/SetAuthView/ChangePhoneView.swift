@@ -27,6 +27,7 @@ struct ChangePhoneView: View {
     @FocusState private var focusItem: Bool
 
     @State private var errorMessage: String = ""
+    let onComplete: (String) -> Void
     
     func generateHapticFeedbackMedium() {
         let generator = UIImpactFeedbackGenerator(style: .medium)
@@ -84,6 +85,8 @@ struct ChangePhoneView: View {
                                 .foregroundColor(Color(.gray))
                                 .multilineTextAlignment(.leading)
                                 .padding(.leading, 16)
+                                .padding(.bottom, 4)
+                                .padding(.top, 4)
                             
                             sendCodeButton
                         } else {
@@ -117,7 +120,12 @@ struct ChangePhoneView: View {
                             Button("Change Phone Number") {
                                 dismiss()
                             }
-                            .foregroundColor(.blue)
+                            .font(.system(size: 14, weight: .semibold))
+                            .foregroundColor(Color(.gray))
+                            .multilineTextAlignment(.leading)
+                            .padding(.leading, 16)
+                            .padding(.bottom, 4)
+                            .padding(.top, 4)
                         }
                         
                         if isLoading {
@@ -132,12 +140,14 @@ struct ChangePhoneView: View {
                         }
                         Spacer()
                     } // VStack ends here
+                    .navigationBarBackButtonHidden(true)
                     .padding()
                 } // VStack ends here
                 .navigationBarBackButtonHidden(true)
             } // ZStack ends here
             .navigationBarBackButtonHidden(true)
         } // Navigation ends here
+        .navigationBarBackButtonHidden(true)
     }
     
     
@@ -393,6 +403,7 @@ struct ChangePhoneView: View {
                                 print("Error updating phone number in Firestore: \(error.localizedDescription)")
                             } else {
                                 print("Successfully updated phone number in Firestore to \(newPhoneNumber)")
+                                onComplete("Phone number successfully changed!")
                                 dismiss()
                             }
                         }
@@ -432,9 +443,4 @@ struct ChangePhoneView: View {
             completion(true) // Phone number already exists
         }
     }
-}
-
-
-#Preview {
-    ChangePhoneView()
 }

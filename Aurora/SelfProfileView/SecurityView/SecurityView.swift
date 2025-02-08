@@ -324,66 +324,6 @@ struct SecurityView: View {
         }
     }
     
-    // Google Sign-In Button
-    private var googleSignInButton: some View {
-        Button {
-            handleGoogleSignIn()
-            generateHapticFeedbackMedium()
-        } label: {
-            HStack {
-                Image(systemName: "g.circle.fill")
-                    .font(.system(size: 20))
-                Text("Continue with Google")
-                    .font(.system(size: 16, weight: .medium))
-            }
-            .frame(maxWidth: .infinity)
-            .padding(.vertical, 12)
-            .background(
-                RoundedRectangle(cornerRadius: 12)
-                    .stroke(Color.gray.opacity(0.5), lineWidth: 1)
-            )
-        }
-    }
-    
-    // Apple Sign-In Button
-    private var appleSignInButton: some View {
-        SignInWithAppleButton(.continue) { request in
-            let nonce = randomNonceString()
-            self.nonce = nonce
-            request.requestedScopes = [.email, .fullName]
-            request.nonce = sha256(nonce)
-            generateHapticFeedbackMedium()
-        } onCompletion: { result in
-            switch result {
-            case .success(let authorization):
-                handleAppleSignIn(authorization)
-            case .failure(let error):
-                errorMessage = "Error signing in with Apple: \(error.localizedDescription)"
-            }
-        }
-        .frame(maxWidth: .infinity)
-        .frame(height: 44)
-        .cornerRadius(12)
-    }
-    
-    // Change Phone Number Button
-    private var changePhoneNavigationLink: some View {
-        NavigationLink(destination: ChangePhoneView()) {
-            HStack {
-                Image(systemName: "phone")
-                    .foregroundColor(.blue)
-                Text("Change Phone Number")
-                    .font(.system(size: 16, weight: .medium))
-                    .foregroundColor(.blue)
-            }
-            .frame(maxWidth: .infinity)
-            .padding(.vertical, 12)
-            .background(
-                RoundedRectangle(cornerRadius: 12)
-                    .stroke(Color.blue, lineWidth: 1)
-            )
-        }
-    }
     
     
     
