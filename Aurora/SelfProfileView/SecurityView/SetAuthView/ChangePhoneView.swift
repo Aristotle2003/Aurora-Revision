@@ -134,9 +134,9 @@ struct ChangePhoneView: View {
                         
                         if !errorMessage.isEmpty {
                             Text(errorMessage)
-                                .foregroundColor(.red)
-                                .font(.caption)
-                                .multilineTextAlignment(.center)
+                                .font(.system(size: 14, weight: .bold))
+                                .foregroundColor(Color(red: 125/255, green: 133/255, blue: 191/255))
+                                .padding(.top)
                         }
                         Spacer()
                     } // VStack ends here
@@ -300,7 +300,7 @@ struct ChangePhoneView: View {
         
         // Crucial Line
         guard let verificationID = verificationID else {
-            errorMessage = "Verification ID not found"
+            errorMessage = "Unable to verify your code. Please request a new verification code"
             isLoading = false
             return
         }
@@ -311,7 +311,7 @@ struct ChangePhoneView: View {
         )
         
         guard let currentUser = FirebaseManager.shared.auth.currentUser else {
-            errorMessage = "No current user found"
+            errorMessage = "Please sign in again to continue"
             isLoading = false
             return
         }
@@ -323,7 +323,7 @@ struct ChangePhoneView: View {
                 // Link and update phone number after unlinking
                 self.linkCredentialAndUpdatePhone(currentUser: currentUser, credential: credential)
             } else {
-                self.errorMessage = "Failed to unlink previous phone numbers."
+                self.errorMessage = "Unable to update your phone number. Please try again"
                 self.isLoading = false
             }
         }
@@ -371,7 +371,7 @@ struct ChangePhoneView: View {
             // Link the provided phone credential
             currentUser.link(with: credential) { authResult, error in
                 if let error = error {
-                    self.errorMessage = "Error linking phone number: \(error.localizedDescription)"
+                    self.errorMessage = "Unable to set new phone number. Please check the number and try again"
                     print("Error linking phone number: \(error.localizedDescription)")
                     return
                 }
@@ -381,7 +381,7 @@ struct ChangePhoneView: View {
                 // Reload user to verify the update
                 currentUser.reload { error in
                     if let error = error {
-                        self.errorMessage = "Error reloading user: \(error.localizedDescription)"
+                        self.errorMessage = "Unable to complete phone number update. Please try again"
                         print("Error reloading user: \(error.localizedDescription)")
                         return
                     }
@@ -399,7 +399,7 @@ struct ChangePhoneView: View {
                             "phoneNumber": newPhoneNumber
                         ]) { error in
                             if let error = error {
-                                self.errorMessage = "Error updating phone number in Firestore: \(error.localizedDescription)"
+                                self.errorMessage = "Unable to save your new phone number. Please try again later"
                                 print("Error updating phone number in Firestore: \(error.localizedDescription)")
                             } else {
                                 print("Successfully updated phone number in Firestore to \(newPhoneNumber)")
@@ -408,7 +408,7 @@ struct ChangePhoneView: View {
                             }
                         }
                     } else {
-                        self.errorMessage = "Phone number not updated in Firebase Auth"
+                        self.errorMessage = "Your phone number could not be updated. Please try again later"
                         print("No phone number available after update.")
                     }
                 }

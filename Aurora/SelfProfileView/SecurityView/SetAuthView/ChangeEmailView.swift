@@ -134,7 +134,7 @@ struct ChangeEmailView: View {
             case .success(let authorization):
                 handleAppleSignIn(authorization)
             case .failure(let error):
-                errorMessage = "Error signing in with Apple: \(error.localizedDescription)"
+                errorMessage = "Unable to sign in with Apple. Please try again."
             }
         }
         .frame(maxWidth: .infinity)
@@ -176,7 +176,7 @@ struct ChangeEmailView: View {
     // Google Sign-In Handler
     private func handleGoogleSignIn() {
         guard let clientID = FirebaseManager.shared.auth.app?.options.clientID else {
-            errorMessage = "Error getting client ID"
+            errorMessage = "Unable to start Google Sign-In. Please try again later."
             return
         }
 
@@ -186,20 +186,20 @@ struct ChangeEmailView: View {
 
         guard let windowScene = UIApplication.shared.connectedScenes.first as? UIWindowScene,
               let rootViewController = windowScene.windows.first?.rootViewController else {
-            errorMessage = "Error getting root view controller"
+            errorMessage = "Unable to display sign-in window. Please restart the app and try again."
             return
         }
 
         // Start the sign-in flow.
         GIDSignIn.sharedInstance.signIn(withPresenting: rootViewController) { result, error in
             if let error = error {
-                errorMessage = "Error signing in with Google: \(error.localizedDescription)"
+                errorMessage = "Unable to sign in with Google. Please check your internet connection and try again."
                 return
             }
 
             guard let user = result?.user,
                   let idToken = user.idToken?.tokenString else {
-                errorMessage = "Error getting user data"
+                errorMessage = "Unable to access Google account information. Please try signing in again."
                 return
             }
 
@@ -226,11 +226,11 @@ struct ChangeEmailView: View {
                 fatalError("Invalid state: A login callback was received, but no login request was sent.")
             }
             guard let appleIDToken = appleIDCredential.identityToken else {
-                errorMessage = "Unable to fetch identity token"
+                errorMessage = "Unable to complete Apple Sign-In. Please try again."
                 return
             }
             guard let idTokenString = String(data: appleIDToken, encoding: .utf8) else {
-                errorMessage = "Unable to serialize token string from data: \(appleIDToken.debugDescription)"
+                errorMessage = "Unable to process Apple Sign-In data. Please try again later."
                 return
             }
 
@@ -253,7 +253,7 @@ struct ChangeEmailView: View {
     // Main function to handle linking and unlinking logic
     private func handleLinking(with credential: AuthCredential, providerID: String) {
         guard let currentUser = FirebaseManager.shared.auth.currentUser else {
-            self.errorMessage = "No current user found"
+            self.errorMessage = "Please sign in again to continue."
             return
         }
 
@@ -270,7 +270,7 @@ struct ChangeEmailView: View {
                     // After unlinking, link the provided credential
                     linkCredentialAndUpdateDatabase(credential: credential)
                 } else {
-                    self.errorMessage = "Error unlinking existing email providers"
+                    self.errorMessage = "Unable to update account links. Please try again later."
                 }
             }
         }
@@ -282,7 +282,7 @@ struct ChangeEmailView: View {
     // Method to unlink all email-based providers (Google, Apple) and invoke a completion handler
     private func unlinkAllEmailProviders(completion: @escaping (Bool) -> Void) {
         guard let currentUser = FirebaseManager.shared.auth.currentUser else {
-            self.errorMessage = "No current user found"
+            self.errorMessage = "Please sign in again to continue."
             completion(false)
             return
         }
@@ -298,7 +298,7 @@ struct ChangeEmailView: View {
             currentUser.unlink(fromProvider: provider.providerID) { _, error in
                 if let error = error {
                     unlinkingError = error
-                    print("Error unlinking provider \(provider.providerID): \(error.localizedDescription)")
+                    print("Unable to update account settings. Please try again later.")
                 } else {
                     print("Successfully unlinked provider: \(provider.providerID)")
                 }
@@ -309,7 +309,7 @@ struct ChangeEmailView: View {
         // Call completion handler after all unlinking is complete
         group.notify(queue: .main) {
             if let error = unlinkingError {
-                self.errorMessage = "Error unlinking providers: \(error.localizedDescription)"
+                self.errorMessage = "Unable to update account settings. Please try again later."
                 completion(false)
             } else {
                 print("All email providers unlinked successfully.")
@@ -328,27 +328,26 @@ struct ChangeEmailView: View {
     // Combined helper function to link credential, update Firebase email, and update database
     private func linkCredentialAndUpdateDatabase(credential: AuthCredential) {
         guard let currentUser = FirebaseManager.shared.auth.currentUser else {
-            self.errorMessage = "No current user found"
+            self.errorMessage = "Please sign in again to continue."
             return
         }
         
         // Link the provided credential
         currentUser.link(with: credential) { authResult, error in
             if let error = error {
-                self.errorMessage = "Error linking account: \(error.localizedDescription)"
+                self.errorMessage = "Unable to link accounts. Please try again later."
                 return
             }
             
             // Fetch the linked email
             guard let linkedEmail = authResult?.user.providerData.first(where: { $0.providerID != PhoneAuthProviderID })?.email else {
-                self.errorMessage = "Error fetching linked email."
+                self.errorMessage = "Unable to access email information. Please try again."
                 return
             }
             // Update the user's email in Firebase Authentication
             currentUser.updateEmail(to: linkedEmail) { error in
                 if let error = error {
-                    self.errorMessage = "Error updating email in Firebase Auth: \(error.localizedDescription)"
-                    print("Error updating email in Firebase Auth: \(error.localizedDescription)")
+                    self.errorMessage = "Unable to update email. Please try again later."
                     return
                 }
                 
@@ -362,8 +361,7 @@ struct ChangeEmailView: View {
                     "email": linkedEmail
                 ]) { error in
                     if let error = error {
-                        self.errorMessage = "Error updating email in Firestore: \(error.localizedDescription)"
-                        print("Error updating email in Firestore: \(error.localizedDescription)")
+                        self.errorMessage = "Unable to save email changes. Please try again later."
                     } else {
                         print("Successfully updated email in Firestore to \(linkedEmail)")
                     }
